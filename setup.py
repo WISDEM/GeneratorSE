@@ -17,7 +17,7 @@ kwargs = {'author': 'Yi Guo, Taylor Parsons and Ryan King',
  'name': 'GeneratorSE',
  'package_data': {'GeneratorSE': []},
  'package_dir': {'': 'src'},
- 'packages': ['drivese', 'test'],
+ 'packages': ['generatorse', 'test'],
  'zip_safe': False}
 
 
