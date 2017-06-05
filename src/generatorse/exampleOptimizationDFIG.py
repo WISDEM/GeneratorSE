@@ -29,9 +29,6 @@ class DFIG_exec(Assembly):
         self.DFIG.DFIG_B_symax = 1. # Tesla
         self.DFIG.DFIG_S_N = -0.1 # Tesla
 
-        # Dummy value
-        self.DFIG.Generator_input = 20
-    
 top = DFIG_exec()
 top.DFIG.Target_efficiency=0.93
 top.DFIG.Generator_input=3.6*1e3*0.95
