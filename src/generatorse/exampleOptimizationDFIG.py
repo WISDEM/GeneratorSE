@@ -33,8 +33,9 @@ class DFIG_exec(Assembly):
         self.DFIG.Generator_input = 20
     
 top = DFIG_exec()
-top.Targt_efficiency = .95
-top.Gearbox_efficiency = .95
+top.DFIG.Target_efficiency=0.93
+top.DFIG.Generator_input=3.6*1e3*0.95
+top.DFIG.Gearbox_efficiency=0.955
 top.run()
 print 'optimum is DFIG.DFIG_r_s %f '%top.DFIG.DFIG_r_s
 print 'optimum is DFIG.DFIG_l_s %f '%top.DFIG.DFIG_l_s
