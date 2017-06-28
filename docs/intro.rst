@@ -1,4 +1,4 @@
 Introduction
 ------------
 
-Generator Systems Engineering (GeneratorSE) is a set of analytical frameworks for sizing variable speed wind turbine Generators. sizing tool based on OpenMDAO, an open-source high-performance computing platform  that  involving electromagnetic, structural, and basic thermal design that are integrated to provide the optimal generator design dimensions using conventional magnetic circuit laws. The sizing tool mainly considers available torque, mechanical power, normal and shear stresses, material properties, and costs to customize designs of variable-speed wind turbine generators by satisfying specific design criteria.
+Generator Systems Engineering (GeneratorSE) is a set of analytical frameworks for sizing variable speed wind turbine Generators. The tool integrates electromagnetic, structural, and basic thermal design to provide the optimal generator design dimensions using conventional magnetic circuit laws. 
