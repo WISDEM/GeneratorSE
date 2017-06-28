@@ -1,6 +1,9 @@
-Generator SE description. 
+Generator Systems Engineering (GeneratorSE)
 
-Author: [L. Sethuraman](nrel.wisdem+GeneratorSE@gmail.com)
+GeneratorSE is a set of analytical tools for sizing variable speed wind turbine Generators. The analytical framework involves electromagnetic, structural, and basic thermal design that are integrated to provide the optimal generator design dimensions using conventional magnetic circuit laws. 
+The tool is structured on OpenMDAO and mainly considers available torque, mechanical power, normal and shear stresses, material properties, and costs to optimize designs of variable-speed wind turbine generators by satisfying specific design criteria. 
+
+Author: [Latha Sethuraman and Katherine Dykes](nrel.wisdem+GeneratorSE@gmail.com)
 
 ## Version
 
