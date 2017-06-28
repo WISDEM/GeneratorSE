@@ -1,4 +1,4 @@
-DriveSE and HubSE
+GeneratorSE 
 =======================
 
 .. only:: html
