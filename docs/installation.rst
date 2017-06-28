@@ -12,8 +12,8 @@ Installation
 
 	Supporting python packages: Pandas, Algopy, Zope.interface, Sphinx, Xlrd, PyOpt, py2exe, Pyzmq, Sphinxcontrib-bibtex, Sphinxcontrib-zopeext, Numpydoc, Ipython
 
-Clone the repository at `<https://github.com/WISDEM/DriveSE>`_
-or download the releases and uncompress/unpack (DriveSE.py-|release|.tar.gz or DriveSE.py-|release|.zip) from the website link at the bottom the `DriveSE site<http://nwtc.nrel.gov/DriveSE>`_.
+Clone the repository at `<https://github.com/WISDEM/GeneratorSE>`_
+or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the `DriveSE site<http://nwtc.nrel.gov/DriveSE>`_.
 
 To install DriveSE, first activate the OpenMDAO environment and then install with the following command.
 
@@ -29,8 +29,10 @@ To check if installation was successful try to import the module from within an 
 
 .. code-block:: python
 
-    > import drivese.drive
-    > import drivese.hub
+    > import GeneratorSE.PMSG
+    > import GeneratorSE.EESG
+    > import GeneratorSE.DFIG
+    > import GeneratorSE.SCIG
 
 or run the unit tests which include functional and gradient tests.  Analytic gradients are provided for variables only so warnings will appear for missing gradients on model input parameters; these can be ignored.
 
