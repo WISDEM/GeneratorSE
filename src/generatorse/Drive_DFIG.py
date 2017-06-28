@@ -399,7 +399,15 @@ class Drive_DFIG(component):
   self.TC2=self.r_s**2*self.l_s
   P_total_loss=TL #+ P_conv;
   
-class DFIG_exec(Assembly):
+	if __name__ == "__main__":
+
+    opt_problem = OptimizationUnconstrained()
+
+    import time
+    tt = time.time()
+
+    opt_problem.run()
+
 	def configure(self):
 		self.add('Drive_DFIG', Drive_DFIG())
 		# Iteration Hierarchy

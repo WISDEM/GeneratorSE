@@ -404,7 +404,7 @@ class PMDDOptim_5MW(Component):
   V_Fesy	=L_t*pi*((self.r_s+self.h_s+h_ys+h_sy0)**2-(self.r_s+self.h_s)**2) # volume of iron in stator yoke
   V_Fery	=L_t*pi*((r_r-self.h_m)**2-(r_r-self.h_m-h_yr)**2)
   
-  self.M_Cus		=V_Cus*8900
+  self.M_Cus=V_Cus*8900
   self.M_Fest	=V_Fest*7700
   self.M_Fesy	=V_Fesy*7700
   self.M_Fery	=V_Fery*7700
