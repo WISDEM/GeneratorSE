@@ -42,6 +42,16 @@ class PMSG(Component):
  t_s= Float(iotype='in', desc='stator back iron ')
  R_o=Float(iotype='in', desc='Shaft radius')
  
+ C_Cu=Float( iotype='in', desc='Specific cost of copper')
+ C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+ C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+ C_PM=Float(iotype='in', desc='Specific cost of Magnet')
+ 
+ rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+ rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+ rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+ rho_PM=Float(iotype='in', desc='Magnet density kg/m^3')
+ 
  # Magnetic loading
  B_symax = Float(iotype='out', desc='Peak Stator Yoke flux density B_ymax')
  B_tmax=Float(iotype='out', desc='Peak Teeth flux density')
@@ -210,13 +220,22 @@ class PMSG(Component):
   R_o=self.R_o
   Costs=self.Costs
   n_nom = self.n_nom
+  
+  C_Cu=self.C_Cu
+  C_Fe=self.C_Fe
+  C_Fes=self.C_Fes
+  C_PM =self.C_PM
+  
+  rho_Fe= self.rho_Fe
+  rho_Fes=self.rho_Fes
+  rho_Copper=self.rho_Copper
+  rho_PM=self.rho_PM
+  
 	
   from math import pi, cos, sqrt, radians, sin, exp, log10, log, floor, ceil, tan, atan
   import numpy as np
   from numpy import sign
   
-  rho    =7850                # Kg/m3 steel density
-  rho_PM =7450                # Kg/m3 magnet density
   B_r    =1.2                 # Tesla remnant flux density 
   g1     =9.81                # m/s^2 acceleration due to gravity
   E      =2e11                # N/m^2 young's modulus
@@ -226,9 +245,7 @@ class PMSG(Component):
   mu_r   =1.06								# relative permeability 
   phi    =90*2*pi/360         # tilt angle (rotor tilt -90 degrees during transportation)
   cofi   =0.85                 # power factor
-  C_pm   =95
-  C_Fes  =0.50139
-  C_Fe   =0.556
+  
   h_sy0  =0
   h_w    =0.005
   h_i    =0.001 										# coil insulation thickness
@@ -340,13 +357,13 @@ class PMSG(Component):
   R_1s      = R_st-self.t_s*0.5
   d_se=dia+2*(self.h_ys+self.h_s+h_w)  # stator outer diameter
   
-  self.mass_PM   =(2*pi*(R+0.5*self.t)*l*self.h_m*ratio*rho_PM)           # magnet mass
+  self.mass_PM   =(2*pi*(R+0.5*self.t)*l*self.h_m*ratio*self.rho_PM)           # magnet mass
   
                                              
-  w_r					=rho*g1*sin(phi)*a_r*N_r
+  w_r					=self.rho_Fes*g1*sin(phi)*a_r*N_r
   
 
-  mass_st_lam=7700*2*pi*(R+0.5*self.t)*l*self.h_yr                                     # mass of rotor yoke steel  
+  mass_st_lam=self.rho_Fe*2*pi*(R+0.5*self.t)*l*self.h_yr                                     # mass of rotor yoke steel  
   W				=g1*sin(phi)*(mass_st_lam/N_r+(self.mass_PM)/N_r)  # weight of rotor cylinder
   Numer=R**3*((0.25*(sin(theta_r)-(theta_r*cos(theta_r)))/(sin(theta_r))**2)-(0.5/sin(theta_r))+(0.5/theta_r))
   Pov=((theta_r/(sin(theta_r))**2)+1/tan(theta_r))*((0.25*R/A_r)+(0.25*R**3/I_r))
@@ -371,8 +388,8 @@ class PMSG(Component):
   
   self.z_A_r       =(2*pi*(R-0.5*self.t)*l/N_r)*sigma*(l_ir-0.5*self.t)**3/3/E/I_arm_tor_r       # circumferential deflection
   
-  val_str_cost_rotor=C_pm*self.mass_PM+C_Fe*(mass_st_lam)+C_Fes*(N_r*(R_1-self.R_o)*a_r*rho)
-  val_str_rotor		= self.mass_PM+((mass_st_lam)+(N_r*(R_1-self.R_o)*a_r*rho))
+  val_str_cost_rotor=self.C_PM*self.mass_PM+self.C_Fe*(mass_st_lam)+self.C_Fes*(N_r*(R_1-self.R_o)*a_r*self.rho_Fes)
+  val_str_rotor		= self.mass_PM+((mass_st_lam)+(N_r*(R_1-self.R_o)*a_r*self.rho_Fes))
   
   
   self.Rotor_delta_radial=self.u_Ar
@@ -445,18 +462,18 @@ class PMSG(Component):
   V_Fesy	=L_t*pi*((self.r_s+self.h_s+self.h_ys+h_sy0)**2-(self.r_s+self.h_s)**2) # volume of iron in stator yoke
   V_Fery	=L_t*pi*((r_r-self.h_m)**2-(r_r-self.h_m-self.h_yr)**2)
   
-  self.M_Cus		=V_Cus*8900
-  self.M_Fest	=V_Fest*7700
-  self.M_Fesy	=V_Fesy*7700
-  self.M_Fery	=V_Fery*7700
+  self.M_Cus		=V_Cus*self.rho_Copper
+  self.M_Fest	=V_Fest*self.rho_Fe
+  self.M_Fesy	=V_Fesy*self.rho_Fe
+  self.M_Fery	=V_Fery*self.rho_Fe
   M_Fe		=self.M_Fest+self.M_Fesy+self.M_Fery
   M_gen		=(self.M_Cus)
-  K_gen		=self.M_Cus*4.786
+  K_gen		=self.M_Cus*self.C_Cu
   
-  mass_st_lam_s= self.M_Fest+pi*l*7700*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2) 
-  W_is			=0.5*g1*sin(phi)*(rho*l*self.d_s**2) # weight of rotor cylinder                               # length of rotor arm beam at which self-weight acts
-  W_iis     =g1*sin(phi)*(mass_st_lam_s+V_Cus*8900)/2/N_st
-  w_s         =rho*g1*sin(phi)*a_s*N_st
+  mass_st_lam_s= self.M_Fest+pi*l*self.rho_Fe*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2) 
+  W_is			=0.5*g1*sin(phi)*(self.rho_Fes*l*self.d_s**2) # weight of rotor cylinder                               # length of rotor arm beam at which self-weight acts
+  W_iis     =g1*sin(phi)*(mass_st_lam_s+V_Cus*self.rho_Copper)/2/N_st
+  w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st
   
   l_is      =R_st-self.R_o
   l_iis     =l_is 
@@ -466,7 +483,7 @@ class PMSG(Component):
   
   
   #stator structure deflection calculation
-  mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*rho)
+  mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*self.rho_Fes)
   Numers=R_st**3*((0.25*(sin(theta_s)-(theta_s*cos(theta_s)))/(sin(theta_s))**2)-(0.5/sin(theta_s))+(0.5/theta_s))
   Povs=((theta_s/(sin(theta_s))**2)+1/tan(theta_s))*((0.25*R_st/A_st)+(0.25*R_st**3/I_st))
   Qovs=R_st**3/(2*I_st*theta_s*(m2+1))
@@ -482,8 +499,8 @@ class PMSG(Component):
   self.z_A_s  =2*pi*(R_st+0.5*self.t_s)*l/(2*N_st)*sigma*(l_is+0.5*self.t_s)**3/3/E/I_arm_tor_s 
    #val_str_stator		= mass_stru_steel+mass_st_lam_s+((sign(u_As-u_all)+1)*(u_As-u_all)**3*1e100)+(((sign(y_As-y_all)+1)*(y_As-y_all)**3*1e100))+(((sign(z_As-z_all_s)+1)*(z_As-z_all_s)**3*1e100))+(((sign(self.b_st-b_all_s)+1)*(self.b_st-b_all_s)**3*1e50))+((sign((T/2/pi/sigma)-(R_st**2*l))+1)*((T/2/pi/sigma)-(R_st**2*l))**3*1e50)
   val_str_stator		= mass_stru_steel+mass_st_lam_s
-  #val_str_cost_stator =	0.50139*mass_stru_steel+0.556*mass_st_lam_s+((sign(u_As-u_all)+1)*(u_As-u_all)**3*1e100)+(((sign(y_As-y_all)+1)*(y_As-y_all)**3*5e17))+(((sign(z_As-z_all_s)+1)*(z_As-z_all_s)**3*1e100))+(((sign(self.b_st-b_all_s)+1)*(self.b_st-b_all_s)**3*1e100))+((sign((T/2/pi/sigma)-(R_st**2*l))+1)*((T/2/pi/sigma)-(R_st**2*l))**3*1e100)
-  val_str_cost_stator =	C_Fes*mass_stru_steel+C_Fe*mass_st_lam_s
+  
+  val_str_cost_stator =	self.C_Fes*mass_stru_steel+self.C_Fe*mass_st_lam_s
     
   val_str_mass=val_str_rotor+val_str_stator
   
@@ -495,13 +512,13 @@ class PMSG(Component):
   self.TC2=R**2*l              # Evaluating Torque constraint for rotor
   self.TC3=R_st**2*l           # Evaluating Torque constraint for stator
   
-  self.Iron=mass_st_lam_s+(2*pi*t*l*(R+0.5*self.t)*7700)
+  self.Iron=mass_st_lam_s+(2*pi*t*l*(R+0.5*self.t)*self.rho_Fe)
   self.PM=self.mass_PM
   self.Copper=self.M_Cus
-  self.Inactive=mass_stru_steel+(N_r*(R_1-self.R_o)*a_r*rho)
+  self.Inactive=mass_stru_steel+(N_r*(R_1-self.R_o)*a_r*self.rho_Fes)
   
   self.Stator=mass_st_lam_s+mass_stru_steel+self.Copper
-  self.Rotor=((2*pi*t*l*(R+0.5*self.t)*7700)+(N_r*(R_1-self.R_o)*a_r*rho))+self.PM
+  self.Rotor=((2*pi*t*l*(R+0.5*self.t)*self.rho_Fe)+(N_r*(R_1-self.R_o)*a_r*self.rho_Fes))+self.PM
   self.M_actual	=self.Stator+self.Rotor
   self.Mass = self.M_actual
   self.Active=self.Iron+self.Copper+self.mass_PM
@@ -549,7 +566,7 @@ class PMSG(Component):
   cm[1]  = self.main_shaft_cm[1]
   cm[2]  = self.main_shaft_cm[2]
   
-  #print ((self.mass_PM))*g1,  (self.M_Fest+V_Cus*8900)*g1,q3
+  #print ((self.mass_PM))*g1,  (self.M_Fest+V_Cus*self.rho_Copper)*g1,q3
   
   
   
@@ -586,12 +603,18 @@ class Drive_PMSG(Assembly):
 	PMSG_t_wr =Float(iotype='in', desc='Rotor arm thickness')
 	PMSG_t_ws =Float(iotype='in', desc='Stator arm thickness')
 	PMSG_R_o =Float(iotype='in', desc='Main shaft radius')
-	Stator_delta_radial=Float(iotype='out', desc='Rotor radial deflection')
- 	Stator_delta_axial=Float(iotype='out', desc='Stator Axial deflection')
- 	Stator_circum=Float(iotype='out', desc='Rotor radial deflection')
- 	Rotor_delta_radial=Float(iotype='out', desc='Generator efficiency')
- 	Rotor_delta_axial=Float(iotype='out', desc='Rotor Axial deflection')
- 	Rotor_circum=Float(iotype='out', desc='Rotor circumferential deflection')
+	
+	C_Cu=Float( iotype='in', desc='Specific cost of copper')
+	C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	C_PM=Float(iotype='in', desc='Specific cost of Magnet')
+	
+	rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+	rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+	rho_PM=Float(iotype='in', desc='Magnet density kg/m^3')
+ 	
+ 	
   
 	
 	def __init__(self,Optimiser='',Objective_function=''):
@@ -628,6 +651,18 @@ class Drive_PMSG(Assembly):
 		self.connect('PMSG.l_s','l_s')
 		self.connect('PMSG.I','I')
 		self.connect('PMSG.cm','cm')
+		
+		self.connect('C_Fe','PMSG.C_Fe')
+		self.connect('C_Fes','PMSG.C_Fes')
+		self.connect('C_Cu','PMSG.C_Cu')
+		self.connect('C_PM','PMSG.C_PM')
+		
+		self.connect('rho_PM','PMSG.rho_PM')
+		self.connect('rho_Fe','PMSG.rho_Fe')
+		self.connect('rho_Fes','PMSG.rho_Fes')
+		self.connect('rho_Copper','PMSG.rho_Copper')
+
+				
 		
 		
 		Opt1=globals()[self.Optimiser]
@@ -756,6 +791,23 @@ def optim_PMSG():
 	opt_problem.PMSG_t_wr =0.01
 	opt_problem.PMSG_t_ws =0.01
 	opt_problem.PMSG_R_o =0.17625                    # 1.5MW: 0.2775; 3MW: 0.363882632; 10 MW:0.523950817; 0.75MW :0.17625
+	
+	# Specific costs
+	opt_problem.C_Cu   =4.786                  
+	opt_problem.C_Fe	= 0.556                   
+	opt_problem.C_Fes =0.50139                   
+	opt_problem.C_PM  =95
+	
+	#Material properties
+	opt_problem.rho_Fe = 7700                 #Steel density
+	opt_problem.rho_Fes = 7850                 #Steel density
+	opt_problem.rho_Copper =8900                  # Kg/m3 copper density
+	opt_problem.rho_PM =7450
+	
+	
+	
+	
+	
 	opt_problem.run()
 	raw_data = {'Parameters': ['Rating','Stator Arms', 'Stator Axial arm dimension','Stator Circumferential arm dimension',' Stator arm Thickness' ,'Rotor arms','Rotor Axial arm dimension','Rotor Circumferential arm dimension' ,'Rotor arm Thickness',' Stator Radial deflection', 'Stator Axial deflection','Stator circum deflection',' Rotor Radial deflection', 'Rotor Axial deflection','Rotor circum deflection', 'Air gap diameter','Overall Outer diameter', 'Stator length', 'l/d ratio','Slot_aspect_ratio','Pole pitch', 'Stator slot height','Stator slotwidth','Stator tooth width', 'Stator yoke height', 'Rotor yoke height', 'Magnet height', 'Magnet width', 'Peak air gap flux density fundamental','Peak stator yoke flux density','Peak rotor yoke flux density','Flux density above magnet','Maximum Stator flux density','Maximum tooth flux density','Pole pairs', 'Generator output frequency', 'Generator output phase voltage', 'Generator Output phase current', 'Stator resistance','Synchronous inductance', 'Stator slots','Stator turns','Conductor cross-section','Stator Current density ','Specific current loading','Generator Efficiency ','Iron mass','Magnet mass','Copper mass','Mass of Arms', 'Total Mass', 'Stator Mass','Rotor Mass','Total Material Cost'],
 			'Values': [opt_problem.PMSG.P_gennom/1000000,opt_problem.PMSG.n_s,opt_problem.PMSG.d_s*1000,opt_problem.PMSG.b_st*1000,opt_problem.PMSG.t_ws*1000,opt_problem.PMSG.n_r,opt_problem.PMSG.d_r*1000,opt_problem.PMSG.b_r*1000,opt_problem.PMSG.t_wr*1000,opt_problem.PMSG.Stator_delta_radial*1000,opt_problem.PMSG.Stator_delta_axial*1000,opt_problem.PMSG.Stator_circum*1000,opt_problem.PMSG.Rotor_delta_radial*1000,opt_problem.PMSG.Rotor_delta_axial*1000,opt_problem.PMSG.Rotor_circum*1000,2*opt_problem.PMSG.r_s,opt_problem.PMSG.R_out*2,opt_problem.PMSG.l_s,opt_problem.PMSG.K_rad,opt_problem.PMSG.Slot_aspect_ratio,opt_problem.PMSG.tau_p*1000,opt_problem.PMSG.h_s*1000,opt_problem.PMSG.b_s*1000,opt_problem.PMSG.b_t*1000,opt_problem.PMSG.t_s*1000,opt_problem.PMSG.t*1000,opt_problem.PMSG.h_m*1000,opt_problem.PMSG.b_m*1000,opt_problem.PMSG.B_g,opt_problem.PMSG.B_symax,opt_problem.PMSG.B_rymax,opt_problem.PMSG.B_pm1,opt_problem.PMSG.B_smax,opt_problem.PMSG.B_tmax,opt_problem.PMSG.p,opt_problem.PMSG.f,opt_problem.PMSG.E_p,opt_problem.PMSG.I_s,opt_problem.PMSG.R_s,opt_problem.PMSG.L_s,opt_problem.PMSG.S,opt_problem.PMSG.N_s,opt_problem.PMSG.A_Cuscalc,opt_problem.PMSG.J_s,opt_problem.PMSG.A_1/1000,opt_problem.PMSG.gen_eff,opt_problem.PMSG.Iron/1000,opt_problem.PMSG.mass_PM/1000,opt_problem.PMSG.M_Cus/1000,opt_problem.PMSG.Inactive/1000,opt_problem.PMSG.M_actual/1000,opt_problem.PMSG.Stator/1000,opt_problem.PMSG.Rotor/1000,opt_problem.PMSG.Costs/1000],
