@@ -21,6 +21,8 @@ class SCIG(Component):
  machine_rating=Float(0.0,iotype='in', desc='Machine rating')
  n_nom=Float(0.0,iotype='in', desc='Rated speed')
  B_symax = Float(0.0,iotype='in', desc='Peak Yoke flux density B_ymax')
+ 
+ # Costs and material properties
  C_Cu=Float( iotype='in', desc='Specific cost of copper')
  C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
  C_Fes=Float(iotype='in', desc='Specific cost of structural steel')

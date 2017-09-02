@@ -42,6 +42,7 @@ class PMSG(Component):
  t_s= Float(iotype='in', desc='stator back iron ')
  R_o=Float(iotype='in', desc='Shaft radius')
  
+ # Costs and material properties
  C_Cu=Float( iotype='in', desc='Specific cost of copper')
  C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
  C_Fes=Float(iotype='in', desc='Specific cost of structural steel')

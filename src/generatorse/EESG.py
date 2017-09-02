@@ -40,6 +40,16 @@ class EESG(Component):
  b_s=Float(0.0, iotype='out', desc='slot width')
  b_t=Float(0.0, iotype='out', desc='tooth width')
  
+ # Costs and material properties
+ C_Cu=Float( iotype='in', desc='Specific cost of copper')
+ C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+ C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+ 
+ rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+ rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+ rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+ 
+ 
  # Magnetic loading
  B_g = Float(1.06, iotype='out', desc='Peak air gap flux density B_g')
  B_gfm=Float(1.06, iotype='out', desc='Average air gap flux density B_g')
@@ -219,6 +229,17 @@ class EESG(Component):
   machine_rating=self.machine_rating
   n_nom=self.n_nom
   
+  C_Cu=self.C_Cu
+  C_Fe=self.C_Fe
+  C_Fes=self.C_Fes
+
+  
+  rho_Fe= self.rho_Fe
+  rho_Fes=self.rho_Fes
+  rho_Copper=self.rho_Copper
+
+  
+  
   from math import pi, cos,cosh,sinh, sqrt, radians, sin, exp, log10, log, floor, ceil, tan, atan
   import numpy as np
   from numpy import sign
@@ -233,10 +254,7 @@ class EESG(Component):
   mu_r   =1.06
   phi    =90*2*pi/360 
 
-  C_Fes  =0.50139               # Unit Costs of structural steel
-  C_Fe   =0.556									# Unit Costs of magnetic steel
-  C_Cu   =4.786                  # Unit Costs of Copper 
-                     
+                    
   h_sy0  =0
 
   h_w    =0.005
@@ -439,11 +457,11 @@ class EESG(Component):
   V_Fert=2*self.p*l_pfe*(h_pc*b_pc+self.b_p*h_ps)
   
   V_Fery=l_pfe*pi*((r_r-h_ps-h_pc)**2-(r_r-h_ps-h_pc-self.h_yr)**2)
-  M_Cus=(V_Cuss+V_Cusr)*8900
-  M_Fest=V_Fest*7700
-  M_Fesy=V_Fesy*7700
-  M_Fert=V_Fert*7700
-  M_Fery=V_Fery*7700
+  M_Cus=(V_Cuss+V_Cusr)*self.rho_Copper
+  M_Fest=V_Fest*self.rho_Fe
+  M_Fesy=V_Fesy*self.rho_Fe
+  M_Fert=V_Fert*self.rho_Fe
+  M_Fery=V_Fery*self.rho_Fe
   
   cos_phi=0.85
   I_snom=self.P_gennom/(3*self.E_s*cos_phi)
@@ -535,13 +553,13 @@ class EESG(Component):
   self.b_all_s			=2*pi*self.R_o/N_st                           
   
                                     
-  w_r					=rho*g1*sin(phi)*a_r*N_r
+  w_r					=self.rho_Fes*g1*sin(phi)*a_r*N_r
   
   
 
   
-  mass_st_lam=7700*2*pi*(R+0.5*self.h_yr)*l*self.h_yr                                    # mass of rotor yoke steel  
-  W				=g1*sin(phi)*(mass_st_lam+(V_Cusr*8900)+M_Fert)/N_r  # weight of rotor cylinder
+  mass_st_lam=self.rho_Fe*2*pi*(R+0.5*self.h_yr)*l*self.h_yr                                    # mass of rotor yoke steel  
+  W				=g1*sin(phi)*(mass_st_lam+(V_Cusr*self.rho_Copper)+M_Fert)/N_r  # weight of rotor cylinder
   
   Numer=R**3*((0.25*(sin(theta_r)-(theta_r*cos(theta_r)))/(sin(theta_r))**2)-(0.5/sin(theta_r))+(0.5/theta_r))
   Pov=((theta_r/(sin(theta_r))**2)+1/tan(theta_r))*((0.25*R/A_r)+(0.25*R**3/I_r))
@@ -569,15 +587,15 @@ class EESG(Component):
   self.TC2=R**2*l
   self.TC3=R_st**2*l
  
-  cost_rotor		= C_Fes*((N_r*(R_1-self.R_o)*a_r*rho))+(mass_st_lam+M_Fert)*C_Fe+V_Cusr*8900*C_Cu
-  mass_rotor		= mass_st_lam+(N_r*(R_1-self.R_o)*a_r*rho)+M_Fert+V_Cusr*8900
+  cost_rotor		= self.C_Fes*((N_r*(R_1-self.R_o)*a_r*self.rho_Fes))+(mass_st_lam+M_Fert)*self.C_Fe+V_Cusr*self.rho_Copper*self.C_Cu
+  mass_rotor		= mass_st_lam+(N_r*(R_1-self.R_o)*a_r*self.rho_Fes)+M_Fert+V_Cusr*self.rho_Copper
  
  
   
-  mass_st_lam_s= M_Fest+pi*l*7700*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2) 
-  W_is			=g1*sin(phi)*(rho*l*self.d_s**2*0.5) # weight of rotor cylinder                               # length of rotor arm beam at which self-weight acts
-  W_iis     =g1*sin(phi)*(V_Cuss*8900+mass_st_lam_s)/2/N_st
-  w_s         =rho*g1*sin(phi)*a_s*N_st
+  mass_st_lam_s= M_Fest+pi*l*self.rho_Fe*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2) 
+  W_is			=g1*sin(phi)*(self.rho_Fes*l*self.d_s**2*0.5) # weight of rotor cylinder                               # length of rotor arm beam at which self-weight acts
+  W_iis     =g1*sin(phi)*(V_Cuss*self.rho_Copper+mass_st_lam_s)/2/N_st
+  w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st
   
   #stator structure
   
@@ -606,10 +624,10 @@ class EESG(Component):
   
   
   
-  mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*rho)
-  mass_stator		= mass_stru_steel+mass_st_lam_s+V_Cuss*8900
+  mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*self.rho_Fes)
+  mass_stator		= mass_stru_steel+mass_st_lam_s+V_Cuss*self.rho_Copper
  
-  cost_stator =	C_Fes*mass_stru_steel+C_Fe*mass_st_lam_s+V_Cuss*8900*C_Cu  
+  cost_stator =	self.C_Fes*mass_stru_steel+self.C_Fe*mass_st_lam_s+V_Cuss*self.rho_Copper*self.C_Cu  
     
   self.Mass = mass_rotor+mass_stator
 
@@ -618,11 +636,11 @@ class EESG(Component):
   
   
   Stator_arms=mass_stru_steel
-  Rotor_arms=(N_r*(R_1-self.R_o)*a_r*rho)
+  Rotor_arms=(N_r*(R_1-self.R_o)*a_r*self.rho_Fes)
   
 
   self.Arms=Stator_arms+Rotor_arms
-  self.Iron=M_Fest+7700*pi*l*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2)+M_Fert+(2*pi*self.t*l*(R+0.5*self.h_yr)*7700)
+  self.Iron=M_Fest+self.rho_Fe*pi*l*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2)+M_Fert+(2*pi*self.t*l*(R+0.5*self.h_yr)*self.rho_Fe)
   self.Copper=M_Cus
   
   #print (V_Cuss*8900+M_Fest)*g1,(V_Cusr*8900+M_Fert)*g1,R
@@ -661,12 +679,16 @@ class Drive_EESG(Assembly):
 	EESG_t_wr =Float(0.0, iotype='in', desc='Rotor arm thickness')
 	EESG_t_ws =Float(0.0, iotype='in', desc='Stator arm thickness')
 	EESG_R_o =Float(0.0, iotype='in', desc='Main shaft radius')
-	Stator_radial=Float(0.01, iotype='out', desc='Rotor radial deflection')
- 	Stator_axial=Float(0.01, iotype='out', desc='Stator Axial deflection')
- 	Stator_circum=Float(0.01, iotype='out', desc='Rotor radial deflection')
- 	Rotor_radial=Float(0.01, iotype='out', desc='Generator efficiency')
- 	Rotor_axial=Float(0.01, iotype='out', desc='Rotor Axial deflection')
- 	Rotor_circum=Float(0.01, iotype='out', desc='Rotor circumferential deflection')
+	C_Cu=Float( iotype='in', desc='Specific cost of copper')
+	C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+
+	
+	rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+	rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+
+
   
 	
 	def __init__(self,Optimiser='',Objective_function=''):
@@ -704,6 +726,14 @@ class Drive_EESG(Assembly):
 		self.connect('EESG.l_s','l_s')
 		self.connect('EESG.I','I')
 		self.connect('EESG.cm','cm')
+		
+		self.connect('C_Fe','EESG.C_Fe')
+		self.connect('C_Fes','EESG.C_Fes')
+		self.connect('C_Cu','EESG.C_Cu')
+		
+		self.connect('rho_Fe','EESG.rho_Fe')
+		self.connect('rho_Fes','EESG.rho_Fes')
+		self.connect('rho_Copper','EESG.rho_Copper')
 		
 		
 		Opt1=globals()[self.Optimiser]
@@ -818,9 +848,19 @@ def optim_EESG():
 	opt_problem.EESG_d_s= 0.4
 	opt_problem.EESG_t_wr =0.14
 	opt_problem.EESG_t_ws =0.07
-	opt_problem.EESG_R_o =0.43      #10MW: 0.523950817,#5MW: 0.43, #3MW:0.363882632 #1.5MW: 0.2775  0.75MW: 0.17625 
-#	
-#	
+	opt_problem.EESG_R_o =0.43      #10MW: 0.523950817,#5MW: 0.43, #3MW:0.363882632 #1.5MW: 0.2775  0.75MW: 0.17625
+	
+	# Costs 
+	opt_problem.C_Cu   =4.786                  
+	opt_problem.C_Fe	= 0.556                   
+	opt_problem.C_Fes =0.50139                   
+
+	
+	#Material properties
+	opt_problem.rho_Fe = 7700                 #Steel density
+	opt_problem.rho_Fes = 7850                 #Steel density
+	opt_problem.rho_Copper =8900                  # Kg/m3 copper density
+
 	
 #	opt_problem = Drive_EESG('CONMINdriver','Costs')
 #	opt_problem.Target_Efficiency = 93

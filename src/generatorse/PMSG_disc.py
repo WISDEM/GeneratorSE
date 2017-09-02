@@ -37,6 +37,7 @@ class PMSG(Component):
  h_m=Float(0.0, iotype='in', desc='magnet height')
  R_o=Float(0.0, iotype='in', desc='Shaft radius')
  
+ # Costs and material properties
  C_Cu=Float( iotype='in', desc='Specific cost of copper')
  C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
  C_Fes=Float(iotype='in', desc='Specific cost of structural steel')

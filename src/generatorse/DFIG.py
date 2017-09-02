@@ -29,9 +29,10 @@ class DFIG(Component):
 	S_Nmax =Float(iotype='in', desc='Stator slot height ')
 	I_0=Float(iotype='in', desc='Rotor current at no-load')
 	
-	K_Cu=Float(iotype='in', desc='Specific cost of copper')
-	K_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
-	K_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	# Costs and material properties
+	C_Cu=Float(iotype='in', desc='Specific cost of copper')
+	C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
 	rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
 	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
 	
@@ -159,9 +160,9 @@ class DFIG(Component):
 		R_R=self.R_R
 		Iron=self.Iron
 		
-		K_Cu=self.K_Cu
-		K_Fe=self.K_Fe
-		K_Fes=self.K_Fes
+		C_Cu=self.C_Cu
+		C_Fe=self.C_Fe
+		C_Fes=self.C_Fes
 		
 		rho_Fe= self.rho_Fe
 		rho_Copper=self.rho_Copper
@@ -333,12 +334,12 @@ class DFIG(Component):
 		M_Fery=V_Fery*self.rho_Fe
 		self.Iron=M_Fest+M_Fesy+M_Fert+M_Fery
 		M_gen=(self.Cu)+(self.Iron)
-		K_gen=self.Cu*self.K_Cu+(self.Iron)*self.K_Fe #%M_pm*K_pm;
+		K_gen=self.Cu*self.C_Cu+(self.Iron)*self.C_Fe #%M_pm*K_pm;
 		L_tot=self.l_s
 		self.Structure=0.0002*M_gen**2+0.6457*M_gen+645.24
 		self.Mass=M_gen+self.Structure
 		self.B_tsmax=self.B_g*tau_s/(self.b_t)
-		self.Costs=K_gen+self.K_Fes*self.Structure
+		self.Costs=K_gen+self.C_Fes*self.Structure
 		K_R=1.2
 		
 		# losses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -403,9 +404,9 @@ class Drive_DFIG(Assembly):
 	DFIG_P_rated=Float(iotype='in',desc='Rated power')
 	DFIG_N_rated=Float(iotype='in',desc='Rated speed')
 	
-	K_Cu=Float( iotype='in', desc='Specific cost of copper')
-	K_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
-	K_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	C_Cu=Float( iotype='in', desc='Specific cost of copper')
+	C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
 	
 	rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
 	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
@@ -433,9 +434,9 @@ class Drive_DFIG(Assembly):
 				self.connect('DFIG.l_s','l_s')
 				self.connect('DFIG.I','I')
 				self.connect('DFIG.cm','cm')
-				self.connect('K_Fe','DFIG.K_Fe')
-				self.connect('K_Fes','DFIG.K_Fes')
-				self.connect('K_Cu','DFIG.K_Cu')
+				self.connect('C_Fe','DFIG.C_Fe')
+				self.connect('C_Fes','DFIG.C_Fes')
+				self.connect('C_Cu','DFIG.C_Cu')
 				self.connect('rho_Fe','DFIG.rho_Fe')
 				self.connect('rho_Copper','DFIG.rho_Copper')
 				
@@ -502,9 +503,9 @@ def optim_DFIG():
 	opt_problem.DFIG_S_Nmax = -0.3  #Tesla
 	
 	# Specific costs
-	opt_problem.K_Cu   =4.786                  # Unit cost of Copper $/kg
-	opt_problem.K_Fe	= 0.556                    # Unit cost of Iron $/kg
-	opt_problem.K_Fes =0.50139                   # specific cost of structure
+	opt_problem.C_Cu   =4.786                  # Unit cost of Copper $/kg
+	opt_problem.C_Fe	= 0.556                    # Unit cost of Iron $/kg
+	opt_problem.C_Fes =0.50139                   # specific cost of structure
 	
 	#Material properties
 	opt_problem.rho_Fe = 7700                 #Steel density
