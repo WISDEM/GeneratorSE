@@ -17,14 +17,21 @@ class SCIG(Component):
  l_s = Float(0.0,iotype='in', desc='Stator core length l_s')
  h_s = Float(0.0,iotype='in', desc='Yoke height h_s')
  h_r = Float(0.0,iotype='in', desc='Rotor slot height')
- tau_p =Float(0.0,iotype='out', desc='Pole pitch self.tau_p')
  I_0 = Float(0.0,iotype='in', desc='No load current- Excitation')
  machine_rating=Float(0.0,iotype='in', desc='Machine rating')
  n_nom=Float(0.0,iotype='in', desc='Rated speed')
+ B_symax = Float(0.0,iotype='in', desc='Peak Yoke flux density B_ymax')
+ C_Cu=Float( iotype='in', desc='Specific cost of copper')
+ C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+ C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+ 
+ rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
+ rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+ 
  highSpeedSide_cm =Array(np.array([0.0, 0.0, 0.0]),iotype='in', desc=' high speed sidde COM [x, y, z]')
  highSpeedSide_length =Float(0.0,iotype='in', desc='high speed side length')
  Gearbox_efficiency=Float(0.0,iotype='in', desc='Gearbox efficiency')
- B_symax = Float(0.0,iotype='in', desc='Peak Yoke flux density B_ymax')
+ tau_p =Float(0.0,iotype='out', desc='Pole pitch self.tau_p')
  S_N = Float(0.0,iotype='out', desc='Slip')
  h_ys=Float(0.0,iotype='out', desc='stator back iron thickness')
  h_yr=Float(0.0,iotype='out', desc='rotor back iron thickness')
@@ -146,8 +153,13 @@ class SCIG(Component):
   L_s=self.L_s
   Copper=self.Copper
   Iron=self.Iron
-
- 
+  
+  C_Cu=self.C_Cu
+  C_Fe=self.C_Fe
+  C_Fes=self.C_Fes
+  
+  rho_Fe= self.rho_Fe
+  rho_Copper=self.rho_Copper
  
 
   from math import pi, cos, sqrt, radians, sin, exp, log10, log, floor, ceil, tan, atan
@@ -158,9 +170,6 @@ class SCIG(Component):
   sigma  			=21.5e3                # shear stress [chapter Design of Rotating Electrical Machines
   mu_0   			=pi*4e-7        				# permeability of free space
   cofi   			=0.9                 	# power factor
-  C_Cu   			=4.786                  # Unit cost of Copper 
-  C_Fe   			=0.556                    # Unit cost of steel used in magnetic circuit 
-  C_Fes   		=0.50139                   # specific cost of structural steel
   h_w    			= 0.005
   m      			=3                     # Number of phases
   
@@ -192,15 +201,14 @@ class SCIG(Component):
   
   self.r_r					=self.r_s-g             #rotor radius
   
-  #tau_s				=self.tau_p/(m*q1)        #slot pitch
-  
+ 
   self.tau_p=pi*dia/2/self.p
   
   self.S=2*m*self.p*self.q1  
-  #tau_s=self.tau_p/m/q1
+
   
   tau_s=self.tau_p/m/self.q1
-  #self.N_slots=pi*dia/tau_s
+
   
   N_slots_pp	=self.S/(m*self.p*2)
   
@@ -303,7 +311,7 @@ class SCIG(Component):
   J_b					= 6e+06
   K_i					= 0.864
   I_b					= 2*m*self.N_s*k_wd*I_srated/self.Q_r
-  #self.A_bar	= I_b/J_b
+
   
   R_rb				=rho_Cu*k_rm*(self.l_s)/(self.A_bar)
   
@@ -315,7 +323,7 @@ class SCIG(Component):
   D_er=(self.r_s*2-2*g)-0.003
   l_er=pi*(D_er-b)/self.Q_r
   
-  #R_re=rho_Cu*k_rm*D_er/(2*pi*self.p*A_er)
+
   R_re=rho_Cu*l_er/(2*A_er*(sin(pi*self.p/self.Q_r))**2)
   self.R_R=(R_rb+R_re)*4*m*(k_wd*self.N_s)**2/self.Q_r
   
@@ -369,17 +377,17 @@ class SCIG(Component):
   r_r=self.r_s-g
   V_Fert=pi*self.l_s*(r_r**2-(r_r-self.h_r)**2)-2*m*q2*self.p*self.b_r*self.h_r*self.l_s
   V_Fery=self.l_s*pi*((r_r-self.h_r)**2-(r_r-self.h_r-self.h_yr)**2)
-  self.Copper=(V_Cuss+V_Cusr)*8900
-  M_Fest=V_Fest*7700
-  M_Fesy=V_Fesy*7700
-  M_Fert=V_Fert*7700
-  M_Fery=V_Fery*7700
+  self.Copper=(V_Cuss+V_Cusr)*self.rho_Copper
+  M_Fest=V_Fest*self.rho_Fe
+  M_Fesy=V_Fesy*self.rho_Fe
+  M_Fert=V_Fert*self.rho_Fe
+  M_Fery=V_Fery*self.rho_Fe
   self.Iron=M_Fest+M_Fesy+M_Fert+M_Fery
   self.M_gen=(self.Copper+self.Iron)
   L_tot=self.l_s
   self.M_Str=0.0001*self.M_gen**2+0.8841*self.M_gen-132.5
-  K_gen=self.Copper*C_Cu+(self.Iron)*C_Fe #%M_pm*K_pm;
-  Cost_str=C_Fes*self.M_Str
+  K_gen=self.Copper*self.C_Cu+(self.Iron)*self.C_Fe #%M_pm*K_pm;
+  Cost_str=self.C_Fes*self.M_Str
   
   self.Mass=self.M_gen+self.M_Str
   
@@ -449,6 +457,13 @@ class Drive_SCIG(Assembly):
 	SCIG_P_rated=Float(0.0,iotype='in',desc='Rated power')
 	SCIG_N_rated=Float(0.0,iotype='in',desc='Rated speed')
 	
+	C_Cu=Float( iotype='in', desc='Specific cost of copper')
+	C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	
+	rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+	
 	def __init__(self,Optimiser='',Objective_function=''):
 		
 				super(Drive_SCIG,self).__init__()
@@ -471,6 +486,15 @@ class Drive_SCIG(Assembly):
 				self.connect('SCIG.l_s','l_s')
 				self.connect('SCIG.I','I')
 				self.connect('SCIG.cm','cm')
+				
+				self.connect('C_Fe','SCIG.C_Fe')
+				self.connect('C_Fes','SCIG.C_Fes')
+				self.connect('C_Cu','SCIG.C_Cu')
+				self.connect('rho_Fe','SCIG.rho_Fe')
+				self.connect('rho_Copper','SCIG.rho_Copper')
+				
+				
+				
 				self.Optimiser=Optimiser
 				self.Objective_function=Objective_function
 				Opt1=globals()[self.Optimiser]
@@ -517,6 +541,17 @@ def optim_SCIG():
 	opt_problem.SCIG_P_rated=5e6
 	opt_problem.Gearbox_efficiency=0.955
 	opt_problem.SCIG_N_rated=1200
+	
+	# Specific costs
+	opt_problem.C_Cu   =4.786                  # Unit cost of Copper $/kg
+	opt_problem.C_Fe	= 0.556                    # Unit cost of Iron $/kg
+	opt_problem.C_Fes =0.50139                   # specific cost of structure
+	
+	#Material properties
+	opt_problem.rho_Fe = 7700                 #Steel density
+	opt_problem.rho_Copper =8900                  # Kg/m3 copper density
+	
+	
 	opt_problem.run()
 	
 	
