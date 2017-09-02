@@ -74,7 +74,7 @@ class DFIG(Component):
 	K_rad=Float(0.0, iotype='out', desc='Aspect ratio')
 	Mass=Float(0.01, iotype='out', desc='Total mass')
 	cm  =Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='COM [x,y,z]')
-	mass=Float(0.01, iotype='out', desc='Generator mass')
+	
 	I = Array(np.array([0.0, 0.0, 0.0]), iotype='out', desc=' moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
 	gen_eff=Float(0.01, iotype='out', desc='Generator efficiency')
 	Overall_eff=Float(0.01, iotype='out', desc='Overall drivetrain efficiency')
@@ -356,14 +356,15 @@ class DFIG(Component):
 		self.TC2=self.r_s**2*self.l_s
 
 		r_out=d_se*0.5
-		self.I[0]   = (0.5*self.mass*r_out**2)
-		self.I[1]   = (0.25*self.mass*r_out**2+(1/12)*self.mass*self.l_s**2) 
+		self.I[0]   = (0.5*self.Mass*r_out**2)
+		self.I[1]   = (0.25*self.Mass*r_out**2+(1/12)*self.Mass*self.l_s**2) 
 		self.I[2]   = self.I[1]
 		cm[0]  = self.highSpeedSide_cm[0] + self.highSpeedSide_length/2. + self.l_s/2.
 		cm[1]  = self.highSpeedSide_cm[1]
 		cm[2]  = self.highSpeedSide_cm[2]
+		
 
-
+		
 class Drive_DFIG(Assembly):
 	Eta_target=Float(iotype='in', desc='Target drivetrain efficiency')
 	Gearbox_efficiency=Float(iotype='in', desc='Gearbox efficiency')
@@ -372,7 +373,7 @@ class Drive_DFIG(Assembly):
 	Objective_function=Str(iotype='in')
 	Optimiser=Str(desc = 'Optimiser', iotype = 'in')
 	L=Float(iotype='out')
-	mass=Float(iotype='out')
+	Mass=Float(iotype='out')
 	Efficiency=Float(iotype='out')
 	r_s=Float(iotype='out', desc='Optimised radius')
 	l_s=Float(iotype='out', desc='Optimised generator length')
@@ -385,8 +386,8 @@ class Drive_DFIG(Assembly):
 	DFIG_S_Nmax =Float(iotype='in', desc='Slip ')
 	DFIG_B_symax = Float(iotype='in', desc='Peak Yoke flux density B_ymax')
 	DFIG_I_0= Float(iotype='in', desc='Rotor current at no-load')
-	P_rated=Float(iotype='in',desc='Rated power')
-	N_rated=Float(iotype='in',desc='Rated speed')
+	DFIG_P_rated=Float(iotype='in',desc='Rated power')
+	DFIG_N_rated=Float(iotype='in',desc='Rated speed')
 	
 	def __init__(self,Optimiser='',Objective_function=''):
 		
@@ -400,12 +401,12 @@ class Drive_DFIG(Assembly):
 				self.connect('DFIG_B_symax','DFIG.B_symax')
 				self.connect('DFIG_S_Nmax','DFIG.S_Nmax')
 				self.connect('DFIG_I_0','DFIG.I_0')
-				self.connect('P_rated','DFIG.machine_rating')
-				self.connect('N_rated','DFIG.n_nom')
+				self.connect('DFIG_P_rated','DFIG.machine_rating')
+				self.connect('DFIG_N_rated','DFIG.n_nom')
 				self.connect('Gearbox_efficiency','DFIG.Gearbox_efficiency')
 				self.connect('highSpeedSide_cm','DFIG.highSpeedSide_cm')
 				self.connect('highSpeedSide_length','DFIG.highSpeedSide_length')
-				self.connect('DFIG.mass','mass')
+				self.connect('DFIG.Mass','Mass')
 				self.connect('DFIG.Overall_eff','Efficiency')
 				self.connect('DFIG.r_s','r_s')
 				self.connect('DFIG.l_s','l_s')
@@ -426,7 +427,7 @@ class Drive_DFIG(Assembly):
 				self.driver.add_parameter('DFIG_S_Nmax', low=-0.3, high=-0.1)
 				self.driver.add_parameter('DFIG_I_0', low=5, high=100)
 				self.driver.iprint=1
-				self.driver.add_constraint('DFIG.Overall_eff>=Eta_target')		  			#constraint 1
+				self.driver.add_constraint('DFIG.Overall_eff>=Eta_target')		  			      #constraint 1
 				self.driver.add_constraint('DFIG.E_p>500.0')															  #constraint 2
 				self.driver.add_constraint('DFIG.E_p<5000.0')															  #constraint 3
 				self.driver.add_constraint('DFIG.TC1<DFIG.TC2')															#constraint 4
@@ -450,8 +451,8 @@ class Drive_DFIG(Assembly):
 def optim_DFIG():
 	opt_problem = Drive_DFIG('CONMINdriver','Costs')
 	opt_problem.Eta_target=93
-#	opt_problem.P_rated=3e6
-#	opt_problem.N_rated=1200
+#	opt_problem.DFIG_P_rated=3e6
+#	opt_problem.DFIG_N_rated=1200
 #	opt_problem.Gearbox_efficiency=0.955
 #	opt_problem.DFIG_r_s= 0.58 #meter
 #	opt_problem.DFIG_l_s= 0.6 #meter
@@ -461,8 +462,8 @@ def optim_DFIG():
 #	opt_problem.DFIG_B_symax = 1.3 #Tesla
 #	opt_problem.DFIG_S_Nmax = -0.2  #Tesla
 	# initial design values for a DFIG designed for a 5MW turbine
-	opt_problem.P_rated=5e6
-	opt_problem.N_rated=1200
+	opt_problem.DFIG_P_rated=5e6
+	opt_problem.DFIG_N_rated=1200
 	opt_problem.Gearbox_efficiency=0.955
 	opt_problem.DFIG_r_s= 0.65 #meter
 	opt_problem.DFIG_l_s= 0.6 #meter
@@ -479,7 +480,7 @@ def optim_DFIG():
 				'Units':['MW','','m','m','-','-','mm','-','mm','','mm','','mm','mm','-','mm','mm','mm','-','mm','T','T','T','T','T','T','-','Hz','V','A','','turns','mm^2','A/mm^2','kA/m','ohms','p.u','p.u','turns','mm^2','A','','A/mm^2','ohms','p.u','%','%','Tons','Tons','Tons','Tons','$1000']}
 	df=pandas.DataFrame(raw_data, columns=['Parameters','Values','Limit','Units'])
 	print(df)
-	df.to_excel('DFIG_'+str(opt_problem.P_rated/1e6)+'MW.xlsx')
+	df.to_excel('DFIG_'+str(opt_problem.DFIG_P_rated/1e6)+'MW.xlsx')
 
 		
 if __name__=="__main__":

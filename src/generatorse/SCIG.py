@@ -267,7 +267,7 @@ class SCIG(Component):
   	self.D_ratio_UL =1.24
   
   
-  f = self.n_nom*self.p/60
+  
   if (2*self.r_s>2):
       K_fills=0.65
   else:
@@ -433,7 +433,7 @@ class Drive_SCIG(Assembly):
 	Objective_function=Str(iotype='in')
 	Optimiser=Str(desc = 'Optimiser', iotype = 'in')
 	L=Float(0.0,iotype='out')
-	mass=Float(0.0,iotype='out')
+	Mass=Float(0.0,iotype='out')
 	Efficiency=Float(0.0,iotype='out')
 	r_s=Float(0.0,iotype='out', desc='Optimised radius')
 	l_s=Float(0.0,iotype='out', desc='Optimised generator length')
@@ -446,8 +446,8 @@ class Drive_SCIG(Assembly):
 	SCIG_S_N =Float(0.0,iotype='in', desc='Slip ')
 	SCIG_B_symax = Float(0.0,iotype='in', desc='Peak Yoke flux density B_ymax')
 	SCIG_I_0= Float(0.0,iotype='in', desc='Rotor current at no-load')
-	P_rated=Float(0.0,iotype='in',desc='Rated power')
-	N_rated=Float(0.0,iotype='in',desc='Rated speed')
+	SCIG_P_rated=Float(0.0,iotype='in',desc='Rated power')
+	SCIG_N_rated=Float(0.0,iotype='in',desc='Rated speed')
 	
 	def __init__(self,Optimiser='',Objective_function=''):
 		
@@ -460,12 +460,12 @@ class Drive_SCIG(Assembly):
 				self.connect('SCIG_h_r','SCIG.h_r')
 				self.connect('SCIG_B_symax','SCIG.B_symax')
 				self.connect('SCIG_I_0','SCIG.I_0')
-				self.connect('P_rated','SCIG.machine_rating')
-				self.connect('N_rated','SCIG.n_nom')
+				self.connect('SCIG_P_rated','SCIG.machine_rating')
+				self.connect('SCIG_N_rated','SCIG.n_nom')
 				self.connect('Gearbox_efficiency','SCIG.Gearbox_efficiency')
 				self.connect('highSpeedSide_cm','SCIG.highSpeedSide_cm')
 				self.connect('highSpeedSide_length','SCIG.highSpeedSide_length')
-				self.connect('SCIG.Mass','mass')
+				self.connect('SCIG.Mass','Mass')
 				self.connect('SCIG.Overall_eff','Efficiency')
 				self.connect('SCIG.r_s','r_s')
 				self.connect('SCIG.l_s','l_s')
@@ -485,9 +485,9 @@ class Drive_SCIG(Assembly):
 				self.driver.add_parameter('SCIG_B_symax', low=1, high=2)
 				self.driver.add_parameter('SCIG_I_0', low=5, high=200)
 				self.driver.iprint=1
-				self.driver.add_constraint('SCIG.Overall_eff>=Eta_target')		  			#constraint 1
+				self.driver.add_constraint('SCIG.Overall_eff>=Eta_target')		  						#constraint 1
 				self.driver.add_constraint('SCIG.E_p>500.0')															  #constraint 2
-				self.driver.add_constraint('SCIG.E_p<5000.0')															#constraint 3
+				self.driver.add_constraint('SCIG.E_p<5000.0')																#constraint 3
 				self.driver.add_constraint('SCIG.TC1<SCIG.TC2')															#constraint 4
 				self.driver.add_constraint('SCIG.B_g>=0.7')																	#constraint 5
 				self.driver.add_constraint('SCIG.B_g<=1.2')																	#constraint 6
@@ -497,14 +497,12 @@ class Drive_SCIG(Assembly):
 				self.driver.add_constraint('SCIG.A_1<60000')  															#constraint 10
 				self.driver.add_constraint('SCIG.J_s<=6')											        			#constraint 11
 				self.driver.add_constraint('SCIG.J_r<=6')  																	#constraint 12
-				self.driver.add_constraint('SCIG.f>=60')																		#constraint 13
-				self.driver.add_constraint('SCIG.f<=120')																		#constraint 14
-				self.driver.add_constraint('SCIG.K_rad>=SCIG.K_rad_LL')  			#constraint 15 #boldea Chapter 3
-				self.driver.add_constraint('SCIG.K_rad<=SCIG.K_rad_UL')				#constraint 16
-				self.driver.add_constraint('SCIG.D_ratio>=SCIG.D_ratio_LL')  							  #constraint 17 #boldea Chapter 3
-				self.driver.add_constraint('SCIG.D_ratio<=SCIG.D_ratio_UL')  								#constraint 18
-				self.driver.add_constraint('SCIG.Slot_aspect_ratio1>=4')										#constraint 19
-				self.driver.add_constraint('SCIG.Slot_aspect_ratio1<=10')										#constraint 20
+				self.driver.add_constraint('SCIG.K_rad>=SCIG.K_rad_LL')  										#constraint 13 #boldea Chapter 3
+				self.driver.add_constraint('SCIG.K_rad<=SCIG.K_rad_UL')											#constraint 14
+				self.driver.add_constraint('SCIG.D_ratio>=SCIG.D_ratio_LL')  							  #constraint 15 #boldea Chapter 3
+				self.driver.add_constraint('SCIG.D_ratio<=SCIG.D_ratio_UL')  								#constraint 16
+				self.driver.add_constraint('SCIG.Slot_aspect_ratio1>=4')										#constraint 17
+				self.driver.add_constraint('SCIG.Slot_aspect_ratio1<=10')										#constraint 18
 				     	       	 							
 def optim_SCIG():
 	opt_problem = Drive_SCIG('CONMINdriver','Costs')
@@ -516,15 +514,15 @@ def optim_SCIG():
 	opt_problem.SCIG_I_0 = 140   #Ampere
 	opt_problem.SCIG_B_symax = 1.4  #Tesla
 	opt_problem.Eta_target=93
-	opt_problem.P_rated=5e6
+	opt_problem.SCIG_P_rated=5e6
 	opt_problem.Gearbox_efficiency=0.955
-	opt_problem.N_rated=1200
+	opt_problem.SCIG_N_rated=1200
 	opt_problem.run()
 	
 	
 	
 	# Initial design variables for a SCIG designed for a 10MW turbine
-#	opt_problem.P_rated=10e6
+#	opt_problem.SCIG_P_rated=10e6
 #	opt_problem.SCIG_r_s= 0.6 #meter
 #	opt_problem.SCIG_l_s= 1.8 #meter
 #	opt_problem.SCIG_h_s = 0.1 #meter
@@ -533,15 +531,15 @@ def optim_SCIG():
 #	opt_problem.SCIG_B_symax = 1.3  #Tesla
 #	opt_problem.Eta_target=93
 #	opt_problem.Gearbox_efficiency=0.955
-#	opt_problem.N_rated=1200
+#	opt_problem.SCIG_N_rated=1200
 #	opt_problem.run()
-	raw_data = {'Parameters': ['Rating','Objective function',"Air gap diameter", "Stator length","Lambda ratio","Diameter ratio", "Pole pitch(tau_p)", " Number of Stator Slots","Stator slot height(h_s)","Stator slot width(b_s)","Stator Slot aspect ratio", "Stator tooth width(b_t)", "Stator yoke height(h_ys)","Rotor slots", "Rotor slot height(h_r)", "Rotor slot width(b_r)","Rotor tooth width(b_tr)","Rotor yoke height(h_yr)","Rotor Slot_aspect_ratio","Peak air gap flux density","Peak air gap flux density fundamental","Peak stator yoke flux density","Peak rotor yoke flux density","Peak Stator tooth flux density","Peak Rotor tooth flux density","Pole pairs", "Generator output frequency", "Generator output phase voltage", "Generator Output phase current","Optimal Slip","Stator Turns","Conductor cross-section","Stator Current density","Specific current loading","Stator resistance", "Excited magnetic inductance","Magnetization current","Conductor cross-section"," Rotor Current density","Rotor resitance", "Generator Efficiency","Overall drivetrain Efficiency","Copper mass","Iron Mass", "Structural mass","Total Mass","Total Material Cost"],
+	raw_data = {'Parameters': ['Rating','Objective function',"Air gap diameter", "Stator length","Lambda ratio","Diameter ratio", "Pole pitch(tau_p)", " Number of Stator Slots","Stator slot height(h_s)","Stator slot width(b_s)","Stator Slot aspect ratio", "Stator tooth width(b_t)", "Stator yoke height(h_ys)","Rotor slots", "Rotor slot height(h_r)", "Rotor slot width(b_r)","Rotor tooth width(b_tr)","Rotor yoke height(h_yr)","Rotor Slot_aspect_ratio","Peak air gap flux density","Peak air gap flux density fundamental","Peak stator yoke flux density","Peak rotor yoke flux density","Peak Stator tooth flux density","Peak Rotor tooth flux density","Pole pairs", "Generator output frequency", "Generator output phase voltage", "Generator Output phase current","Slip","Stator Turns","Conductor cross-section","Stator Current density","Specific current loading","Stator resistance", "Excited magnetic inductance","Magnetization current","Conductor cross-section"," Rotor Current density","Rotor resitance", "Generator Efficiency","Overall drivetrain Efficiency","Copper mass","Iron Mass", "Structural mass","Total Mass","Total Material Cost"],
 		           'Values': [opt_problem.SCIG.machine_rating/1e6,opt_problem.Objective_function,2*opt_problem.SCIG.r_s,opt_problem.SCIG.l_s,opt_problem.SCIG.K_rad,opt_problem.SCIG.D_ratio,opt_problem.SCIG.tau_p*1000,opt_problem.SCIG.S,opt_problem.SCIG.h_s*1000,opt_problem.SCIG.b_s*1000,opt_problem.SCIG.Slot_aspect_ratio1,opt_problem.SCIG.b_t*1000,opt_problem.SCIG.h_ys*1000,opt_problem.SCIG.Q_r,opt_problem.SCIG.h_r*1000,opt_problem.SCIG.b_r*1000,opt_problem.SCIG.b_tr*1000,opt_problem.SCIG.h_yr*1000,opt_problem.SCIG.Slot_aspect_ratio2,opt_problem.SCIG.B_g,opt_problem.SCIG.B_g1,opt_problem.SCIG.B_symax,opt_problem.SCIG.B_rymax,opt_problem.SCIG.B_tsmax,opt_problem.SCIG.B_trmax,opt_problem.SCIG.p,opt_problem.SCIG.f,opt_problem.SCIG.E_p,opt_problem.SCIG.I_s,opt_problem.SCIG.S_N,opt_problem.SCIG.N_s,opt_problem.SCIG.A_Cuscalc,opt_problem.SCIG.J_s,opt_problem.SCIG.A_1/1000,opt_problem.SCIG.R_s,opt_problem.SCIG.L_sm,opt_problem.SCIG.I_0,opt_problem.SCIG.A_bar*1e6,opt_problem.SCIG.J_r,opt_problem.SCIG.R_R,opt_problem.SCIG.gen_eff,opt_problem.SCIG.Overall_eff,opt_problem.SCIG.Copper/1000,opt_problem.SCIG.Iron/1000,opt_problem.SCIG.M_Str/1000,opt_problem.SCIG.Mass/1000,opt_problem.SCIG.Costs/1000],
 		           	'Limit': ['','','','',"("+str(opt_problem.SCIG.K_rad_LL)+"-"+str(opt_problem.SCIG.K_rad_UL)+")","("+str(opt_problem.SCIG.D_ratio_LL)+"-"+str(opt_problem.SCIG.D_ratio_UL)+")",'','','','','(4-10)','','','','','','','','(4-10)','(0.7-1.2)','','2','2','2','2','','(10-60)','(500-5000)','','(-30% to -0.2%)','','','(3-6)','<60','','','','','','','',opt_problem.Eta_target,'','','','',''],
 		           	'Units':['MW','','m','m','-','-','mm','-','mm','mm','-','mm','mm','-','mm','mm','mm','mm','','T','T','T','T','T','T','-','Hz','V','A','%','turns','mm^2','A/mm^2','kA/m','ohms','p.u','A','mm^2','A/mm^2','ohms','%','%','Tons','Tons','Tons','Tons','$1000']} 
 	df=pandas.DataFrame(raw_data, columns=['Parameters','Values','Limit','Units'])
 	print(df)
-	df.to_excel('SCIG_'+str(opt_problem.P_rated/1e6)+'_MW.xlsx')
+	df.to_excel('SCIG_'+str(opt_problem.SCIG_P_rated/1e6)+'_MW.xlsx')
 
 
 		

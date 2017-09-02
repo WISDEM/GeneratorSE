@@ -1,6 +1,6 @@
 .. _documentation-label:
 
-.. currentmodule:: GeneratorSE
+.. currentmodule:: drivese.drive
 
 Documentation
 --------------
@@ -10,12 +10,12 @@ Documentation
     An HTML version of this documentation is available which is better formatted for reading the code documentation and contains hyperlinks to the source code.
 
 
-Sizing models for the different generator modules are described along with mass, cost and efficiency as objective functions .
+Turbine component sizing models for hub and drivetrain components are described along with mass-cost models for the full set of turbine components from the rotor to tower and foundation.
 
-Documentation for GeneratorSE
+Documentation for DriveSE
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following inputs and outputs are defined for GeneratorSE using the three-point suspension configuration:
+The following inputs and outputs are defined for DriveSE using the three-point suspension configuration:
 
 .. literalinclude:: ../src/drivese/drive.py
     :language: python
