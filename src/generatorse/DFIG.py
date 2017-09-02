@@ -28,63 +28,72 @@ class DFIG(Component):
 	Gearbox_efficiency=Float(iotype='in', desc='Gearbox efficiency')
 	S_Nmax =Float(iotype='in', desc='Stator slot height ')
 	I_0=Float(iotype='in', desc='Rotor current at no-load')
-	tau_p=Float(0.460, iotype='out', desc='Pole pitch')
+	
+	K_Cu=Float(iotype='in', desc='Specific cost of copper')
+	K_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	K_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+	
+	tau_p=Float(iotype='out', desc='Pole pitch')
 	p=Float(0, iotype='out', desc='Pole pairs')
-	B_g = Float(0.75, iotype='out', desc='Peak air gap flux density B_g')
-	q1   =Float(5, iotype='out', desc='Slots per pole per phase')
-	h_ys=Float(0.05, iotype='out', desc=' stator yoke height')
-	h_yr=Float(0.9, iotype='out', desc=' rotor yoke height')
-	B_g = Float(0.7, iotype='out', desc='Peak air gap flux density B_g')
-	B_g1 = Float(0.7, iotype='out', desc='air gap flux density fundamental ')
-	B_rymax = Float(0.7, iotype='out', desc='maximum flux density in rotor yoke')
-	B_tsmax  =Float(0.9, iotype='out', desc='maximum tooth flux density in stator')
-	B_trmax = Float(0.9, iotype='out', desc='maximum tooth flux density in rotor')
-	N_slots = Float(0.9, iotype='out', desc='Stator slots')
-	Q_r = Float(0.9, iotype='out', desc='Rotor slots')
+	B_g = Float(iotype='out', desc='Peak air gap flux density B_g')
+	q1   =Float(iotype='out', desc='Slots per pole per phase')
+	h_ys=Float(iotype='out', desc=' stator yoke height')
+	h_yr=Float(iotype='out', desc=' rotor yoke height')
+	B_g = Float(iotype='out', desc='Peak air gap flux density B_g')
+	B_g1 = Float(iotype='out', desc='air gap flux density fundamental ')
+	B_rymax = Float(iotype='out', desc='maximum flux density in rotor yoke')
+	B_tsmax  =Float(iotype='out', desc='maximum tooth flux density in stator')
+	B_trmax = Float(iotype='out', desc='maximum tooth flux density in rotor')
+	N_slots = Float(iotype='out', desc='Stator slots')
+	Q_r = Float(iotype='out', desc='Rotor slots')
 
 	N_s= Float(0, iotype='out', desc='Stator turns')
-	N_r= Float(80, iotype='out', desc='Rotor turns')
-	M_actual=Float(0.0, iotype='out', desc='Actual mass')
-	p=Float(0.0, iotype='out', desc='No of pole pairs')
-	f=Float(0.0, iotype='out', desc='Output frequency')
-	E_p=Float(0.0, iotype='out', desc='Stator phase voltage')
-	I_s=Float(0.0, iotype='out', desc='Generator output phase current')
-	b_s=Float(0.0, iotype='out', desc='stator slot width')
-	b_r=Float(0.0, iotype='out', desc='rotor slot width')
-	b_t=Float(0.0, iotype='out', desc='stator tooth width')
-	b_trmin=Float(0.0, iotype='out', desc='minimum tooth width')
-	b_tr=Float(0.0, iotype='out', desc='rotor tooth width')
-	gen_eff=Float(0.01, iotype='out', desc='Generator efficiency')
-	Structure=Float(0.01, iotype='out', desc='Structural mass')
-	Active=Float(0.01, iotype='out', desc='Active Mass')
-	TC1=Float(0.01, iotype='out', desc='Torque constraint')
-	TC2=Float(0.01, iotype='out', desc='Torque constraint')
-	A_1=Float(0.01, iotype='out', desc='Specific current loading')
-	J_s=Float(0.01, iotype='out', desc='Stator winding current density')
-	J_r=Float(0.01, iotype='out', desc='Rotor winding current density')
-	K_rad=Float(0.01, iotype='out', desc='Stack length ratio')
-	D_ratio=Float(0.01, iotype='out', desc='Stator diameter ratio')
-	A_Cuscalc=Float(0.01, iotype='out', desc='Stator conductor cross-section')
-	A_Curcalc=Float(0.01, iotype='out', desc='Rotor conductor cross-section')
-	Current_ratio=Float(0.01, iotype='out', desc='Rotor current ratio')
-	Slot_aspect_ratio1=Float(0.01, iotype='out', desc='Slot apsect ratio')
-	Slot_aspect_ratio2=Float(0.01, iotype='out', desc='Slot apsect ratio')
-	Costs= Float(0.0, iotype='out', desc='Total cost')
-	Losses=Float(0.0, iotype='out', desc='Total power Loss')
-	K_rad=Float(0.0, iotype='out', desc='Aspect ratio')
-	Mass=Float(0.01, iotype='out', desc='Total mass')
+	N_r= Float(iotype='out', desc='Rotor turns')
+	M_actual=Float( iotype='out', desc='Actual mass')
+	p=Float( iotype='out', desc='No of pole pairs')
+	f=Float( iotype='out', desc='Output frequency')
+	E_p=Float( iotype='out', desc='Stator phase voltage')
+	I_s=Float( iotype='out', desc='Generator output phase current')
+	b_s=Float( iotype='out', desc='stator slot width')
+	b_r=Float( iotype='out', desc='rotor slot width')
+	b_t=Float( iotype='out', desc='stator tooth width')
+	b_trmin=Float( iotype='out', desc='minimum tooth width')
+	b_tr=Float( iotype='out', desc='rotor tooth width')
+	gen_eff=Float(iotype='out', desc='Generator efficiency')
+	Structure=Float(iotype='out', desc='Structural mass')
+	Active=Float(iotype='out', desc='Active Mass')
+	TC1=Float(iotype='out', desc='Torque constraint')
+	TC2=Float(iotype='out', desc='Torque constraint')
+	A_1=Float(iotype='out', desc='Specific current loading')
+	J_s=Float(iotype='out', desc='Stator winding current density')
+	J_r=Float(iotype='out', desc='Rotor winding current density')
+	K_rad=Float(iotype='out', desc='Stack length ratio')
+	D_ratio=Float(iotype='out', desc='Stator diameter ratio')
+	A_Cuscalc=Float(iotype='out', desc='Stator conductor cross-section')
+	A_Curcalc=Float(iotype='out', desc='Rotor conductor cross-section')
+	Current_ratio=Float(iotype='out', desc='Rotor current ratio')
+	Slot_aspect_ratio1=Float(iotype='out', desc='Slot apsect ratio')
+	Slot_aspect_ratio2=Float(iotype='out', desc='Slot apsect ratio')
+	Costs= Float( iotype='out', desc='Total cost')
+	Losses=Float( iotype='out', desc='Total power Loss')
+	K_rad=Float( iotype='out', desc='Aspect ratio')
+	Mass=Float(iotype='out', desc='Total mass')
 	cm  =Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='COM [x,y,z]')
 	
 	I = Array(np.array([0.0, 0.0, 0.0]), iotype='out', desc=' moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
-	gen_eff=Float(0.01, iotype='out', desc='Generator efficiency')
-	Overall_eff=Float(0.01, iotype='out', desc='Overall drivetrain efficiency')
-	R_s=Float(0.01, iotype='out', desc='Stator resistance')
-	L_sm=Float(0.0, iotype='out', desc='mutual inductance')
-	R_R=Float(0.0, iotype='out', desc='Rotor resistance')
-	L_r=Float(0.0, iotype='out', desc='Rotor impedance')
-	L_s=Float(0.0, iotype='out', desc='Stator synchronising inductance')
-	Cu=Float(0.01, iotype='out', desc='Copper mass')
-	Iron=Float(0.01, iotype='out', desc='Iron mass')
+	gen_eff=Float(iotype='out', desc='Generator efficiency')
+	Overall_eff=Float(iotype='out', desc='Overall drivetrain efficiency')
+	R_s=Float(iotype='out', desc='Stator resistance')
+	L_sm=Float( iotype='out', desc='mutual inductance')
+	R_R=Float( iotype='out', desc='Rotor resistance')
+	L_r=Float( iotype='out', desc='Rotor impedance')
+	L_s=Float( iotype='out', desc='Stator synchronising inductance')
+	Cu=Float(iotype='out', desc='Copper mass')
+	Iron=Float(iotype='out', desc='Iron mass')
+	
+
 	
 	def execute(self):
 		r_s = self.r_s
@@ -150,18 +159,23 @@ class DFIG(Component):
 		R_R=self.R_R
 		Iron=self.Iron
 		
+		K_Cu=self.K_Cu
+		K_Fe=self.K_Fe
+		K_Fes=self.K_Fes
+		
+		rho_Fe= self.rho_Fe
+		rho_Copper=self.rho_Copper
+		
 		from math import pi, cos, sqrt, radians, sin, exp, log10, log, floor, ceil, tan, atan
 		import numpy as np
 		from numpy import sign,abs
-		rho    =7850                # Kg/m3 steel density
+		
 		g1     =9.81                # m/s^2 acceleration due to gravity
 		sigma  =21.5e3                # shear stress
 		ratio  =0.8                 # ratio of magnet width to pole pitch(bm/self.tau_p) 
 		mu_0   =pi*4e-7        # permeability of free space
 		cofi   =0.9                 # power factor
-		K_Cu   =4.786                  # Unit cost of Copper 
-		K_Fe   =0.556                    # Unit cost of Iron 
-		cstr   =0.50139                   # specific cost of a reference structure
+		rho_Cu       =1.8*10**(-8)*1.4   # copper resisitivity
 		h_sy0  =0
 		#DFIG_h_sy   =0.04
 		h_w    = 0.005
@@ -187,7 +201,7 @@ class DFIG(Component):
 		k_sfil =0.65								 # Slot fill factor
 		P_Fe0h =4			               #specific hysteresis losses W/kg @ 1.5 T @50 Hz
 		P_Fe0e =1			               #specific hysteresis losses W/kg @ 1.5 T @50 Hz
-		rho_Cu=1.8*10**(-8)*1.4
+		
 		k_fes =0.9
 		self.p=3
 		freq=60
@@ -210,10 +224,8 @@ class DFIG(Component):
 		b_so=0.004;
 		b_ro=0.004;
 		self.b_t=tau_s-self.b_s              #tooth width
-		v=0.29
-		rho_Fe=8760
-		C_1=(3+v)/4
-		rotor_rad_max=(300e6/(C_1*rho_Fe*(2*20*pi/(1))**2))*0.5
+
+
 		self.Q_r=2*self.p*m*q2
 		tau_r=pi*(dia-2*g)/self.Q_r
 		self.b_r=b_r_tau_r*tau_r
@@ -285,6 +297,7 @@ class DFIG(Component):
 		L_rtl=(mu_0*self.l_s*(2*n_c2)**2*self.Q_r/m)*(0.9*tau_s*q2*k_wd2*K_02*sigma_dr/g_eff) # tooth tip leakage inductance
 		self.L_r=(L_rsl+L_rtl+L_rel)/K_rs**2  # rotor leakage inductance
 		sigma1=1-(self.L_sm**2/self.L_s/self.L_r)
+		
 		#Field winding
 		k_fillr = 0.55
 		diff=self.h_r-h_w
@@ -313,19 +326,19 @@ class DFIG(Component):
 		r_r=self.r_s-g
 		V_Fert=pi*self.l_s*(r_r**2-(r_r-self.h_r)**2)-2*m*self.q1*self.p*self.b_r*self.h_r*self.l_s
 		V_Fery=self.l_s*pi*((r_r-self.h_r)**2-(r_r-self.h_r-self.h_yr)**2)
-		self.Cu=(V_Cuss+V_Cusr)*8900
-		M_Fest=V_Fest*7700
-		M_Fesy=V_Fesy*7700
-		M_Fert=V_Fert*7700
-		M_Fery=V_Fery*7700
+		self.Cu=(V_Cuss+V_Cusr)*self.rho_Copper
+		M_Fest=V_Fest*self.rho_Fe
+		M_Fesy=V_Fesy*self.rho_Fe
+		M_Fert=V_Fert*self.rho_Fe
+		M_Fery=V_Fery*self.rho_Fe
 		self.Iron=M_Fest+M_Fesy+M_Fert+M_Fery
 		M_gen=(self.Cu)+(self.Iron)
-		K_gen=self.Cu*K_Cu+(self.Iron)*K_Fe #%M_pm*K_pm;
+		K_gen=self.Cu*self.K_Cu+(self.Iron)*self.K_Fe #%M_pm*K_pm;
 		L_tot=self.l_s
 		self.Structure=0.0002*M_gen**2+0.6457*M_gen+645.24
 		self.Mass=M_gen+self.Structure
 		self.B_tsmax=self.B_g*tau_s/(self.b_t)
-		self.Costs=K_gen+cstr*self.Structure
+		self.Costs=K_gen+self.K_Fes*self.Structure
 		K_R=1.2
 		
 		# losses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -349,7 +362,7 @@ class DFIG(Component):
 		self.Losses=P_Cusnom+P_Fesnom+p_b+P_add;
 		self.gen_eff=(P_e-self.Losses)*100/P_e
 		self.Overall_eff=self.gen_eff*self.Gearbox_efficiency
-		self.J_s=self.I_s/A_Cuscalc
+		self.J_s=self.I_s/self.A_Cuscalc
 		S_GN=(self.machine_rating-self.S_Nmax*self.machine_rating)/self.gen_eff/0.01
 		T_e=self.p *(self.machine_rating*1.002)/(2*pi*freq*(1-self.S_Nmax))
 		self.TC1=T_e/(2*pi*sigma)
@@ -379,6 +392,7 @@ class Drive_DFIG(Assembly):
 	l_s=Float(iotype='out', desc='Optimised generator length')
 	I = Array(np.array([0.0, 0.0, 0.0]), iotype='out', desc=' moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
 	cm = Array(np.array([0.0, 0.0, 0.0]), iotype='out', desc=' Center of mass [x, y,z]')
+	
 	DFIG_r_s = Float(iotype='in', desc='airgap radius r_s')
 	DFIG_l_s = Float(iotype='in', desc='Stator core length l_s')
 	DFIG_h_s = Float(iotype='in', desc='Stator slot height h_s')
@@ -388,6 +402,13 @@ class Drive_DFIG(Assembly):
 	DFIG_I_0= Float(iotype='in', desc='Rotor current at no-load')
 	DFIG_P_rated=Float(iotype='in',desc='Rated power')
 	DFIG_N_rated=Float(iotype='in',desc='Rated speed')
+	
+	K_Cu=Float( iotype='in', desc='Specific cost of copper')
+	K_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	K_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	
+	rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
 	
 	def __init__(self,Optimiser='',Objective_function=''):
 		
@@ -412,6 +433,13 @@ class Drive_DFIG(Assembly):
 				self.connect('DFIG.l_s','l_s')
 				self.connect('DFIG.I','I')
 				self.connect('DFIG.cm','cm')
+				self.connect('K_Fe','DFIG.K_Fe')
+				self.connect('K_Fes','DFIG.K_Fes')
+				self.connect('K_Cu','DFIG.K_Cu')
+				self.connect('rho_Fe','DFIG.rho_Fe')
+				self.connect('rho_Copper','DFIG.rho_Copper')
+				
+				
 				self.Optimiser=Optimiser
 				self.Objective_function=Objective_function
 				Opt1=globals()[self.Optimiser]
@@ -473,6 +501,15 @@ def optim_DFIG():
 	opt_problem.DFIG_B_symax = 1.3 #Tesla
 	opt_problem.DFIG_S_Nmax = -0.3  #Tesla
 	
+	# Specific costs
+	opt_problem.K_Cu   =4.786                  # Unit cost of Copper $/kg
+	opt_problem.K_Fe	= 0.556                    # Unit cost of Iron $/kg
+	opt_problem.K_Fes =0.50139                   # specific cost of structure
+	
+	#Material properties
+	opt_problem.rho_Fe = 7700                 #Steel density
+	opt_problem.rho_Copper =8900                  # Kg/m3 copper density
+
 	opt_problem.run()
 	raw_data = {'Parameters': ['Rating','Objective function','Air gap diameter', "Stator length","Kra","Diameter ratio", "Pole pitch(tau_p)", " Number of Stator Slots","Stator slot height(h_s)","Slots/pole/phase","Stator slot width(b_s)", " Stator slot aspect ratio","Stator tooth width(b_t)", "Stator yoke height(h_ys)","Rotor slots", "Rotor yoke height(h_yr)", "Rotor slot height(h_r)", "Rotor slot width(b_r)"," Rotor Slot aspect ratio", "Rotor tooth width(b_t)", "Peak air gap flux density","Peak air gap flux density fundamental","Peak stator yoke flux density","Peak rotor yoke flux density","Peak Stator tooth flux density","Peak rotor tooth flux density","Pole pairs", "Generator output frequency", "Generator output phase voltage", "Generator Output phase current","Optimal Slip","Stator Turns","Conductor cross-section","Stator Current density","Specific current loading","Stator resistance", "Stator leakage inductance", "Excited magnetic inductance"," Rotor winding turns","Conductor cross-section","Magnetization current","I_mag/Is"," Rotor Current density","Rotor resitance", " Rotor leakage inductance", "Generator Efficiency","Overall drivetrain Efficiency","Iron mass","Copper mass","Structural Steel mass","Total Mass","Total Material Cost"],
 		'Values': [opt_problem.DFIG.machine_rating/1e6,opt_problem.Objective_function,2*opt_problem.DFIG.r_s,opt_problem.DFIG.l_s,opt_problem.DFIG.K_rad,opt_problem.DFIG.D_ratio,opt_problem.DFIG.tau_p*1000,opt_problem.DFIG.N_slots,opt_problem.DFIG.h_s*1000,opt_problem.DFIG.q1,opt_problem.DFIG.b_s*1000,opt_problem.DFIG.Slot_aspect_ratio1,opt_problem.DFIG.b_t*1000,opt_problem.DFIG.h_ys*1000,opt_problem.DFIG.Q_r,opt_problem.DFIG.h_yr*1000,opt_problem.DFIG.h_r*1000,opt_problem.DFIG.b_r*1000,opt_problem.DFIG.Slot_aspect_ratio2,opt_problem.DFIG.b_tr*1000,opt_problem.DFIG.B_g,opt_problem.DFIG.B_g1,opt_problem.DFIG.B_symax,opt_problem.DFIG.B_rymax,opt_problem.DFIG.B_tsmax,opt_problem.DFIG.B_trmax,opt_problem.DFIG.p,opt_problem.DFIG.f,opt_problem.DFIG.E_p,opt_problem.DFIG.I_s,opt_problem.DFIG.S_Nmax,opt_problem.DFIG.N_s,opt_problem.DFIG.A_Cuscalc,opt_problem.DFIG.J_s,opt_problem.DFIG.A_1/1000,opt_problem.DFIG.R_s,opt_problem.DFIG.L_s,opt_problem.DFIG.L_sm,opt_problem.DFIG.N_r,opt_problem.DFIG.A_Curcalc,opt_problem.DFIG.I_0,opt_problem.DFIG.Current_ratio,opt_problem.DFIG.J_r,opt_problem.DFIG.R_R,opt_problem.DFIG.L_r,opt_problem.DFIG.gen_eff,opt_problem.DFIG.Overall_eff,opt_problem.DFIG.Iron/1000,opt_problem.DFIG.Cu/1000,opt_problem.DFIG.Structure/1000,opt_problem.DFIG.Mass/1000,opt_problem.DFIG.Costs/1000],
