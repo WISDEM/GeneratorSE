@@ -36,6 +36,18 @@ class PMSG(Component):
  h_yr=Float(0.0, iotype='in', desc='rotor yoke height')
  h_m=Float(0.0, iotype='in', desc='magnet height')
  R_o=Float(0.0, iotype='in', desc='Shaft radius')
+ 
+ C_Cu=Float( iotype='in', desc='Specific cost of copper')
+ C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+ C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+ C_PM=Float(iotype='in', desc='Specific cost of Magnet')
+ 
+ rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+ rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+ rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+ rho_PM=Float(iotype='in', desc='Magnet density kg/m^3')
+ 
+ 
  b_m=Float(0.0, iotype='out', desc='magnet width')
  M_actual=Float(0.0, iotype='out', desc='Actual mass')
  Mass=Float(0.0, iotype='out', desc='Actual mass')
@@ -183,13 +195,21 @@ class PMSG(Component):
   TC3=self.TC3
   R_o=self.R_o
   Costs=self.Costs
+  
+  C_Cu=self.C_Cu
+  C_Fe=self.C_Fe
+  C_Fes=self.C_Fes
+  C_PM =self.C_PM
+  
+  rho_Fe= self.rho_Fe
+  rho_Fes=self.rho_Fes
+  rho_Copper=self.rho_Copper
+  rho_PM=self.rho_PM
 	
   from math import pi, cos, sqrt, radians, sin, exp, log10, log, floor, ceil, tan, atan,cosh,sinh
   import numpy as np
   from numpy import sign
   
-  rho    =7850                # Kg/m3 steel density
-  rho_PM =7450                # Kg/m3 magnet density
   B_r    =1.2                 # Tesla remnant flux density 
   g1      =9.81                # m/s^2 acceleration due to gravity
   E      =2e11                # N/m^2 young's modulus
@@ -309,10 +329,10 @@ class PMSG(Component):
   R_1s      = R_st-self.t_s*0.5
   d_se=dia+2*(self.h_ys+self.h_s+h_w)  # stator outer diameter
   
-  self.mass_PM   =(2*pi*(R+0.5*self.t)*l*self.h_m*ratio*rho_PM)           # magnet mass
+  self.mass_PM   =(2*pi*(R+0.5*self.t)*l*self.h_m*ratio*self.rho_PM)           # magnet mass
   
                                       
-  mass_st_lam=7700*2*pi*(R+0.5*self.t)*l*self.h_yr                                     # mass of rotor yoke steel  
+  mass_st_lam=self.rho_Fe*2*pi*(R+0.5*self.t)*l*self.h_yr                                     # mass of rotor yoke steel  
     
   lamb   =((3*(1-v**2)/R_a**2/self.h_yr**2)**0.25)
   x1=lamb*self.l_s
@@ -356,8 +376,8 @@ class PMSG(Component):
   f_d = Part_5/(Part_1-self.t_d*(Part_4*Part_2*F_2_ls2-Part_3*2*Part_4*F_1_ls2-Part_4*F_a4_ls2))
   fr=f_d*self.t_d
  
-  W=0.5*g1*sin(phi)*((self.l_s-self.t_d)*self.h_yr*rho)
-  w=rho*g1*sin(phi)*self.t_d
+  W=0.5*g1*sin(phi)*((self.l_s-self.t_d)*self.h_yr*self.rho_Fes)
+  w=self.rho_Fes*g1*sin(phi)*self.t_d
   a_i=self.R_o
  
   self.u_Ar				=abs(Part_5+fr/2/D_r/lamb**3*((-F_1_x0/C_11)*(C_3*C_a2-C_4*C_a1)+(F_2_x0/2/C_11)*(C_2*C_a2-2*C_3*C_a1)-F_a4_x0/2))
@@ -388,8 +408,8 @@ class PMSG(Component):
   self.z_all_s     =0.05*2*pi*R_st/360  # allowable torsional deflection
   self.z_all_r=0.05*2*pi*R/360  # allowable torsional deflection
   
-  val_str_cost_rotor	= C_pm*mass_PM+C_Fe*(pi*l*(R_a**2-R**2)*7700)+C_Fes*pi*self.t_d*(R**2-self.R_o**2)*rho
-  val_str_rotor		= self.mass_PM+(pi*l*(R_a**2-R**2)*7700)+pi*self.t_d*(R**2-self.R_o**2)*rho
+  val_str_cost_rotor	= self.C_PM*mass_PM+self.C_Fe*(pi*l*(R_a**2-R**2)*self.rho_Fe)+self.C_Fes*pi*self.t_d*(R**2-self.R_o**2)*self.rho_Fes
+  val_str_rotor		= self.mass_PM+(pi*l*(R_a**2-R**2)*self.rho_Fe)+pi*self.t_d*(R**2-self.R_o**2)*self.rho_Fes
   
   self.Rotor_radial=self.u_Ar
   self.Rotor_axial=self.y_Ar
@@ -457,18 +477,18 @@ class PMSG(Component):
   V_Fesy	=L_t*pi*((self.r_s+self.h_s+self.h_ys+h_sy0)**2-(self.r_s+self.h_s)**2) # volume of iron in stator yoke
   V_Fery	=L_t*pi*((r_r-self.h_m)**2-(r_r-self.h_m-self.h_yr)**2)
   
-  self.M_Cus		=V_Cus*8900
-  self.M_Fest	=V_Fest*7700
-  self.M_Fesy	=V_Fesy*7700
-  self.M_Fery	=V_Fery*7700
+  self.M_Cus		=V_Cus*self.rho_Copper
+  self.M_Fest	=V_Fest*self.rho_Fe
+  self.M_Fesy	=V_Fesy*self.rho_Fe
+  self.M_Fery	=V_Fery*self.rho_Fe
   M_Fe		=self.M_Fest+self.M_Fesy+self.M_Fery
   M_gen		=(self.M_Cus)
   K_gen		=self.M_Cus*C_Cu
   
-  mass_st_lam_s= self.M_Fest+pi*l*7700*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2) 
-  W_is			=0.5*g1*sin(phi)*(rho*l*self.d_s**2) # weight of rotor cylinder                               # length of rotor arm beam at which self-weight acts
-  W_iis     =g1*sin(phi)*(mass_st_lam_s+V_Cus*8900)/2/N_st
-  w_s         =rho*g1*sin(phi)*a_s*N_st
+  mass_st_lam_s= self.M_Fest+pi*l*self.rho_Fe*((R_st+0.5*self.h_ys)**2-(R_st-0.5*self.h_ys)**2) 
+  W_is			=0.5*g1*sin(phi)*(self.rho_Fes*l*self.d_s**2) # weight of rotor cylinder                               # length of rotor arm beam at which self-weight acts
+  W_iis     =g1*sin(phi)*(mass_st_lam_s+V_Cus*self.rho_Copper)/2/N_st
+  w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st
   
   l_is      =R_st-self.R_o
   l_iis     =l_is 
@@ -478,7 +498,7 @@ class PMSG(Component):
   
   
   #stator structure deflection calculation
-  mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*rho)
+  mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*self.rho_Fes)
   Numers=R_st**3*((0.25*(sin(theta_s)-(theta_s*cos(theta_s)))/(sin(theta_s))**2)-(0.5/sin(theta_s))+(0.5/theta_s))
   Povs=((theta_s/(sin(theta_s))**2)+1/tan(theta_s))*((0.25*R_st/A_st)+(0.25*R_st**3/I_st))
   Qovs=R_st**3/(2*I_st*theta_s*(m2+1))
@@ -507,13 +527,13 @@ class PMSG(Component):
   self.TC2=R**2*l              # Evaluating Torque constraint for rotor
   self.TC3=R_st**2*l           # Evaluating Torque constraint for stator
   
-  self.Iron=mass_st_lam_s+(2*pi*t*l*(R+0.5*self.t)*7700)
+  self.Iron=mass_st_lam_s+(2*pi*t*l*(R+0.5*self.t)*self.rho_Fe)
   self.PM=self.mass_PM
   self.Copper=self.M_Cus
-  self.Inactive=mass_stru_steel+(pi*(R**2-R_o**2)*self.t_d*rho)
+  self.Inactive=mass_stru_steel+(pi*(R**2-R_o**2)*self.t_d*self.rho_Fes)
   
   self.Stator=mass_st_lam_s+mass_stru_steel+self.Copper
-  self.Rotor=(2*pi*t*l*(R+0.5*self.t)*7700)+(pi*(R**2-R_o**2)*self.t_d*rho)+self.PM
+  self.Rotor=(2*pi*t*l*(R+0.5*self.t)*self.rho_Fe)+(pi*(R**2-R_o**2)*self.t_d*self.rho_Fes)+self.PM
   self.M_actual	=self.Stator+self.Rotor
   self.Mass = self.M_actual
   self.Active=self.Iron+self.Copper+self.mass_PM
@@ -593,12 +613,16 @@ class Drive_PMSG(Assembly):
 	PMSG_t_d =Float(0.0, iotype='in', desc='Rotor disc thickness')
 	PMSG_t_ws =Float(0.0, iotype='in', desc='Stator arm thickness')
 	PMSG_R_o =Float(0.0, iotype='in', desc='Main shaft radius')
-	Stator_radial=Float(0.01, iotype='out', desc='Rotor radial deflection')
- 	Stator_axial=Float(0.01, iotype='out', desc='Stator Axial deflection')
- 	Stator_circum=Float(0.01, iotype='out', desc='Rotor radial deflection')
- 	Rotor_radial=Float(0.01, iotype='out', desc='Generator efficiency')
- 	Rotor_axial=Float(0.01, iotype='out', desc='Rotor Axial deflection')
- 	Rotor_circum=Float(0.01, iotype='out', desc='Rotor circumferential deflection')
+
+	C_Cu=Float( iotype='in', desc='Specific cost of copper')
+	C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
+	C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
+	C_PM=Float(iotype='in', desc='Specific cost of Magnet')
+	
+	rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+	rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+	rho_PM=Float(iotype='in', desc='Magnet density kg/m^3')
   
 	
 	def __init__(self,Optimiser='',Objective_function=''):
@@ -632,6 +656,16 @@ class Drive_PMSG(Assembly):
 		self.connect('PMSG.l_s','l_s')
 		self.connect('PMSG.I','I')
 		self.connect('PMSG.cm','cm')
+		
+		self.connect('C_Fe','PMSG.C_Fe')
+		self.connect('C_Fes','PMSG.C_Fes')
+		self.connect('C_Cu','PMSG.C_Cu')
+		self.connect('C_PM','PMSG.C_PM')
+		
+		self.connect('rho_PM','PMSG.rho_PM')
+		self.connect('rho_Fe','PMSG.rho_Fe')
+		self.connect('rho_Fes','PMSG.rho_Fes')
+		self.connect('rho_Copper','PMSG.rho_Copper')
 		
 		
 		Opt1=globals()[self.Optimiser]
@@ -728,6 +762,19 @@ def optim_PMSG():
 	opt_problem.PMSG_d_s= 0.32
 	opt_problem.PMSG_t_ws =0.15
 	opt_problem.PMSG_R_o =0.43
+	
+	# Specific costs
+	opt_problem.C_Cu   =4.786                  
+	opt_problem.C_Fe	= 0.556                   
+	opt_problem.C_Fes =0.50139                   
+	opt_problem.C_PM  =95
+	
+	#Material properties
+	opt_problem.rho_Fe = 7700                 #Steel density
+	opt_problem.rho_Fes = 7850                 #Steel density
+	opt_problem.rho_Copper =8900                  # Kg/m3 copper density
+	opt_problem.rho_PM =7450
+	
 	opt_problem.run()
 #	
 	
