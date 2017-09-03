@@ -15,7 +15,7 @@ Installation
 Clone the repository at `<https://github.com/WISDEM/GeneratorSE>`_
 or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the `DriveSE site<http://nwtc.nrel.gov/DriveSE>`_.
 
-To install DriveSE, first activate the OpenMDAO environment and then install with the following command.
+To install GeneratorSE, first activate the OpenMDAO environment and then install with the following command.
 
 .. code-block:: bash
 
