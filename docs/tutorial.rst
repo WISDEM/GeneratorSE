@@ -6,7 +6,7 @@
 Tutorial
 --------
 
-As an example, let us simulate model calculations for major wind turbine components for the NREL 5MW Reference Model :cite:`FAST2009`.  
+As an example, let us size a direct drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
 
 The first step is to import the relevant files.
 

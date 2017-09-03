@@ -1,6 +1,6 @@
 .. _documentation-label:
 
-.. currentmodule:: drivese.drive
+.. currentmodule:: GeneratorSE
 
 Documentation
 --------------
@@ -10,14 +10,14 @@ Documentation
     An HTML version of this documentation is available which is better formatted for reading the code documentation and contains hyperlinks to the source code.
 
 
-Turbine component sizing models for hub and drivetrain components are described along with mass-cost models for the full set of turbine components from the rotor to tower and foundation.
+Sizing models for the different generator modules are described along with mass, cost and efficiency as objective functions .
 
-Documentation for DriveSE
+Documentation for GeneratorSE
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following inputs and outputs are defined for DriveSE using the three-point suspension configuration:
+The following inputs and outputs are defined for GeneratorSE :
 
-.. literalinclude:: ../src/drivese/drive.py
+.. literalinclude:: ../src/generatorse/drive.py
     :language: python
     :start-after: Drive3pt(Assembly)
     :end-before: def configure(self)
@@ -26,9 +26,9 @@ The following inputs and outputs are defined for DriveSE using the three-point s
 .. module:: drivese.drive
 .. class:: Drive3pt
 
-The following inputs and outputs are defined for DriveSE using the four-point suspension configuration:
+The following inputs and outputs are defined for GeneratorSE using the four-point suspension configuration:
 
-.. literalinclude:: ../src/drivese/drive.py
+.. literalinclude:: ../src/generatorse/drive.py
     :language: python
     :start-after: Drive4pt(Assembly)
     :end-before: def configure(self)
@@ -59,43 +59,6 @@ Referenced Sub-System Modules
 .. class:: NacelleSystemAdder_drive
 
 
-Supporting Functions
-=====================
-.. module:: drivese.drivese_utils
-.. function:: seed_bearing_table
-.. function:: fatigue_for_bearings
-.. function:: fatigue2_for_bearings
-.. function:: resize_for_bearings
-.. function:: get_rotor_mass
-.. function:: get_L_rb
 
-.. currentmodule:: drivese.hub
 
-Documentation for HubSE
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The following inputs and outputs are defined for HubWPACT:
-
-.. literalinclude:: ../src/drivese/hub.py
-    :language: python
-    :start-after: HubSE(Assembly)
-    :end-before: def configure(self)
-    :prepend: class HubSE(Assembly):
-
-.. module:: drivese.hub
-.. class:: HubSE
-
-Implemented Base Model
-=========================
-.. module:: drivewpact.hub
-.. class:: HubBase
-
-Referenced Sub-System Modules 
-==============================
-.. module:: drivese.hub
-.. class:: Hub_drive
-.. class:: PitchSystem_drive
-.. class:: Spinner_drive
-.. module:: drivewpact.hub
-.. class:: HubSystemAdder
 
