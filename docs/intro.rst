@@ -1,7 +1,8 @@
 Introduction
 ------------
 
-Generator Systems Engineering (GeneratorSE) is a set of analytical frameworks for sizing variable speed wind turbine Generators. The tool can be used as an autonomous tool focused on generator design or integrated in the system using DriveSE, NREL’s drivetrain sizing tool . Thus, the designer has the option to trade magnet, copper, or lamination properties and weights to achieve the optimal generator design that is also optimal for a given drivetrain system. Two types of generator systems— synchronous and induction machines—are currently being handled by GeneratorSE.  The tool includes the following subclasses: permanent-magnet synchronous generators (PMSGs) electrically excited synchronous generators (EESGs), squirrel-cage induction generators (SCIGs), and doubly-fed induction generators (DFIGs). the designer has the option to trade magnet, copper, or lamination properties and weights to achieve the optimal generator design that is also optimal for a given drivetrain system. 
+Generator Systems Engineering (GeneratorSE) is a set of analytical frameworks for sizing variable speed wind turbine Generators. The tool can be used as an autonomous tool focused on generator design or integrated in the system using DriveSE, NREL’s drivetrain sizing tool . 
+Thus, the designer has the option to trade magnet, copper, or lamination properties and weights to achieve the optimal generator design that is also optimal for a given drivetrain system. 
 Two types of generator systems— synchronous and induction machines—are currently being handled by GeneratorSE. The tool includes optimisation modules for four sub-classes: 
 
 1. Permanent-magnet synchronous generator (PMSG) 
@@ -10,9 +11,16 @@ Two types of generator systems— synchronous and induction machines—are currently
 4. Doubly-fed induction generators (DFIG)
 
 Each module is structured to perform electromagnetic, structural, and basic thermal design that are integrated to provide the optimal generator design dimensions. 
-The main design determinants include available torque, mechanical power, normal and shear stresses, material properties, and costs satisfying specific design criteria. 
+The analytical models of each generator module were created in Python within the OpenMDAO computing platform to facilitate systems design and multidisciplinary optimization. 
 
 GeneratorSE:
-•	Provides basic design attributes in addition to key electrical performance parameters—including, but not limited to, output voltage, current, resistances, inductances, and losses—and also the weights and costs of materials involved in the basic design.
-•	Allows for an integrated design with DriveSE and NREL’s Cost and Scaling Model thereby enabling a complete drivetrain optimization of direct-drive, medium-speed, and high-speed geared systems considering the entire turbine system and balance of plant.
-•	Enables drivetrain design coupled with the turbine rotor and tower for a full integrated wind turbine design or even wind plant cost of energy optimization as part of the Wind Plant Integrated Systems Design and Engineering Model (WISDEM™).
+a) Provides basic design attributes in addition to key electrical performance parameters—including, but not limited to, output voltage, current, resistances, inductances, and losses—and also the weights and costs of materials involved in the basic design.
+b) Allows for an integrated design with DriveSE and NREL’s Cost and Scaling Model thereby enabling a complete drivetrain optimization of direct-drive, medium-speed, and high-speed geared systems considering the entire turbine system and balance of plant.
+c) Enables drivetrain design coupled with the turbine rotor and tower for a full integrated wind turbine design or even wind plant cost of energy optimization as part of the Wind Plant Integrated Systems Design and Engineering Model (WISDEM™).
+
+As a first step, the user chooses the type of generator that needs to be optimized along with the optimization goal.
+The optimization goal may be overall costs, efficiency, mass, aspect ratio or a weighted combination of these.
+Each generator subset is identified by a design space that contains decision variables based on which the design is most sensitive 
+and the optimal design is searched by mathematical methods. The key inputs for each design generation include the power rating, 
+torque, rated speed, shear stress, specific costs (i.e., unit costs per kilogram of material), and properties of materials (e.g., material density) used in the basic design. 
+The designs are generated in compliance with the user-specified constraints on generator terminal voltage and constraints imposed on the dimensions and electromagnetic performance. 
