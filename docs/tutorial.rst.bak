@@ -1,0 +1,95 @@
+.. _tutorial-label:
+
+.. currentmodule:: masstocost.docs.source.examples.example
+
+
+Tutorial
+--------
+
+As an example, let us size a direct-drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
+
+The first step is to import the relevant files.
+
+.. literalinclude:: examples/example.py
+    :start-after: # 1 ---
+    :end-before: # 1 ---
+
+We will start with the radial flux PMSG with spoke arm arrangement.  The PMSG module relies on inputs from the rotor such as rated speed, 
+power rating and rated torque.  It also requires specification of shear stress, material properties( densities), specific costs and target design efficiency.
+and initialization of electromagnetic and structural design variables necessary to calculate basic design. Specification of the optimisation 
+objective(Costs,Mass, Efficiency or Aspect ratio) and driver determines the final design. The designs are generated in compliance with the user-specified constraints on generator 
+terminal voltage and constraints imposed on the dimensions and electrical,magnetic and structural deformations. The excitation requirement (e.g., magnet dimensions,pole pairs) 
+is determined in accordance with the required voltage at no-load. 
+
+.. literalinclude:: examples/example.py
+    :start-after: # 2 ---
+    :end-before: # 2 ---
+
+
+We now run the PMSG_arms module.
+
+.. literalinclude:: examples/example.py
+    :start-after: # 3 ---
+    :end-before: # 3 ---
+
+
+The resulting system and component properties can then be printed.
+
+.. literalinclude:: examples/example.py
+    :start-after: # 4 ---
+    :end-before: # 4 ---
+
+The results should appear as below:
+
+>>> 
+>>> Hub Components
+>>>   Hub:  29852.8 kg
+>>>   Pitch system:      0.0 kg
+>>>   Nose cone:   1810.5 kg
+>>> Hub system total:  31663.3 kg
+>>>     cm  -1.30   0.00   0.22 [m, m, m]
+>>>     I 89383.2 137332.2 120860.1 [kg*m^2, kg*m^2, kg*m^2]
+
+Secondly, we will design a gear driven Doubly fed Induction generator.  The DFIG design 
+relies on inputs such as machine rating, target overall drivetrain efficiency, gearbox efficiency,
+high speed shaft speed( or gear ratio).It also requires specification of shear stress, material properties( densities), specific material costs. 
+The main design variables are initialized with an objective and driver. The designs are computed analytically and checked against predefined constraints 
+to meet objective functions.The optimized design dimensions are printed on screen and available in an output file in a Microsoft Excel format.
+
+.. literalinclude:: examples/example.py
+    :start-after: # 5 ---
+    :end-before: # 5 ---
+
+We now instantiate the DFIG object which automatically updates the mass, costs, efficiency and performance variables based on the supplied inputs.  
+In addition, calculations of mass properties are also made.
+
+.. literalinclude:: examples/example.py
+    :start-after: # 6 ---
+    :end-before: # 6 ---
+
+
+The resulting system and component properties can then be printed.
+
+.. literalinclude:: examples/example.py
+    :start-after: # 7 ---
+    :end-before: # 7 ---
+
+The results should appear as below:
+
+>>> Estimate of Nacelle Component Sizes for the NREL 5 MW Reference Turbine
+>>> Low speed shaft:  18564.9 kg
+>>> Main bearings:   5845.4 kg
+>>> Gearbox:  55658.3 kg
+>>> High speed shaft & brakes:   2414.7 kg
+>>> Generator:  16699.9 kg
+>>> Variable speed electronics:      0.0 kg
+>>> Overall mainframe: 60785.2 kg
+>>>      Bedplate:  51364.7 kg
+>>> Electrical connections:      0.0 kg
+>>> HVAC system:    400.0 kg
+>>> Nacelle cover:   4577.4 kg
+>>> Yaw system:   6044.7 kg
+>>> Overall nacelle: 170990.5 kg
+>>>     cm  -0.44   0.00   0.26 [m, m, m]
+>>>     I 77320965.7 1033725.7 935773.7 [kg*m^2, kg*m^2, kg*m^2]
+

@@ -6,7 +6,7 @@
 Tutorial
 --------
 
-As an example, let us size a direct drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
+As an example, let us size a direct-drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
 
 The first step is to import the relevant files.
 
@@ -14,14 +14,19 @@ The first step is to import the relevant files.
     :start-after: # 1 ---
     :end-before: # 1 ---
 
-We will start with the hub system model.  The hub model relies on inputs from the rotor such as blade mass, rotor diameter, and blade number.  It also requires either the specification of variables necessary to calculate the maximum bending moment at the blade root (the wind speed necessary to achieve rated power production, air density conditions, and rotor solidity) or the root moment itself.  Specification of the hub diameter is required as well as the machine rating, the positions of the main bearing and other low speed shaft information. 
+We will start with the radial flux PMSG with spoke arm arrangement.  The PMSG module relies on inputs from the rotor such as rated speed, 
+power rating and rated torque.  It also requires specification of shear stress, material properties( densities), specific costs and target design efficiency.
+and initialization of electromagnetic and structural design variables necessary to calculate basic design. Specification of the optimisation 
+objective(Costs,Mass, Efficiency or Aspect ratio) and driver determines the final design. The designs are generated in compliance with the user-specified constraints on generator 
+terminal voltage and constraints imposed on the dimensions and electrical,magnetic and structural deformations. The excitation requirement (e.g., magnet dimensions,pole pairs) 
+is determined in accordance with the required voltage at no-load. 
 
 .. literalinclude:: examples/example.py
     :start-after: # 2 ---
     :end-before: # 2 ---
 
 
-We now run the hub system model.
+We now run the PMSG_arms module.
 
 .. literalinclude:: examples/example.py
     :start-after: # 3 ---
@@ -36,22 +41,75 @@ The resulting system and component properties can then be printed.
 
 The results should appear as below:
 
->>> Estimate of Hub Component Sizes for the NREL 5 MW Reference Turbine
->>> Hub Components
->>>   Hub:  29852.8 kg
->>>   Pitch system:      0.0 kg
->>>   Nose cone:   1810.5 kg
->>> Hub system total:  31663.3 kg
->>>     cm  -1.30   0.00   0.22 [m, m, m]
->>>     I 89383.2 137332.2 120860.1 [kg*m^2, kg*m^2, kg*m^2]
+                                Parameters      Values       Limit      Units
+0                                  Rating    0.750000                     MW
+1                             Stator Arms    5.000000                   unit
+2              Stator Axial arm dimension  180.076619                     mm
+3    Stator Circumferential arm dimension  218.906710     221.482         mm
+4                    Stator arm Thickness   11.502241                     mm
+5                              Rotor arms    5.000000                     mm
+6               Rotor Axial arm dimension  400.073883                     mm
+7     Rotor Circumferential arm dimension  218.906710     221.482
+8                     Rotor arm Thickness   11.518336                     mm
+9                Stator Radial deflection    0.145855    0.137114         mm
+10                Stator Axial deflection    0.088038     14.2067         mm
+11               Stator circum deflection    1.268266     1.19654         mm
+12                Rotor Radial deflection    0.123555    0.127067         mm
+13                 Rotor Axial deflection    0.022129     14.2067         mm
+14                Rotor circum deflection    1.270572     1.10887         mm
+15                       Air gap diameter    2.607190                      m
+16                 Overall Outer diameter    2.734388                      m
+17                          Stator length    0.710333                      m
+18                              l/d ratio    0.272452  (0.2-0.27)
+19                      Slot_aspect_ratio    4.975006      (4-10)
+20                             Pole pitch   60.000000                     mm
+21                     Stator slot height   44.943664                     mm
+22                       Stator slotwidth    9.033891                     mm
+23                     Stator tooth width   11.041423                     mm
+24                     Stator yoke height   45.197796                     mm
+25                      Rotor yoke height   45.276276                     mm
+26                          Magnet height    7.682400                     mm
+27                           Magnet width   42.000000                     mm
+28  Peak air gap flux density fundamental    0.988394                      T
+29          Peak stator yoke flux density    0.512131          <2          T
+30           Peak rotor yoke flux density    0.460119          <2          T
+31              Flux density above magnet    0.871243          <2          T
+32            Maximum Stator flux density    0.080488    0.988394          T
+33             Maximum tooth flux density    1.797080                      T
+34                             Pole pairs   68.000000                      -
+35             Generator output frequency   32.413333                     Hz
+36         Generator output phase voltage  588.498407                      V
+37         Generator Output phase current  452.107575        >500          A
+38                      Stator resistance    0.055544              ohm/phase
+39                 Synchronous inductance    0.002570                    p.u
+40                           Stator slots  408.000000                 A/mm^2
+41                           Stator turns  136.000000                  slots
+42                Conductor cross-section  117.275183           5      turns
+43                Stator Current density     3.855100         3-6       mm^2
+44               Specific current loading   45.041147          60       kA/m
+45                  Generator Efficiency    93.267839        >93%          %
+46                              Iron mass    5.436602                   tons
+47                            Magnet mass    0.264293                   tons
+48                            Copper mass    0.809398                   tons
+49                           Mass of Arms    1.373463                   tons
+50                             Total Mass    7.883757                   tons
+51                            Stator Mass    5.029585                    ton
+52                             Rotor Mass    2.854173                    ton
+53                    Total Material Cost   32.693049                     k$
 
-Secondly, we will demonstrate the nacelle system model.  The nacelle model relies on inputs from the rotor and hub as well as design variables for the drivetrain. Inputs from the rotor include the rotor diameter, the rotor speed at rated power, the rotor torque at rated power, the maximum thrust from the rotor and the overall rotor mass (including blades and hub).  For the drivetrain, the overall configuration (3-stage geared, single-stage, multi-generator, or direct-drive) must be specified.  The overall gear ratio (1 for direct drive) must be specified along with the gear configuration (may be null for direct drive) and a Boolean for the presence of a bevel stage.  If an onboard crane is present, then the crane Boolean should be set true.  Finally the machine rating (in kW) must be provided.  In addition to these inputs, more specific rotor aerodynamic forces and moments must be specified and a number of additional parameters on the nacelle.
+
+Secondly, we will design a gear driven Doubly fed Induction generator.  The DFIG design 
+relies on inputs such as machine rating, target overall drivetrain efficiency, gearbox efficiency,
+high speed shaft speed( or gear ratio).It also requires specification of shear stress, material properties( densities), specific material costs. 
+The main design variables are initialized with an objective and driver. The designs are computed analytically and checked against predefined constraints 
+to meet objective functions.The optimized design dimensions are printed on screen and available in an output file in a Microsoft Excel format.
 
 .. literalinclude:: examples/example.py
     :start-after: # 5 ---
     :end-before: # 5 ---
 
-We now instantiate the nacelle system object which contains the low speed shaft, main bearings, gearbox, high speed shaft and brakes, bedplate, and yaw system components.  The main bearings in turn contain components for the main and a second bearing.  The initialization automatically updates the mass of the components and overall system based on the supplied inputs.  In addition, calculations of mass properties are also made.
+We now instantiate the DFIG object which automatically updates the mass, costs, efficiency and performance variables based on the supplied inputs.  
+In addition, calculations of mass properties are also made.
 
 .. literalinclude:: examples/example.py
     :start-after: # 6 ---
