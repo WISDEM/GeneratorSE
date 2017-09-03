@@ -37,6 +37,7 @@ class PMSG(Component):
  h_m=Float(0.0, iotype='in', desc='magnet height')
  R_o=Float(0.0, iotype='in', desc='Shaft radius')
  
+ # Costs and material properties
  C_Cu=Float( iotype='in', desc='Specific cost of copper')
  C_Fe=Float(iotype='in', desc='Specific cost of magnetic steel/iron')
  C_Fes=Float(iotype='in', desc='Specific cost of structural steel')
@@ -584,7 +585,7 @@ class PMSG(Component):
   #print   g1*sin(phi)*(self.M_Fest+V_Cus*8900)/2/N_st,q3,self.z_all_r
   
 
-class Drive_PMSG(Assembly):
+class Drive_PMSG_disc(Assembly):
 	Eta_target=Float(iotype='in', desc='Target drivetrain efficiency')
 	T_rated=Float(iotype='in', desc='Torque')
 	N=Float(iotype='in', desc='rated speed')
@@ -627,7 +628,7 @@ class Drive_PMSG(Assembly):
 	
 	def __init__(self,Optimiser='',Objective_function=''):
 		
-		super(Drive_PMSG,self).__init__()
+		super(Drive_PMSG_disc,self).__init__()
 		self.Optimiser=Optimiser
 		self.Objective_function=Objective_function
 		""" Creates a new Assembly containing PMSG and an optimizer"""

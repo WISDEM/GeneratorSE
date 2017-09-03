@@ -572,7 +572,7 @@ class PMSG(Component):
   
   
 
-class Drive_PMSG(Assembly):
+class Drive_PMSG_arms(Assembly):
 	Eta_target=Float(iotype='in', desc='Target drivetrain efficiency')
 	T_rated=Float(iotype='in', desc='Torque')
 	N=Float(iotype='in', desc='rated speed')
@@ -620,7 +620,7 @@ class Drive_PMSG(Assembly):
 	
 	def __init__(self,Optimiser='',Objective_function=''):
 		
-		super(Drive_PMSG,self).__init__()
+		super(Drive_PMSG_arms,self).__init__()
 		self.Optimiser=Optimiser
 		self.Objective_function=Objective_function
 		""" Creates a new Assembly containing PMSG and an optimizer"""
@@ -745,7 +745,7 @@ class Drive_PMSG(Assembly):
 		
 				
 def optim_PMSG():
-	opt_problem = Drive_PMSG('CONMINdriver','Costs')
+	opt_problem = Drive_PMSG_arms('CONMINdriver','Costs')
 #	opt_problem.Eta_target = 93
 #	# Initial design variables for a DD PMSG designed for a 5MW turbine
 #	opt_problem.P_rated=5.0e6
