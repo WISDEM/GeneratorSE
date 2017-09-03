@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # AirfoilPrep.py documentation build configuration file, created by
-# sphinx-quickstart on Thu Mar  7 14:24:52 2013.
+# sphinx-quickstart on Thu Mar  7 14:24:52 2017.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -60,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = codeName
-# copyright = u'2013, Katherine Dykes'
+# copyright = u'2017, Katherine Dykes'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
