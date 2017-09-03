@@ -746,52 +746,52 @@ class Drive_PMSG_arms(Assembly):
 				
 def optim_PMSG():
 	opt_problem = Drive_PMSG_arms('CONMINdriver','Costs')
-#	opt_problem.Eta_target = 93
-#	# Initial design variables for a DD PMSG designed for a 5MW turbine
-#	opt_problem.P_rated=5.0e6
-#	opt_problem.T_rated=4.143289e6
-#	opt_problem.N=12.1
-#	opt_problem.PMSG_r_s= 3.26               
-#	opt_problem.PMSG_l_s= 1.6
-#	opt_problem.PMSG_h_s = 0.07
-#	opt_problem.PMSG_tau_p = 0.08
-#	opt_problem.PMSG_h_m = 0.009
-#	opt_problem.PMSG_h_ys = 0.0615
-#	opt_problem.PMSG_h_yr = 0.057
-#	opt_problem.PMSG_n_s = 5
-#	opt_problem.PMSG_b_st = 0.480
-#	opt_problem.PMSG_n_r =5
-#	opt_problem.PMSG_b_r = 0.520
-#	opt_problem.PMSG_d_r = 0.7
-#	opt_problem.PMSG_d_s= 0.3
-#	opt_problem.PMSG_t_wr =0.06
-#	opt_problem.PMSG_t_ws =0.06
-#	opt_problem.PMSG_R_o =0.43      #0.523950817  #0.43  #0.523950817 #0.17625 #0.2775 #0.363882632 ##0.35 #0.523950817 #0.43 #523950817 #0.43 #0.523950817 #0.523950817 #0.17625 #0.2775 #0.363882632 #0.43 #0.523950817 #0.43
-#	opt_problem.run()
+	opt_problem.Eta_target = 93
+	# Initial design variables for a DD PMSG designed for a 5MW turbine
+	opt_problem.P_rated=5.0e6
+	opt_problem.T_rated=4.143289e6
+	opt_problem.N=12.1
+	opt_problem.PMSG_r_s= 3.26               
+	opt_problem.PMSG_l_s= 1.6
+	opt_problem.PMSG_h_s = 0.07
+	opt_problem.PMSG_tau_p = 0.08
+	opt_problem.PMSG_h_m = 0.009
+	opt_problem.PMSG_h_ys = 0.0615
+	opt_problem.PMSG_h_yr = 0.057
+	opt_problem.PMSG_n_s = 5
+	opt_problem.PMSG_b_st = 0.480
+	opt_problem.PMSG_n_r =5
+	opt_problem.PMSG_b_r = 0.520
+	opt_problem.PMSG_d_r = 0.7
+	opt_problem.PMSG_d_s= 0.3
+	opt_problem.PMSG_t_wr =0.06
+	opt_problem.PMSG_t_ws =0.06
+	opt_problem.PMSG_R_o =0.43      #0.523950817  #0.43  #0.523950817 #0.17625 #0.2775 #0.363882632 ##0.35 #0.523950817 #0.43 #523950817 #0.43 #0.523950817 #0.523950817 #0.17625 #0.2775 #0.363882632 #0.43 #0.523950817 #0.43
+
 #	
 	
 
-	opt_problem.Eta_target = 93
-	# Initial design variables for a DD PMSG designed for a 10MW turbine
-	opt_problem.P_rated=0.75e6
-	opt_problem.T_rated=250418.6168
-	opt_problem.N=28.6
-	opt_problem.PMSG_r_s=1.3             
-	opt_problem.PMSG_l_s= 0.71
-	opt_problem.PMSG_h_s = 0.045
-	opt_problem.PMSG_tau_p = 0.06
-	opt_problem.PMSG_h_m = 0.009
-	opt_problem.PMSG_h_ys = 0.045
-	opt_problem.PMSG_h_yr = 0.045
-	opt_problem.PMSG_n_s = 5
-	opt_problem.PMSG_b_st = 0.220
-	opt_problem.PMSG_n_r =5
-	opt_problem.PMSG_b_r = 0.220
-	opt_problem.PMSG_d_r = 0.4
-	opt_problem.PMSG_d_s= 0.18
-	opt_problem.PMSG_t_wr =0.01
-	opt_problem.PMSG_t_ws =0.01
-	opt_problem.PMSG_R_o =0.17625                    # 1.5MW: 0.2775; 3MW: 0.363882632; 10 MW:0.523950817; 0.75MW :0.17625
+#	opt_problem.Eta_target = 93
+#	# Initial design variables for a DD PMSG designed for a 10MW turbine
+#	opt_problem.P_rated=0.75e6
+#	opt_problem.T_rated=250418.6168
+#	opt_problem.N=28.6
+#	opt_problem.PMSG_r_s=1.3             
+#	opt_problem.PMSG_l_s= 0.71
+#	opt_problem.PMSG_h_s = 0.045
+#	opt_problem.PMSG_tau_p = 0.06
+#	opt_problem.PMSG_h_m = 0.009
+#	opt_problem.PMSG_h_ys = 0.045
+#	opt_problem.PMSG_h_yr = 0.045
+#	opt_problem.PMSG_n_s = 5
+#	opt_problem.PMSG_b_st = 0.220
+#	opt_problem.PMSG_n_r =5
+#	opt_problem.PMSG_b_r = 0.220
+#	opt_problem.PMSG_d_r = 0.4
+#	opt_problem.PMSG_d_s= 0.18
+#	opt_problem.PMSG_t_wr =0.01
+#	opt_problem.PMSG_t_ws =0.01
+#	opt_problem.PMSG_R_o =0.17625                    # 1.5MW: 0.2775; 3MW: 0.363882632; 10 MW:0.523950817; 0.75MW :0.17625
 	
 	# Specific costs
 	opt_problem.C_Cu   =4.786                  
