@@ -15,7 +15,7 @@ Sizing models for the different generator modules are described along with mass,
 Documentation for GeneratorSE
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following inputs and outputs are defined for GeneratorSE using the three-point suspension configuration:
+The following inputs and outputs are defined for GeneratorSE :
 
 .. literalinclude:: ../src/drivese/drive.py
     :language: python
