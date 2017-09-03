@@ -8,12 +8,10 @@ Installation
 
 	Wind Plant Framework: FUSED-Wind (Framework for Unified Systems Engineering and Design of Wind Plants)
 
-	Sub-Models: CommonSE, DriveWPACT
-
 	Supporting python packages: Pandas, Algopy, Zope.interface, Sphinx, Xlrd, PyOpt, py2exe, Pyzmq, Sphinxcontrib-bibtex, Sphinxcontrib-zopeext, Numpydoc, Ipython
 
 Clone the repository at `<https://github.com/WISDEM/GeneratorSE>`_
-or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the `DriveSE site<http://nwtc.nrel.gov/DriveSE>`_.
+or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the `GeneratorSE site<http://nwtc.nrel.gov/GeneratorSE>`_.
 
 To install GeneratorSE, first activate the OpenMDAO environment and then install with the following command.
 
