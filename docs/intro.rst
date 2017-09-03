@@ -5,7 +5,7 @@ Generator Systems Engineering (GeneratorSE) is a set of analytical frameworks fo
 Thus, the designer has the option to trade magnet, copper, or lamination properties and weights to achieve the optimal generator design that is also optimal for a given drivetrain system. 
 Two types of generator systems— synchronous and induction machines—are currently being handled by GeneratorSE. The tool includes optimisation modules for four sub-classes: 
 
-1. Permanent-magnet synchronous generator (PMSG),s
+1. Permanent-magnet synchronous generator (PMSG),
 2. Electrically excited synchronous generator (EESG), 
 3. Squirrel-cage induction generators (SCIG), and 
 4. Doubly-fed induction generators (DFIG)
