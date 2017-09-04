@@ -3,11 +3,8 @@ Generator Systems Engineering (GeneratorSE)
 GeneratorSE is a set of analytical tools for sizing variable speed wind turbine Generators. The analytical framework involves electromagnetic, structural, and basic thermal design that are integrated to provide the optimal generator design dimensions using conventional magnetic circuit laws. 
 The tool is structured on OpenMDAO and mainly considers available torque, mechanical power, normal and shear stresses, material properties, and costs to optimize designs of variable-speed wind turbine generators by satisfying specific design criteria. 
 
-<<<<<<< HEAD
-Author: [Latha Sethuraman and Katherine Dykes](nrel.wisdem+GeneratorSE@gmail.com)
-=======
 Authors: [Latha Sethuraman and Katherine Dykes](nrel.wisdem+GeneratorSE@gmail.com)
->>>>>>> develop
+
 
 ## Version
 
@@ -33,7 +30,7 @@ Supporting python packages: Pandas, Algopy, Zope.interface, Sphinx, Xlrd, PyOpt,
 
 First, clone the [repository](https://github.com/WISDEM/GeneratorSE)
 or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the [GeneratorSE site](http://nwtc.nrel.gov/GeneratorSE).
-
+s
 Install GeneratorSE within an activated OpenMDAO environment:
 
 	$ plugin install
