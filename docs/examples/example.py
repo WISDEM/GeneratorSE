@@ -1,8 +1,6 @@
 # 1 ---------
-
-from math import pi
-import numpy as np
 import generatorse.PMSG_arms
+import generatorse.DFIG
 
 
 # 1 ---------
@@ -87,65 +85,18 @@ opt_problem.C_Fes =0.50139                   				# specific cost of structure
 opt_problem.rho_Fe = 7700                 					#Steel density
 opt_problem.rho_Copper =8900                  			# Kg/m3 copper density
 
-opt_problem.run()
-
-# NREL 5 MW Drivetrain variables
-nace.drivetrain_design = 'geared' # geared 3-stage Gearbox with induction generator machine
-nace.machine_rating = 5000.0 # kW
-nace.gear_ratio = 96.76 # 97:1 as listed in the 5 MW reference document
-nace.gear_configuration = 'eep' # epicyclic-epicyclic-parallel
-#nace.bevel = 0 # no bevel stage
-nace.crane = True # onboard crane present
-nace.shaft_angle = 5.0 #deg
-nace.shaft_ratio = 0.10
-nace.Np = [3,3,1]
-nace.ratio_type = 'optimal'
-nace.shaft_type = 'normal'
-nace.uptower_transformer=False
-nace.shrink_disc_mass = 333.3*nace.machine_rating/1000.0 # estimated
-nace.carrier_mass = 8000.0 # estimated
-nace.mb1Type = 'CARB'
-nace.mb2Type = 'SRB'
-nace.flange_length = 0.5 #m
-nace.overhang = 5.0
-nace.gearbox_cm = 0.1
-nace.hss_length = 1.5
-nace.check_fatigue = 0 #0 if no fatigue check, 1 if parameterized fatigue check, 2 if known loads inputs
-nace.blade_number=3
-nace.cut_in=3. #cut-in m/s
-nace.cut_out=25. #cut-out m/s
-nace.Vrated=11.4 #rated windspeed m/s
-nace.weibull_k = 2.2 # windepeed distribution shape parameter
-nace.weibull_A = 9. # windspeed distribution scale parameter
-nace.T_life=20. #design life in years
-nace.IEC_Class_Letter = 'A'
-nace.L_rb = 1.912 # length from hub center to main bearing, leave zero if unknown
-
-# NREL 5 MW Tower Variables
-nace.tower_top_diameter = 3.78 # m
-
 # 5 ---------
 # 6 ---------
 
-nace.run()
+opt_problem.run()
 
 # 6 ---------
 # 7 ---------
+raw_data = {'Parameters': ['Rating','Objective function','Air gap diameter', "Stator length","Kra","Diameter ratio", "Pole pitch(tau_p)", " Number of Stator Slots","Stator slot height(h_s)","Slots/pole/phase","Stator slot width(b_s)", " Stator slot aspect ratio","Stator tooth width(b_t)", "Stator yoke height(h_ys)","Rotor slots", "Rotor yoke height(h_yr)", "Rotor slot height(h_r)", "Rotor slot width(b_r)"," Rotor Slot aspect ratio", "Rotor tooth width(b_t)", "Peak air gap flux density","Peak air gap flux density fundamental","Peak stator yoke flux density","Peak rotor yoke flux density","Peak Stator tooth flux density","Peak rotor tooth flux density","Pole pairs", "Generator output frequency", "Generator output phase voltage", "Generator Output phase current","Optimal Slip","Stator Turns","Conductor cross-section","Stator Current density","Specific current loading","Stator resistance", "Stator leakage inductance", "Excited magnetic inductance"," Rotor winding turns","Conductor cross-section","Magnetization current","I_mag/Is"," Rotor Current density","Rotor resitance", " Rotor leakage inductance", "Generator Efficiency","Overall drivetrain Efficiency","Iron mass","Copper mass","Structural Steel mass","Total Mass","Total Material Cost"],
+		'Values': [opt_problem.DFIG.machine_rating/1e6,opt_problem.Objective_function,2*opt_problem.DFIG.r_s,opt_problem.DFIG.l_s,opt_problem.DFIG.K_rad,opt_problem.DFIG.D_ratio,opt_problem.DFIG.tau_p*1000,opt_problem.DFIG.N_slots,opt_problem.DFIG.h_s*1000,opt_problem.DFIG.q1,opt_problem.DFIG.b_s*1000,opt_problem.DFIG.Slot_aspect_ratio1,opt_problem.DFIG.b_t*1000,opt_problem.DFIG.h_ys*1000,opt_problem.DFIG.Q_r,opt_problem.DFIG.h_yr*1000,opt_problem.DFIG.h_r*1000,opt_problem.DFIG.b_r*1000,opt_problem.DFIG.Slot_aspect_ratio2,opt_problem.DFIG.b_tr*1000,opt_problem.DFIG.B_g,opt_problem.DFIG.B_g1,opt_problem.DFIG.B_symax,opt_problem.DFIG.B_rymax,opt_problem.DFIG.B_tsmax,opt_problem.DFIG.B_trmax,opt_problem.DFIG.p,opt_problem.DFIG.f,opt_problem.DFIG.E_p,opt_problem.DFIG.I_s,opt_problem.DFIG.S_Nmax,opt_problem.DFIG.N_s,opt_problem.DFIG.A_Cuscalc,opt_problem.DFIG.J_s,opt_problem.DFIG.A_1/1000,opt_problem.DFIG.R_s,opt_problem.DFIG.L_s,opt_problem.DFIG.L_sm,opt_problem.DFIG.N_r,opt_problem.DFIG.A_Curcalc,opt_problem.DFIG.I_0,opt_problem.DFIG.Current_ratio,opt_problem.DFIG.J_r,opt_problem.DFIG.R_R,opt_problem.DFIG.L_r,opt_problem.DFIG.gen_eff,opt_problem.DFIG.Overall_eff,opt_problem.DFIG.Iron/1000,opt_problem.DFIG.Cu/1000,opt_problem.DFIG.Structure/1000,opt_problem.DFIG.Mass/1000,opt_problem.DFIG.Costs/1000],
+			'Limit': ['','','','','(0.2-1.5)','(1.37-1.4)','','','','','','(4-10)','','','','','','','(4-10)','','(0.7-1.2)','','2','2.1','2.1','2.1','','','(500-5000)','','(-0.002-0.3)','','','(3-6)','<60','','','','','','','(0.1-0.3)','(3-6)','','','',opt_problem.Eta_target,'','','','',''],
+				'Units':['MW','','m','m','-','-','mm','-','mm','','mm','','mm','mm','-','mm','mm','mm','-','mm','T','T','T','T','T','T','-','Hz','V','A','','turns','mm^2','A/mm^2','kA/m','ohms','p.u','p.u','turns','mm^2','A','','A/mm^2','ohms','p.u','%','%','Tons','Tons','Tons','Tons','$1000']}
+	df=pandas.DataFrame(raw_data, columns=['Parameters','Values','Limit','Units'])
+	print(df)
 
-print "Estimate of Nacelle Component Sizes for the NREL 5 MW Reference Turbine"
-print 'Low speed shaft: {0:8.1f} kg'.format(nace.lowSpeedShaft.mass)
-print 'Main bearings: {0:8.1f} kg'.format(nace.mainBearing.mass + nace.secondBearing.mass)
-print 'Gearbox: {0:8.1f} kg'.format(nace.gearbox.mass)
-print 'High speed shaft & brakes: {0:8.1f} kg'.format(nace.highSpeedSide.mass)
-print 'Generator: {0:8.1f} kg'.format(nace.generator.mass)
-print 'Variable speed electronics: {0:8.1f} kg'.format(nace.above_yaw_massAdder.vs_electronics_mass)
-print 'Overall mainframe:{0:8.1f} kg'.format(nace.above_yaw_massAdder.mainframe_mass)
-print '     Bedplate: {0:8.1f} kg'.format(nace.bedplate.mass)
-print 'Electrical connections: {0:8.1f} kg'.format(nace.above_yaw_massAdder.electrical_mass)
-print 'HVAC system: {0:8.1f} kg'.format(nace.above_yaw_massAdder.hvac_mass )
-print 'Nacelle cover: {0:8.1f} kg'.format(nace.above_yaw_massAdder.cover_mass)
-print 'Yaw system: {0:8.1f} kg'.format(nace.yawSystem.mass)
-print 'Overall nacelle: {0:8.1f} kg'.format(nace.nacelle_mass, nace.nacelle_cm[0], nace.nacelle_cm[1], nace.nacelle_cm[2], nace.nacelle_I[0], nace.nacelle_I[1], nace.nacelle_I[2]  )
-print '    cm {0:6.2f} {1:6.2f} {2:6.2f} [m, m, m]'.format(nace.nacelle_cm[0], nace.nacelle_cm[1], nace.nacelle_cm[2])
-print '    I {0:6.1f} {1:6.1f} {2:6.1f} [kg*m^2, kg*m^2, kg*m^2]'.format(nace.nacelle_I[0], nace.nacelle_I[1], nace.nacelle_I[2])
 # 7 ---------
