@@ -49,29 +49,7 @@ The following inputs and outputs are defined for EESG :
 .. class:: generatorse.EESG.Drive_EESG
 
 
-The following inputs and outputs are defined for DFIG :
 
-.. literalinclude:: ../src/generatorse/DFIG.py
-    :language: python
-    :start-after: Drive_DFIG(Assembly)
-    :end-before: def configure(self)
-    :prepend: class DFIG(Component):
-
-.. module:: generatorse.DFIG
-.. class:: generatorse.DFIG.Drive_DFIG
-
-
-
-The following inputs and outputs are defined for SCIG :
-
-.. literalinclude:: ../src/generatorse/SCIG.py
-    :language: python
-    :start-after: Drive_SCIG(Assembly)
-    :end-before: def configure(self)
-    :prepend: class SCIG(Component):
-
-.. module:: generatorse.SCIG
-.. class:: generatorse.SCIG.Drive_SCIG
 
 
 
