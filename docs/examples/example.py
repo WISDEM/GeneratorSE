@@ -8,44 +8,42 @@ import generatorse.PMSG_arms
 # 1 ---------
 # 2 ---------
 
-# simple test of PMSG for a 5 MW turbine
+## Initial design variables for a DD PMSG designed for a 5MW turbine
 
-  opt_problem = Drive_PMSG_arms('CONMINdriver','Costs')  		# Optimiser and Objective function
+opt_problem = Drive_PMSG_arms('CONMINdriver','Costs') # Optimiser and Objective function
 	
-	# Initial design variables for a DD PMSG designed for a 5MW turbine
-	
-	opt_problem.P_rated=5.0e6             										# Rated power  
-	opt_problem.T_rated=4.143289e6														# Rated torque (Nm)
-	opt_problem.N=12.1                    										# Rated speed (rpm)
-	opt_problem.Eta_target = 93																# Target design efficiency %
-	
-	opt_problem.PMSG_r_s= 3.26																# Air gap radius (meter)               
-	opt_problem.PMSG_l_s= 1.6																	# core length (meter)
-	opt_problem.PMSG_h_s = 0.07																# Stator slot height (meter)
-	opt_problem.PMSG_tau_p = 0.08															# Pole pitch (meter)
-	opt_problem.PMSG_h_m = 0.009															# Magnet height (meter)
-	opt_problem.PMSG_h_ys = 0.0615														# Stator yoke height (meter)
-	opt_problem.PMSG_h_yr = 0.057															# Rotor yoke height (meter)
-	opt_problem.PMSG_n_s = 5																	# Stator arms
-	opt_problem.PMSG_b_st = 0.480															# Stator circumferential arm dimension (meter)
-	opt_problem.PMSG_n_r =5																		# Rotor arms
-	opt_problem.PMSG_b_r = 0.520															# Rotor circumferential arm dimension (meter)
-	opt_problem.PMSG_d_r = 0.7																# Rotor axial arm dimension (meter)
-	opt_problem.PMSG_d_s= 0.3																	# Stator axial arm dimension (meter)
-	opt_problem.PMSG_t_wr =0.06																# Rotor arm thickness (meter)
-	opt_problem.PMSG_t_ws =0.06																# Stator arm thickness (meter)
-	opt_problem.PMSG_R_o =0.43      													# Main shaft radius (meter)
-	
-	# Specific costs
-	opt_problem.C_Cu   =4.786                  								# Unit cost of Copper $/kg
-	opt_problem.C_Fe	= 0.556                    							# Unit cost of Iron/magnetic steel $/kg
-	opt_problem.C_Fes =0.50139                   							# specific cost of structural steel
-	
-	#Material properties
-	opt_problem.rho_Fe = 7700                 								# magnetic Steel density
-	opt_problem.rho_Copper =8900              								# Kg/m3 copper density
-	opt_problem.rho_PM =7450                  								# Kg/m3 magnet density
-	opt_problem.rho_Fes =7850                  								# Kg/m3 structural steel density
+opt_problem.P_rated=5.0e6             								# Rated power  
+opt_problem.T_rated=4.143289e6												# Rated torque (Nm)
+opt_problem.N=12.1                    								# Rated speed (rpm)
+opt_problem.Eta_target = 93														# Target design efficiency %
+
+opt_problem.PMSG_r_s= 3.26														# Air gap radius (meter)               
+opt_problem.PMSG_l_s= 1.6															# core length (meter)
+opt_problem.PMSG_h_s = 0.07														# Stator slot height (meter)
+opt_problem.PMSG_tau_p = 0.08													# Pole pitch (meter)
+opt_problem.PMSG_h_m = 0.009													# Magnet height (meter)
+opt_problem.PMSG_h_ys = 0.0615												# Stator yoke height (meter)
+opt_problem.PMSG_h_yr = 0.057													# Rotor yoke height (meter)
+opt_problem.PMSG_n_s = 5															# Stator arms
+opt_problem.PMSG_b_st = 0.480													# Stator circumferential arm dimension (meter)
+opt_problem.PMSG_n_r =5																# Rotor arms
+opt_problem.PMSG_b_r = 0.520													# Rotor circumferential arm dimension (meter)
+opt_problem.PMSG_d_r = 0.7														# Rotor axial arm dimension (meter)
+opt_problem.PMSG_d_s= 0.3															# Stator axial arm dimension (meter)
+opt_problem.PMSG_t_wr =0.06														# Rotor arm thickness (meter)
+opt_problem.PMSG_t_ws =0.06														# Stator arm thickness (meter)
+opt_problem.PMSG_R_o =0.43      											# Main shaft radius (meter)
+
+# Specific costs
+opt_problem.C_Cu   =4.786                  						# Unit cost of Copper $/kg
+opt_problem.C_Fe	= 0.556                    					# Unit cost of Iron/magnetic steel $/kg
+opt_problem.C_Fes =0.50139                   					# specific cost of structural steel
+
+#Material properties
+opt_problem.rho_Fe = 7700                 						# magnetic Steel density
+opt_problem.rho_Copper =8900              						# Kg/m3 copper density
+opt_problem.rho_PM =7450                  						# Kg/m3 magnet density
+opt_problem.rho_Fes =7850                  						# Kg/m3 structural steel density
 
 # 2 ----------
 # 3 ----------
@@ -65,32 +63,31 @@ print df
 # 4 ---------
 # 5 ---------
 
-# test of gear driven doubly fed Induction generator
+# # Initial design values for a DFIG designed for a 5MW turbine
 
-# Initial design values for a DFIG designed for a 5MW turbine
-  opt_problem = Drive_DFIG('CONMINdriver','Costs')         # Optimiser and Objective function
-	opt_problem.Eta_target=93																 # Target overall drivetrain efficiency             
-	opt_problem.DFIG_P_rated=5e6														 # Rated power
-	opt_problem.DFIG_N_rated=1200														 # Rated speed
-	opt_problem.Gearbox_efficiency=0.955										 # Gearbox efficiency
-	opt_problem.DFIG_r_s= 0.65                               # Air gap radius (meter)                       
-	opt_problem.DFIG_l_s= 0.6 															 # Core length (meter)
-	opt_problem.DFIG_h_s = 0.1 															 # Stator Slot height (meter)
-	opt_problem.DFIG_h_r = 0.065 														 # Rotor Slot height (meter)
-	opt_problem.DFIG_I_0 = 32 															 # No-load magnetization current (Ampere)
-	opt_problem.DFIG_B_symax = 1.3 													 # Peak Stator yoke flux density (Tesla)
-	opt_problem.DFIG_S_Nmax = -0.3  												 # Maximum slip
-	
-	# Specific costs
-	opt_problem.C_Cu   =4.786                  							 # Unit cost of Copper $/kg
-	opt_problem.C_Fe	= 0.556                    						 # Unit cost of Iron $/kg
-	opt_problem.C_Fes =0.50139                   						 # specific cost of structure
-	
-	#Material properties
-	opt_problem.rho_Fe = 7700                 							 #Steel density
-	opt_problem.rho_Copper =8900                  					 # Kg/m3 copper density
+opt_problem = Drive_DFIG('CONMINdriver','Costs')    # Optimiser and Objective function
+opt_problem.Eta_target=93														# Target overall drivetrain efficiency             
+opt_problem.DFIG_P_rated=5e6												# Rated power
+opt_problem.DFIG_N_rated=1200												# Rated speed
+opt_problem.Gearbox_efficiency=0.955								# Gearbox efficiency
+opt_problem.DFIG_r_s= 0.65                          # Air gap radius (meter)                       
+opt_problem.DFIG_l_s= 0.6 													# Core length (meter)
+opt_problem.DFIG_h_s = 0.1 													# Stator Slot height (meter)
+opt_problem.DFIG_h_r = 0.065 												# Rotor Slot height (meter)
+opt_problem.DFIG_I_0 = 32 													# No-load magnetization current (Ampere)
+opt_problem.DFIG_B_symax = 1.3 											# Peak Stator yoke flux density (Tesla)
+opt_problem.DFIG_S_Nmax = -0.3  										# Maximum slip
 
-	opt_problem.run()
+# Specific costs
+opt_problem.C_Cu   =4.786                  				  # Unit cost of Copper $/kg
+opt_problem.C_Fe	= 0.556                    				# Unit cost of Iron $/kg
+opt_problem.C_Fes =0.50139                   				# specific cost of structure
+
+#Material properties
+opt_problem.rho_Fe = 7700                 					#Steel density
+opt_problem.rho_Copper =8900                  			# Kg/m3 copper density
+
+opt_problem.run()
 
 # NREL 5 MW Drivetrain variables
 nace.drivetrain_design = 'geared' # geared 3-stage Gearbox with induction generator machine
