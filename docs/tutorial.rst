@@ -6,7 +6,7 @@
 Tutorial
 --------
 
-As an example, let us size a direct-drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
+As a frst example, we will size a direct-drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
 
 The first step is to import the relevant files.
 
@@ -39,7 +39,7 @@ The resulting system and component properties can then be printed.
     :start-after: # 4 ---
     :end-before: # 4 ---
 
-The results should appear as below:
+The results should appear as below listing the parameters together with their limits where applicable:
 
 >>>                               Parameters       Values       Limit      Units
 >>>0                                  Rating     5.000000                     MW
@@ -97,47 +97,87 @@ The results should appear as below:
 >>>52                             Rotor Mass    40.103961                    ton
 >>>53                    Total Material Cost   282.820957                     k$
 
+These result file can be read into the the MATALB script [Par_GeneratorSE_FEMM_PMSG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
 
-Secondly, we will design a gear driven Doubly fed Induction generator.  The DFIG design 
+As a second example, we will design a gear driven Doubly fed Induction generator(DFIG).  The DFIG design 
 relies on inputs such as machine rating, target overall drivetrain efficiency, gearbox efficiency,
 high speed shaft speed( or gear ratio).It also requires specification of shear stress, material properties( densities), specific material costs. 
 The main design variables are initialized with an objective and driver. The designs are computed analytically and checked against predefined constraints 
-to meet objective functions.The optimized design dimensions are printed on screen and available in an output file in a Microsoft Excel format.
+to meet objective functions.In addition, calculations of mass properties are also made.
+We now instantiate the DFIG object which automatically updates the mass, costs, efficiency and performance variables based on the supplied inputs.  
 
 .. literalinclude:: examples/example.py
     :start-after: # 5 ---
     :end-before: # 5 ---
 
-We now instantiate the DFIG object which automatically updates the mass, costs, efficiency and performance variables based on the supplied inputs.  
-In addition, calculations of mass properties are also made.
+
 
 .. literalinclude:: examples/example.py
     :start-after: # 6 ---
     :end-before: # 6 ---
 
 
-The resulting system and component properties can then be printed.
+The resulting system and component properties can then be printed. 
 
 .. literalinclude:: examples/example.py
     :start-after: # 7 ---
     :end-before: # 7 ---
 
-The results should appear as below:
+The optimized design dimensions together with the performance parameters are printed on screen and available in an output file in a Microsoft Excel format(file name [DFIG_5.0MW.xlsx]). 
+The results should appear as below listing the parameters together with their limits where applicable:
 
->>> Estimate of Nacelle Component Sizes for the NREL 5 MW Reference Turbine
->>> Low speed shaft:  18564.9 kg
->>> Main bearings:   5845.4 kg
->>> Gearbox:  55658.3 kg
->>> High speed shaft & brakes:   2414.7 kg
->>> Generator:  16699.9 kg
->>> Variable speed electronics:      0.0 kg
->>> Overall mainframe: 60785.2 kg
->>>      Bedplate:  51364.7 kg
->>> Electrical connections:      0.0 kg
->>> HVAC system:    400.0 kg
->>> Nacelle cover:   4577.4 kg
->>> Yaw system:   6044.7 kg
->>> Overall nacelle: 170990.5 kg
->>>     cm  -0.44   0.00   0.26 [m, m, m]
->>>     I 77320965.7 1033725.7 935773.7 [kg*m^2, kg*m^2, kg*m^2]
+>>>                               Parameters       Values         Limit   Units
+>>>0                                  Rating            5                    MW
+>>>1                      Objective function        Costs
+>>>2                        Air gap diameter     0.893608                     m
+>>>3                           Stator length      1.15888                     m
+>>>4                                     Kra      1.29685     (0.2-1.5)       -
+>>>5                          Diameter ratio      1.37928    (1.37-1.4)       -
+>>>6                       Pole pitch(tau_p)      467.892                    mm
+>>>7                  Number of Stator Slots           90                     -
+>>>8                 Stator slot height(h_s)          100                    mm
+>>>9                        Slots/pole/phase            5
+>>>10                 Stator slot width(b_s)      14.0368                    mm
+>>>11               Stator slot aspect ratio      7.12415        (4-10)
+>>>12                Stator tooth width(b_t)       17.156                    mm
+>>>13               Stator yoke height(h_ys)      64.4629                    mm
+>>>14                            Rotor slots           72                     -
+>>>15                Rotor yoke height(h_yr)      64.4629                    mm
+>>>16                 Rotor slot height(h_r)      83.0378                    mm
+>>>17                  Rotor slot width(b_r)      17.4614                    mm
+>>>18                Rotor Slot aspect ratio      4.75549        (4-10)       -
+>>>19                 Rotor tooth width(b_t)      21.3418                    mm
+>>>20              Peak air gap flux density     0.700955     (0.7-1.2)       T
+>>>21  Peak air gap flux density fundamental     0.655258                     T
+>>>22          Peak stator yoke flux density      1.61948             2       T
+>>>23           Peak rotor yoke flux density      1.61948           2.1       T
+>>>24         Peak Stator tooth flux density      1.27446           2.1       T
+>>>25          Peak rotor tooth flux density      1.56712           2.1       T
+>>>26                             Pole pairs            3                     -
+>>>27             Generator output frequency           60                    Hz
+>>>28         Generator output phase voltage      2327.55    (500-5000)       V
+>>>29         Generator Output phase current      578.929                     A
+>>>30                           Optimal Slip         -0.3  (-0.002-0.3)
+>>>31                           Stator Turns           30                 turns
+>>>32                Conductor cross-section      266.698                  mm^2
+>>>33                 Stator Current density      2.17073         (3-6)  A/mm^2
+>>>34               Specific current loading      37.1194           <60    kA/m
+>>>35                      Stator resistance            0                  ohms
+>>>36              Stator leakage inductance  0.000268092                   p.u
+>>>37            Excited magnetic inductance    0.0343756                   p.u
+>>>38                    Rotor winding turns           98                 turns
+>>>39                Conductor cross-section      91.7704                  mm^2
+>>>40                  Magnetization current      38.2396                     A
+>>>41                               I_mag/Is     0.178009     (0.1-0.3)
+>>>42                  Rotor Current density      6.00211         (3-6)  A/mm^2
+>>>43                        Rotor resitance   0.00705202                  ohms
+>>>44               Rotor leakage inductance  0.000701202                   p.u
+>>>45                   Generator Efficiency       98.511                     %
+>>>46          Overall drivetrain Efficiency       94.078            93       %
+>>>47                              Iron mass      5.65377                  Tons
+>>>48                            Copper mass     0.900368                  Tons
+>>>49                  Structural Steel mass      13.4686                  Tons
+>>>50                             Total Mass      20.0227                  Tons
+>>>51                    Total Material Cost      14.2057                 $1000
 
+These result file can be read into the the MATALB script [Par_GeneratorSE_FEMM_DFIG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
