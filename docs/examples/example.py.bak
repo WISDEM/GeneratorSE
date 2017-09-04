@@ -75,7 +75,7 @@ opt_problem.DFIG_B_symax = 1.3 											# Peak Stator yoke flux density (Tesla
 opt_problem.DFIG_S_Nmax = -0.3  										# Maximum slip
 
 # Specific costs
-opt_problem.C_Cu   =4.786														# Unit cost of Copper $/kg
+opt_problem.C_Cu   =4.786                  				  # Unit cost of Copper $/kg
 opt_problem.C_Fe	= 0.556                    				# Unit cost of Iron $/kg
 opt_problem.C_Fes =0.50139                   				# specific cost of structure
 
