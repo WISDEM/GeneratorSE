@@ -9,13 +9,11 @@ import generatorse.DFIG
 ## Initial design variables for a DD PMSG designed for a 5MW turbine
 
 opt_problem = Drive_PMSG_arms('CONMINdriver','Costs') # Optimiser and Objective function
-	
-opt_problem.P_rated=5.0e6             								# Rated power  
+opt_problem.P_rated=5.0e6															# Rated power
 opt_problem.T_rated=4.143289e6												# Rated torque (Nm)
-opt_problem.N=12.1                    								# Rated speed (rpm)
+opt_problem.N=12.1																		# Rated speed (rpm)
 opt_problem.Eta_target = 93														# Target design efficiency %
-
-opt_problem.PMSG_r_s= 3.26														# Air gap radius (meter)               
+opt_problem.PMSG_r_s= 3.26														# Air gap radius (meter)
 opt_problem.PMSG_l_s= 1.6															# core length (meter)
 opt_problem.PMSG_h_s = 0.07														# Stator slot height (meter)
 opt_problem.PMSG_tau_p = 0.08													# Pole pitch (meter)
@@ -30,9 +28,9 @@ opt_problem.PMSG_d_r = 0.7														# Rotor axial arm dimension (meter)
 opt_problem.PMSG_d_s= 0.3															# Stator axial arm dimension (meter)
 opt_problem.PMSG_t_wr =0.06														# Rotor arm thickness (meter)
 opt_problem.PMSG_t_ws =0.06														# Stator arm thickness (meter)
-opt_problem.PMSG_R_o =0.43      											# Main shaft radius (meter)
+opt_problem.PMSG_R_o =0.43														# Main shaft radius (meter)
 
-# Specific costs
+#Specific costs
 opt_problem.C_Cu   =4.786                  						# Unit cost of Copper $/kg
 opt_problem.C_Fe	= 0.556                    					# Unit cost of Iron/magnetic steel $/kg
 opt_problem.C_Fes =0.50139                   					# specific cost of structural steel
@@ -64,11 +62,11 @@ print df
 # # Initial design values for a DFIG designed for a 5MW turbine
 
 opt_problem = Drive_DFIG('CONMINdriver','Costs')    # Optimiser and Objective function
-opt_problem.Eta_target=93														# Target overall drivetrain efficiency             
+opt_problem.Eta_target=93														# Target overall drivetrain efficiency
 opt_problem.DFIG_P_rated=5e6												# Rated power
 opt_problem.DFIG_N_rated=1200												# Rated speed
 opt_problem.Gearbox_efficiency=0.955								# Gearbox efficiency
-opt_problem.DFIG_r_s= 0.65                          # Air gap radius (meter)                       
+opt_problem.DFIG_r_s= 0.65                          # Air gap radius (meter)
 opt_problem.DFIG_l_s= 0.6 													# Core length (meter)
 opt_problem.DFIG_h_s = 0.1 													# Stator Slot height (meter)
 opt_problem.DFIG_h_r = 0.065 												# Rotor Slot height (meter)
@@ -84,9 +82,6 @@ opt_problem.C_Fes =0.50139                   				# specific cost of structure
 #Material properties
 opt_problem.rho_Fe = 7700                 					#Steel density
 opt_problem.rho_Copper =8900                  			# Kg/m3 copper density
-
-# NREL 5 MW Tower Variables
-nace.tower_top_diameter = 3.78 # m
 
 # 5 ---------
 # 6 ---------

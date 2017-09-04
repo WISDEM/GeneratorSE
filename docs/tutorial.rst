@@ -97,7 +97,7 @@ The results should appear as below listing the parameters together with their li
 >>>52                             Rotor Mass    40.103961                    ton
 >>>53                    Total Material Cost   282.820957                     k$
 
-These result file can be read into the the MATALB script [Par_GeneratorSE_FEMM_PMSG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
+These structural design dimensions can be used to create CAD models and the resulting design can be validated by structural analysis. The electromagnetic design dimensions from the excel file can be read into the the MATALB script [Par_GeneratorSE_FEMM_PMSG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
 
 As a second example, we will design a gear driven Doubly fed Induction generator(DFIG).  The DFIG design 
 relies on inputs such as machine rating, target overall drivetrain efficiency, gearbox efficiency,

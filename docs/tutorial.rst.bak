@@ -6,7 +6,7 @@
 Tutorial
 --------
 
-As an example, let us size a direct-drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
+As a frst example, we will size a direct-drive Permanent Magnet synchronous Generator (PMSG) for the NREL 5MW Reference Model :cite:`FAST2009`.  
 
 The first step is to import the relevant files.
 
@@ -97,8 +97,9 @@ The results should appear as below listing the parameters together with their li
 >>>52                             Rotor Mass    40.103961                    ton
 >>>53                    Total Material Cost   282.820957                     k$
 
+These structural design dimensions can be used to create CAD models and the resulting design can be validated by structural analysis. The electromagnetic design dimensions can be read into the the MATALB script [Par_GeneratorSE_FEMM_PMSG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
 
-Secondly, we will design a gear driven Doubly fed Induction generator.  The DFIG design 
+As a second example, we will design a gear driven Doubly fed Induction generator(DFIG).  The DFIG design 
 relies on inputs such as machine rating, target overall drivetrain efficiency, gearbox efficiency,
 high speed shaft speed( or gear ratio).It also requires specification of shear stress, material properties( densities), specific material costs. 
 The main design variables are initialized with an objective and driver. The designs are computed analytically and checked against predefined constraints 
@@ -122,7 +123,8 @@ The resulting system and component properties can then be printed.
     :start-after: # 7 ---
     :end-before: # 7 ---
 
-The optimized design dimensions together with the performance parameters are printed on screen and available in an output file in a Microsoft Excel format(file name [DFIG_5.0MW.xlsx]). The results should appear as below listing the parameters together with their limits where applicable:
+The optimized design dimensions together with the performance parameters are printed on screen and available in an output file in a Microsoft Excel format(file name [DFIG_5.0MW.xlsx]). 
+The results should appear as below listing the parameters together with their limits where applicable:
 
 >>>                               Parameters       Values         Limit   Units
 >>>0                                  Rating            5                    MW
@@ -178,3 +180,4 @@ The optimized design dimensions together with the performance parameters are pri
 >>>50                             Total Mass      20.0227                  Tons
 >>>51                    Total Material Cost      14.2057                 $1000
 
+These result file can be read into the the MATALB script [Par_GeneratorSE_FEMM_DFIG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
