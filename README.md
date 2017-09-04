@@ -21,7 +21,7 @@ General: NumPy, SciPy, Swig, pyWin32, MatlPlotLib, Lxml, OpenMDAO
 
 Wind Plant Framework: [FUSED-Wind](http://fusedwind.org) (Framework for Unified Systems Engineering and Design of Wind Plants)
 
-Sub-Models: CommonSE, DriveWPACT
+Other interfaces: DriveSE
 
 Supporting python packages: Pandas, Algopy, Zope.interface, Sphinx, Xlrd, PyOpt, py2exe, Pyzmq, Sphinxcontrib-bibtex, Sphinxcontrib-zopeext, Numpydoc, Ipython
 
