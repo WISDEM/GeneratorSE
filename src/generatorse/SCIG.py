@@ -612,14 +612,14 @@ def SCIG_Opt_example():
     opt_problem = SCIG_Opt('CONMINdriver','SCIG_Cost.Costs',1)
     
     #Initial design variables for a SCIG designed for a 5MW turbine
-    opt_problem.SCIG_r_s= 0.3 #meter
-    opt_problem.SCIG_l_s= 0.51 #meter
-    opt_problem.SCIG_h_s = 0.04 #meter
+    opt_problem.SCIG_r_s= 0.55 #meter
+    opt_problem.SCIG_l_s= 1.3 #meter
+    opt_problem.SCIG_h_s = 0.090 #meter
     opt_problem.SCIG_h_r = 0.050 #meter
-    opt_problem.SCIG_I_0 = 80  #Ampere
-    opt_problem.SCIG_B_symax = 1.3  #Tesla
+    opt_problem.SCIG_I_0 = 140  #Ampere
+    opt_problem.SCIG_B_symax = 1.4 #Tesla
     opt_problem.Eta_target=93
-    opt_problem.SCIG_P_rated=0.75e6
+    opt_problem.SCIG_P_rated=5e6
     opt_problem.Gearbox_efficiency=0.955
     opt_problem.SCIG_N_rated=1200
     # Specific costs
@@ -645,7 +645,7 @@ def SCIG_Opt_example():
     print(df)
     #df.to_excel('SCIG_'+str(opt_problem.SCIG_P_rated/1e6)+'_MW.xlsx')
     
-     """
+    """ 
 
 if __name__=="__main__":
 

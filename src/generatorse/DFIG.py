@@ -316,7 +316,7 @@ class DFIG(Component):
 		sigma1=1-(self.L_sm**2/self.L_s/self.L_r)
 		
 		#Rotor Field winding
-		print g_eff     
+		    
 		# conductor cross-section
 		diff=self.h_r-h_w
 		A_Cur=k_fillr*self.p*q2*self.b_r*diff/self.N_r
@@ -335,7 +335,7 @@ class DFIG(Component):
 		self.E_p=om_s*self.N_s*k_wd1*self.r_s*self.l_s*self.B_g1*sqrt(2)
 		
 		I_r=P_e/m/self.E_p         										# rotor active current
-		print I_r
+		
 		I_sm=self.E_p/(2*pi*freq*(self.L_s+self.L_sm)) # stator reactive current
 		self.I_s=sqrt((I_r**2+I_sm**2))								#Stator current
 		I_srated=self.machine_rating/3/K_rs/self.E_p	#Rated current
@@ -365,7 +365,7 @@ class DFIG(Component):
 		L_tot=self.l_s
 		self.Structural_mass=0.0002*M_gen**2+0.6457*M_gen+645.24
 		self.Mass=M_gen+self.Structural_mass
-		print V_Cuss,M_Fest,M_Fesy,M_Fert,M_Fery
+		
 		# Calculating Losses and efficiency 
     # 1. Copper losses
 		
@@ -435,7 +435,7 @@ class DFIG_Cost(Component):
 		C_Fe=self.C_Fe
 		C_Fes=self.C_Fes
 		Costs=self.Costs
-		print self.C_Fes
+		
 		Structural_mass=self.Structural_mass
 		# Material cost as a function of material mass and specific cost of material
 		K_gen=self.Copper*self.C_Cu+(self.Iron)*self.C_Fe #%M_pm*K_pm; # 

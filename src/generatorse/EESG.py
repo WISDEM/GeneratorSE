@@ -528,6 +528,8 @@ class EESG(Component):
     	  W_iis     =g1*sin(phi)*(V_Cuss*self.rho_Copper+mass_st_lam_s)/2/N_st
     	  w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st
     	  
+    	  print (V_Cusr*self.rho_Copper+M_Fert)*g1
+    	  
     	  X_comp1 = (W_is*l_is**3/12/E/I_arm_axi_s)
     	  X_comp2 =(W_iis*l_iis**4/24/E/I_arm_axi_s)
     	  X_comp3 =w_s*l_iiis**4/24/E/I_arm_axi_s
@@ -752,26 +754,26 @@ def EESG_Opt_example():
 		
 		# Initial design variables for a DD EESG designed for a 5MW turbine
 		opt_problem.Eta_target=93.0
-		opt_problem.P_rated=0.75e6
-		opt_problem.T_rated=250418.6168     # 0.75MW:250418.6168   ;1.5MW: 698729.0185; 3MW: 1.7904931e6
-		opt_problem.N_rated=28.6
-		opt_problem.EESG_r_s=1.5
-		opt_problem.EESG_l_s= 0.7
-		opt_problem.EESG_h_s = 0.08
-		opt_problem.EESG_tau_p = 0.1
-		opt_problem.EESG_I_f = 15
-		opt_problem.EESG_N_f = 250
-		opt_problem.EESG_h_ys = 0.01
-		opt_problem.EESG_h_yr = 0.01
+		opt_problem.P_rated=5e6
+		opt_problem.T_rated=4.143289e6     # 0.75MW:250418.6168   ;1.5MW: 698729.0185; 3MW: 1.7904931e6
+		opt_problem.N_rated=12.1
+		opt_problem.EESG_r_s=3.2
+		opt_problem.EESG_l_s= 1.4
+		opt_problem.EESG_h_s = 0.060
+		opt_problem.EESG_tau_p = 0.170
+		opt_problem.EESG_I_f = 69
+		opt_problem.EESG_N_f = 100
+		opt_problem.EESG_h_ys = 0.130
+		opt_problem.EESG_h_yr = 0.120
 		opt_problem.EESG_n_s = 5
-		opt_problem.EESG_b_st = 0.17
+		opt_problem.EESG_b_st = 0.470
 		opt_problem.EESG_n_r =5
-		opt_problem.EESG_b_r = 0.2
-		opt_problem.EESG_d_r = 0.420
-		opt_problem.EESG_d_s= 0.360
-		opt_problem.EESG_t_wr =0.05
-		opt_problem.EESG_t_ws =0.05
-		opt_problem.EESG_R_o =0.17625      #10MW: 0.523950817,#5MW: 0.43, #3MW:0.363882632 #1.5MW: 0.2775  0.75MW: 0.17625
+		opt_problem.EESG_b_r = 0.480
+		opt_problem.EESG_d_r = 0.510
+		opt_problem.EESG_d_s= 0.400
+		opt_problem.EESG_t_wr =0.140
+		opt_problem.EESG_t_ws =0.070
+		opt_problem.EESG_R_o =0.43      #10MW: 0.523950817,#5MW: 0.43, #3MW:0.363882632 #1.5MW: 0.2775  0.75MW: 0.17625
 		
 		# Costs
 		opt_problem.C_Cu   =4.786
