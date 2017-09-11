@@ -17,6 +17,8 @@ class PMSG(Component):
 	
 	""" Estimates overall mass dimensions and Efficiency of PMSG -disc rotor generator. """
 	
+	# PMSG_disc generator design inputs
+	
 	r_s = Float(iotype='in', desc='airgap radius r_s')
 	l_s = Float(iotype='in', desc='Stator core length l_s')
 	h_s = Float(iotype='in', desc='Yoke height h_s')
@@ -94,10 +96,14 @@ class PMSG(Component):
 	R_out=Float(iotype='out', desc='Outer radius')
 	S			=Float(iotype='out', desc='Stator slots')
 	Slot_aspect_ratio=Float(iotype='out', desc='Slot aspect ratio')
+	
+	#inputs/outputs for interface with drivese
 	main_shaft_cm = Array(np.array([0.0, 0.0, 0.0]),iotype='in', desc='Main Shaft CM')
 	main_shaft_length=Float(iotype='in', desc='main shaft length')
 	cm=Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='COM [x,y,z]')
 	I=Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='Moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
+	
+	# Mass Outputs
 	mass_PM=Float(iotype='out', desc='Magnet mass')
 	Copper		=Float(iotype='out', desc='Copper Mass')
 	Iron	=Float(iotype='out', desc='Electrical Steel Mass')
@@ -202,7 +208,6 @@ class PMSG(Component):
 		#Assign values to design constants
 		h_w    =0.005										# wedge height
 		y_tau_p=1												# coiil span to pole pitch
-		self.K_rad=self.l_s/(2*self.r_s) # aspect ratio
 		m      =3                    # no of phases
 		q1     =1                    # no of slots per pole per phase
 		b_s_tau_s=0.45							 # slot width/slot pitch ratio
@@ -219,7 +224,11 @@ class PMSG(Component):
 		self.t_s =self.h_ys    
 		self.t =self.h_yr
 		
-		# Electromagnetic design
+		# Aspect ratio
+		self.K_rad=self.l_s/(2*self.r_s) # aspect ratio
+		
+		###################################################### Electromagnetic design#############################################
+		
 		dia				=  2*self.r_s              # air gap diameter
 		g         =  0.001*dia							 # air gap length
 		self.b_m  =0.7*self.tau_p							# magnet width
@@ -321,7 +330,7 @@ class PMSG(Component):
 		self.Losses=P_Cu+P_Festnom+P_Fesynom+P_ad+P_Ftm
 		self.gen_eff=self.machine_rating*100/(self.machine_rating+self.Losses)
 		
-		### Structural design
+		################################################## Structural  Design ############################################################
 		
 		## Structural deflection calculations
 		#rotor structure
@@ -456,7 +465,7 @@ class PMSG(Component):
 		# Stator circumferential deflection
 		self.z_all_s     =0.05*2*pi*R_st/360  # allowable torsional deflection
 		self.z_A_s  =2*pi*(R_st+0.5*self.t_s)*l/(2*N_st)*sigma*(l_is+0.5*self.t_s)**3/3/E/I_arm_tor_s
-		
+
 		mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*self.rho_Fes)
 		
 		self.TC1=T/(2*pi*sigma)     # Torque/shear stress
@@ -474,6 +483,7 @@ class PMSG(Component):
 		cm[1]  = self.main_shaft_cm[1]
 		cm[2]  = self.main_shaft_cm[2]
 
+####################################################Cost Analysis#######################################################################
 
 class PMSG_Cost(Component):
 	
@@ -506,7 +516,9 @@ class PMSG_Cost(Component):
 		# Material cost as a function of material mass and specific cost of material
 		K_gen=self.Copper*self.C_Cu+self.Iron*self.C_Fe+self.C_PM*self.mass_PM
 		Cost_str=self.C_Fes*self.Structural_mass
-		self.Costs=K_gen+Cost_str 
+		self.Costs=K_gen+Cost_str
+		
+####################################################OPTIMISATION SET_UP ############################################################### 
 
 class PMSG_disc_Opt(Assembly):
 	Eta_target=Float(iotype='in', desc='Target drivetrain efficiency')
@@ -660,23 +672,23 @@ def PMSG_disc_Opt_example():
 	
 	#Initial design variables for a DD PMSG designed for a 5MW turbine
 	
-	opt_problem.P_rated=10e6
-	opt_problem.T_rated=9549296.586
+	opt_problem.P_rated=5e6
+	opt_problem.T_rated=4.143289e6
 	opt_problem.Eta_target = 93
-	opt_problem.N=10
-	opt_problem.PMSG_r_s=4.31
-	opt_problem.PMSG_l_s= 2.2
+	opt_problem.N=12.1
+	opt_problem.PMSG_r_s=3.49
+	opt_problem.PMSG_l_s= 1.5
 	opt_problem.PMSG_h_s = 0.060
-	opt_problem.PMSG_tau_p = 0.08
-	opt_problem.PMSG_h_m = 0.014
-	opt_problem.PMSG_h_ys = 0.108
-	opt_problem.PMSG_h_yr = 0.065
+	opt_problem.PMSG_tau_p = 0.07
+	opt_problem.PMSG_h_m = 0.0105
+	opt_problem.PMSG_h_ys = 0.085
+	opt_problem.PMSG_h_yr = 0.055
 	opt_problem.PMSG_n_s = 5
-	opt_problem.PMSG_b_st = 0.579
-	opt_problem.PMSG_t_d = 0.160
-	opt_problem.PMSG_d_s= 0.450
-	opt_problem.PMSG_t_ws =0.190
-	opt_problem.PMSG_R_o =0.523950817
+	opt_problem.PMSG_b_st = 0.460
+	opt_problem.PMSG_t_d = 0.105
+	opt_problem.PMSG_d_s= 0.350
+	opt_problem.PMSG_t_ws =0.150
+	opt_problem.PMSG_R_o =0.43
 	
 	# Specific costs
 	opt_problem.C_Cu   =4.786

@@ -16,6 +16,8 @@ class PMSG(Component):
 	
 	""" Estimates overall mass dimensions and Efficiency of PMSG -arms generator. """
 	
+	# PMSG_arms generator design inputs
+	
 	r_s = Float(iotype='in', desc='airgap radius r_s')
 	l_s = Float(iotype='in', desc='Stator core length l_s')
 	h_s = Float(iotype='in', desc='Yoke height h_s')
@@ -102,14 +104,25 @@ class PMSG(Component):
 	R_out=Float(iotype='out', desc='Outer radius')
 	S			=Float(iotype='out', desc='Stator slots')
 	Slot_aspect_ratio=Float(iotype='out', desc='Slot aspect ratio')
-	main_shaft_cm = Array(np.array([0.0, 0.0, 0.0]),iotype='in', desc='Main Shaft CM')
-	main_shaft_length=Float(iotype='in', desc='main shaft length')
-	cm=Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='COM [x,y,z]')
-	I=Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='Moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
+	
+	# Mass Outputs
 	mass_PM=Float(iotype='out', desc='Magnet mass')
 	Copper		=Float(iotype='out', desc='Copper Mass')
 	Iron	=Float(iotype='out', desc='Electrical Steel Mass')
 	Structural_mass	=Float(iotype='out', desc='Structural Mass')
+	
+	# Material properties
+	rho_Fes=Float(iotype='in', desc='Structural Steel density kg/m^3')
+	rho_Fe=Float(iotype='in', desc='Magnetic Steel density kg/m^3')
+	rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
+	rho_PM=Float(iotype='in', desc='Magnet density kg/m^3')
+	
+	#inputs/outputs for interface with drivese	
+	main_shaft_cm = Array(np.array([0.0, 0.0, 0.0]),iotype='in', desc='Main Shaft CM')
+	main_shaft_length=Float(iotype='in', desc='main shaft length')
+	cm=Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='COM [x,y,z]')
+	I=Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='Moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
+
 	
 	def execute(self):
 		
@@ -223,7 +236,7 @@ class PMSG(Component):
 		self.t =self.h_yr
 		
 		
-		### Electromagnetic design
+		###################################################### Electromagnetic design#############################################
 		self.K_rad=self.l_s/(2*self.r_s)							# Aspect ratio
 		T =   self.Torque															# rated torque
 		l_u       =k_fes * self.l_s                   #useful iron stack length
@@ -341,7 +354,7 @@ class PMSG(Component):
 		
 		
 		
-		#### Structural  Design 
+		################################################## Structural  Design ############################################################
 		
 		##Deflection Calculations##
 		
@@ -383,7 +396,7 @@ class PMSG(Component):
 		w_r					=self.rho_Fes*g1*sin(phi)*a_r*N_r																		 # uniformly distributed load of the weight of the rotor arm
 		mass_st_lam=self.rho_Fe*2*pi*(R)*l*self.h_yr                                     # mass of rotor yoke steel
 		W				=g1*sin(phi)*(mass_st_lam/N_r+(self.mass_PM)/N_r)  											 # weight of 1/nth of rotor cylinder
-
+		
 		y_a1=(W*l_ir**3/12/E/I_arm_axi_r)                                                # deflection from weight component of back iron
 		y_a2=(w_r*l_iir**4/24/E/I_arm_axi_r)																						 # deflection from weight component of yhe arms
 		self.y_Ar       =y_a1+y_a2 # axial deflection
@@ -432,6 +445,7 @@ class PMSG(Component):
 		W_iis     =g1*sin(phi)*(mass_st_lam_s+V_Cus*self.rho_Copper)/2/N_st							 # weight of stator cylinder and teeth
 		w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st																	 # uniformly distributed load of the arms
 		
+		print (M_Fest+self.Copper)*g1
 		
 		mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*self.rho_Fes)											# Structural mass of stator arms
 		
@@ -478,6 +492,7 @@ class PMSG(Component):
 		cm[1]  = self.main_shaft_cm[1]
 		cm[2]  = self.main_shaft_cm[2]
 
+####################################################Cost Analysis#######################################################################
 
 class PMSG_Cost(Component):
 	
@@ -512,6 +527,7 @@ class PMSG_Cost(Component):
 		Cost_str=self.C_Fes*self.Structural_mass
 		self.Costs=K_gen+Cost_str
   
+####################################################OPTIMISATION SET_UP ###############################################################
 
 class PMSG_arms_Opt(Assembly):
 	Eta_target=Float(iotype='in', desc='Target drivetrain efficiency')
@@ -674,26 +690,26 @@ def PMSG_arms_Opt_example():
 	opt_problem = PMSG_arms_Opt('CONMINdriver','PMSG_Cost.Costs',1)
 	
 	#Initial design variables for a PMSG designed for a 5MW turbine
-	opt_problem.P_rated=0.75e6
-	opt_problem.T_rated=250418.6168
+	opt_problem.P_rated=5e6
+	opt_problem.T_rated=4.143289e6
 	opt_problem.Eta_target = 93
-	opt_problem.N=28.6
-	opt_problem.PMSG_r_s= 1.29
-	opt_problem.PMSG_l_s= 0.7
-	opt_problem.PMSG_h_s = 0.045
-	opt_problem.PMSG_tau_p = 0.070
-	opt_problem.PMSG_h_m = 0.0072
-	opt_problem.PMSG_h_ys = 0.045
-	opt_problem.PMSG_h_yr = 0.045
+	opt_problem.N=12.1
+	opt_problem.PMSG_r_s= 3.26
+	opt_problem.PMSG_l_s= 1.6
+	opt_problem.PMSG_h_s = 0.070
+	opt_problem.PMSG_tau_p = 0.080
+	opt_problem.PMSG_h_m = 0.009
+	opt_problem.PMSG_h_ys = 0.075
+	opt_problem.PMSG_h_yr = 0.075
 	opt_problem.PMSG_n_s = 5
-	opt_problem.PMSG_b_st = 0.220
+	opt_problem.PMSG_b_st = 0.480
 	opt_problem.PMSG_n_r =5
-	opt_problem.PMSG_b_r = 0.190
-	opt_problem.PMSG_d_r = 0.350
-	opt_problem.PMSG_d_s= 0.3
-	opt_problem.PMSG_t_wr =0.03
-	opt_problem.PMSG_t_ws =0.01
-	opt_problem.PMSG_R_o =0.17625           #0.523950817  #0.43  #0.523950817 #0.17625 #0.2775 #0.363882632 ##0.35 #0.523950817 #0.43 #523950817 #0.43 #0.523950817 #0.523950817 #0.17625 #0.2775 #0.363882632 #0.43 #0.523950817 #0.43
+	opt_problem.PMSG_b_r = 0.530
+	opt_problem.PMSG_d_r = 0.700
+	opt_problem.PMSG_d_s= 0.350
+	opt_problem.PMSG_t_wr =0.06
+	opt_problem.PMSG_t_ws =0.06
+	opt_problem.PMSG_R_o =0.43           #0.523950817  #0.43  #0.523950817 #0.17625 #0.2775 #0.363882632 ##0.35 #0.523950817 #0.43 #523950817 #0.43 #0.523950817 #0.523950817 #0.17625 #0.2775 #0.363882632 #0.43 #0.523950817 #0.43
 	
 	# Specific costs
 	opt_problem.C_Cu   =4.786

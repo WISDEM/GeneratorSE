@@ -25,9 +25,6 @@ class SCIG(Component):
    
    rho_Fe=Float(iotype='in', desc='Steel density kg/m^3')
    rho_Copper=Float(iotype='in', desc='Copper density kg/m^3')
-   
-   highSpeedSide_cm =Array(np.array([0.0, 0.0, 0.0]),iotype='in', desc=' high speed sidde COM [x, y, z]')
-   highSpeedSide_length =Float(0.0,iotype='in', desc='high speed side length')
    Gearbox_efficiency=Float(0.0,iotype='in', desc='Gearbox efficiency')
 
    # SCIG generator design outputs
@@ -35,55 +32,68 @@ class SCIG(Component):
    S_N = Float(0.0,iotype='out', desc='Slip')
    h_ys=Float(0.0,iotype='out', desc='stator back iron thickness')
    h_yr=Float(0.0,iotype='out', desc='rotor back iron thickness')
-   B_g = Float(0.0,iotype='out', desc='Peak air gap flux density B_g')
    b_s=Float(0.0,iotype='out', desc='stator slot width')
    b_r=Float(0.0,iotype='out', desc='rotor slot width')
    b_t=Float(0.0,iotype='out', desc='stator tooth width')
    b_trmin=Float(0.0,iotype='out', desc='minimum rotor tooth width')
    b_tr=Float(0.0,iotype='out', desc='rotor tooth width')
-   P_gennom=Float(0.0,iotype='out', desc='Generator input')
+   N_s = Float(0.0,iotype='out', desc='Stator winding turns')
+   Q_r = Float(0.0,iotype='out', desc='Rotor slots')
+   p=Float(0.0,iotype='out', desc='pole pairs')
+   q1=Float(0.0,iotype='out', desc='Stator slots per pole per phase')
+   A_Cuscalc=Float(0.0,iotype='out', desc='Stator conductor cross-section')
+   A_Curcalc=Float(0.0,iotype='out', desc='Rotor conductor cross-section')
+   S=Float(0.0,iotype='out', desc='Stator slots')
+   r_r=Float(0.0,iotype='out', desc='rotor radius')
+   
+   # Output: Magnetic loading
+   B_g = Float(0.0,iotype='out', desc='Peak air gap flux density B_g')
    B_rymax = Float(0.0,iotype='out', desc='Peak Rotor Yoke flux density B_ymax')
    B_tsmax = Float(0.0,iotype='out', desc='Peak stator tooth flux density B_ymax')
    B_trmax = Float(0.0,iotype='out', desc='Peak rotor tooth flux density B_ymax')
-   N_s = Float(0.0,iotype='out', desc='Stator winding turns')
+   
+   # Output : Electrical parameters and performance
    f=Float(0.0,iotype='out', desc='output frequency')
-   Q_r = Float(0.0,iotype='out', desc='Rotor slots')
-   p=Float(0.0,iotype='out', desc='pole pairs')
    E_p=Float(0.0,iotype='out', desc='Stator phase voltage')
    I_s=Float(0.0,iotype='out', desc='Generator output phase current')
    Losses=Float(0.0,iotype='out', desc='Total Loss')
    Active_mass=Float(0.0,iotype='out', desc='Active mass')
    gen_eff=Float(0.0,iotype='out', desc='Generator efficiency')
-   q1=Float(0.0,iotype='out', desc='Stator slots per pole per phase')
-   J_r=Float(0.0,iotype='out', desc='Rotor current density')
-   TC1=Float(0.0,iotype='out', desc='Torque constraint')
-   TC2=Float(0.0,iotype='out', desc='Torque constraint')
    A_1=Float(0.0,iotype='out', desc='Specific current loading')
    J_s=Float(0.0,iotype='out', desc='Stator current density')
    J_r=Float(0.0,iotype='out', desc='Rotor current density')
+   R_s=Float(0.0,iotype='out', desc='Stator resistance')
+   L_s=Float(0.0,iotype='out', desc='Stator inductance')
+   L_sm=Float(0.0,iotype='out', desc='mutual inductance')
+   R_R=Float(0.0,iotype='out', desc='Rotor resistance')
+   
+   # Tangential stress constraints
+   TC1=Float(0.0,iotype='out', desc='Torque constraint')
+   TC2=Float(0.0,iotype='out', desc='Torque constraint')
+   
    K_rad=Float(0.0,iotype='out', desc='Stack length ratio')
    D_ratio=Float(0.0,iotype='out', desc='Stator diameter ratio')
-   A_Cuscalc=Float(0.0,iotype='out', desc='Stator conductor cross-section')
-   A_Curcalc=Float(0.0,iotype='out', desc='Rotor conductor cross-section')
-   S=Float(0.0,iotype='out', desc='Stator slots')
+   
+   # Other outputs
    Slot_aspect_ratio1=Float(0.0,iotype='out', desc='Slot apsect ratio-stator')
    Slot_aspect_ratio2=Float(0.0,iotype='out', desc='Slot apsect ratio-rotor')
    D_ratio_UL=Float(0.0,iotype='out', desc='Dia ratio upper limit')
    D_ratio_LL=Float(0.0,iotype='out', desc='Dia ratio Lower limit')
    K_rad_UL=Float(0.0,iotype='out', desc='Aspect ratio upper limit')
    K_rad_LL=Float(0.0,iotype='out', desc='Aspect ratio Lower limit')
-   r_r=Float(0.0,iotype='out', desc='rotor radius')
    Overall_eff=Float(0.0,iotype='out', desc='Overall efficiency')
-   R_s=Float(0.0,iotype='out', desc='Stator resistance')
-   L_s=Float(0.0,iotype='out', desc='Stator inductance')
-   L_sm=Float(0.0,iotype='out', desc='mutual inductance')
-   R_R=Float(0.0,iotype='out', desc='Rotor resistance')
+
+   
+   # Mass Outpus
    Copper=Float(0.0,iotype='out', desc='Copper mass')
    Iron=Float(0.0,iotype='out', desc='Iron mass')
    Structural_mass=Float(0.0,iotype='out', desc='Structural mass')
+   Mass=Float(0.01, iotype='out', desc='Total Generator mass')
    
+   #inputs/outputs for interface with drivese	
+   highSpeedSide_cm =Array(np.array([0.0, 0.0, 0.0]),iotype='in', desc=' high speed sidde COM [x, y, z]')
+   highSpeedSide_length =Float(0.0,iotype='in', desc='high speed side length')
    cm  =Array(np.array([0.0, 0.0, 0.0]),iotype='out', desc='COM [x,y,z]')
-   Mass=Float(0.01, iotype='out', desc='Generator mass')
    I = Array(np.array([0.0, 0.0, 0.0]), iotype='out', desc=' moments of Inertia for the component [Ixx, Iyy, Izz] around its center of mass')
    
    def execute(self):
@@ -478,7 +488,7 @@ class SCIG_Cost(Component):
 		Cost_str=self.C_Fes*self.Structural_mass
 		self.Costs=K_gen+Cost_str
 		
-		
+####################################################OPTIMISATION SET_UP ###############################################################		
 
 class SCIG_Opt(Assembly):
     Eta_target=Float(0.0,iotype='in', desc='Target drivetrain efficiency')
