@@ -70,7 +70,7 @@ class Test_PMSG_arms(unittest.TestCase):
         
         self.PMSG_arms.run()
         
-        self.assertEqual(round(self.PMSG_arms.Mass/1000,1), 101.0)
+        self.assertEqual(round(self.PMSG_arms.Mass/1000,1), 100.6)
 
 
 class Test_PMSG_disc(unittest.TestCase):
@@ -116,7 +116,7 @@ class Test_PMSG_disc(unittest.TestCase):
 				def test_functionality(self):
 					
 					self.PMSG_disc.run()
-					self.assertEqual(round(self.PMSG_disc.Mass/1000,1), 122.5)
+					self.assertEqual(round(self.PMSG_disc.Mass/1000,1), 117.5)
 
 class Test_EESG(unittest.TestCase):
 
@@ -165,7 +165,7 @@ class Test_EESG(unittest.TestCase):
         
         self.EESG.run()
         
-        self.assertEqual(round(self.EESG.Mass/1000,1), 147.8)
+        self.assertEqual(round(self.EESG.Mass/1000,1), 149.5)
 
 
 class Test_SCIG(unittest.TestCase):
@@ -200,7 +200,7 @@ class Test_SCIG(unittest.TestCase):
         
         self.SCIG.run()
         
-        self.assertEqual(round(self.SCIG.Mass/1000,1), 23.7)
+        self.assertEqual(round(self.SCIG.Mass/1000,1), 23.8)
         
         
 class Test_DFIG(unittest.TestCase):
@@ -237,7 +237,7 @@ class Test_DFIG(unittest.TestCase):
         
         self.DFIG.run()
         
-        self.assertEqual(round(self.DFIG.Mass/1000,1), 25.1)
+        self.assertEqual(round(self.DFIG.Mass/1000,1), 20.0)
 
 
 

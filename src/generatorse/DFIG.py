@@ -580,7 +580,8 @@ def DFIG_Opt_example():
 	#Material properties
 	opt_problem.rho_Fe = 7700                 #Steel density
 	opt_problem.rho_Copper =8900                  # Kg/m3 copper density
-
+	
+	#Run optimization
 	opt_problem.run()
 	
 	"""Uncomment to print solution to an excel file
