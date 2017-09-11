@@ -727,7 +727,7 @@ def PMSG_arms_Opt_example():
 	#Run optimization
 	opt_problem.run()
 	
-	""" Uncomment to print solution to an excel file"""
+	""" Uncomment to print solution to an excel file
 	
 	import pandas
 	
@@ -740,7 +740,7 @@ def PMSG_arms_Opt_example():
 	print df
 	df.to_excel('PMSG_'+str(opt_problem.P_rated/1e6)+'_arms_MW.xlsx')
 	
-	""" """
+	"""
 if __name__=="__main__":
 	# Run an example optimization of PMSG generator on cost
     PMSG_arms_Opt_example()

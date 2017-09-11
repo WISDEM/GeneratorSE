@@ -528,7 +528,7 @@ class EESG(Component):
     	  W_iis     =g1*sin(phi)*(V_Cuss*self.rho_Copper+mass_st_lam_s)/2/N_st
     	  w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st
     	  
-    	  print (V_Cusr*self.rho_Copper+M_Fert)*g1
+
     	  
     	  X_comp1 = (W_is*l_is**3/12/E/I_arm_axi_s)
     	  X_comp2 =(W_iis*l_iis**4/24/E/I_arm_axi_s)
@@ -790,7 +790,7 @@ def EESG_Opt_example():
 		
 		opt_problem.run()
 		
-		""" Uncomment to print solution to an excel file"""
+		""" Uncomment to print solution to an excel file
 		
 		import pandas
 		
@@ -803,7 +803,7 @@ def EESG_Opt_example():
 		print df
 		df.to_excel('EESG_'+str(opt_problem.P_rated/1e6)+'MW.xlsx')
 		
-		""" """ 
+		 """ 
 
 		
 if __name__=="__main__":
