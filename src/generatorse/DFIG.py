@@ -592,8 +592,8 @@ def DFIG_Opt_example():
 				'Units':['MW','','m','m','-','-','mm','-','mm','','mm','','mm','mm','-','mm','mm','mm','-','mm','T','T','T','T','T','T','-','Hz','V','A','','turns','mm^2','A/mm^2','kA/m','ohms','','','turns','mm^2','A','','A/mm^2','ohms','p.u','%','%','Tons','Tons','Tons','Tons','$1000']}
 	df=pandas.DataFrame(raw_data, columns=['Parameters','Values','Limit','Units'])
 	print(df)
-	df.to_excel('DFIG_'+str(opt_problem.DFIG_P_rated/1e6)+'MW.xlsx')
-		"""
+	df.to_excel('DFIG_'+str(opt_problem.DFIG_P_rated/1e6)+'MW.xlsx')"""
+	
 
 	
 if __name__=="__main__":

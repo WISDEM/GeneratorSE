@@ -445,7 +445,7 @@ class PMSG(Component):
 		W_iis     =g1*sin(phi)*(mass_st_lam_s+V_Cus*self.rho_Copper)/2/N_st							 # weight of stator cylinder and teeth
 		w_s         =self.rho_Fes*g1*sin(phi)*a_s*N_st																	 # uniformly distributed load of the arms
 		
-		print (M_Fest+self.Copper)*g1
+		#print (M_Fest+self.Copper)*g1
 		
 		mass_stru_steel  =2*(N_st*(R_1s-self.R_o)*a_s*self.rho_Fes)											# Structural mass of stator arms
 		
