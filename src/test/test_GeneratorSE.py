@@ -13,11 +13,11 @@ import numpy as np
 
 # from drivese.drive_smooth import YawSystemSmooth, BedplateSmooth
 import generatorse.PMSG_arms, generatorse.PMSG_disc, generatorse.DFIG,generatorse.SCIG,generatorse.EESG
-from generatorse.PMSG_arms import Drive_PMSG_arms
-from generatorse.EESG import Drive_EESG
-from generatorse.PMSG_disc import Drive_PMSG_disc
-from generatorse.DFIG import Drive_DFIG
-from generatorse.SCIG import Drive_SCIG
+from generatorse.PMSG_arms import PMSG_arms_Opt
+from generatorse.EESG import EESG_Opt
+from generatorse.PMSG_disc import PMSG_disc_Opt
+from generatorse.DFIG import DFIG_Opt
+from generatorse.SCIG import SCIG_Opt
 
 
 class Test_PMSG_arms(unittest.TestCase):
@@ -26,12 +26,9 @@ class Test_PMSG_arms(unittest.TestCase):
 
         self.PMSG_arms = PMSG_arms_Opt('CONMINdriver','PMSG_Cost.Costs',0)
  
-        self.PMSG_arms.Eta_target = 93
-        # Initial design variables for a DD PMSG designed for a 5MW turbine
         
-        self.PMSG_arms.Eta_target = 93
         # Initial design variables for a DD PMSG designed for a 5MW turbine
-        
+        self.PMSG_arms.Eta_target = 93
         self.PMSG_arms.P_rated=5.0e6
         self.PMSG_arms.T_rated=4.143289e6
         self.PMSG_arms.N=12.1
@@ -47,7 +44,7 @@ class Test_PMSG_arms(unittest.TestCase):
         self.PMSG_arms.PMSG_n_r =5
         self.PMSG_arms.PMSG_b_r = 0.530
         self.PMSG_arms.PMSG_d_r = 0.7
-        self.PMSG_arms.PMSG_d_s= 0.3
+        self.PMSG_arms.PMSG_d_s= 0.35
         self.PMSG_arms.PMSG_t_wr =0.06
         self.PMSG_arms.PMSG_t_ws =0.06
         self.PMSG_arms.PMSG_R_o =0.43
@@ -70,7 +67,7 @@ class Test_PMSG_arms(unittest.TestCase):
         
         self.PMSG_arms.run()
         
-        self.assertEqual(round(self.PMSG_arms.Mass/1000,1), 101.0)
+        self.assertEqual(round(self.PMSG_arms.Mass/1000,2), 101.05)
 
 
 class Test_PMSG_disc(unittest.TestCase):
@@ -79,10 +76,10 @@ class Test_PMSG_disc(unittest.TestCase):
 		
 				self.PMSG_disc=PMSG_disc_Opt('CONMINdriver','PMSG_Cost.Costs',0)
 				
-				self.PMSG_disc.Eta_target = 93
+				
 				
 				# Initial design variables for a DD PMSG designed for a 1.5MW turbine
-				
+				self.PMSG_disc.Eta_target = 93
 				self.PMSG_disc.P_rated=5.0e6
 				self.PMSG_disc.T_rated=4143289.841
 				self.PMSG_disc.N=12.1
@@ -123,9 +120,9 @@ class Test_EESG(unittest.TestCase):
     def setUp(self):
 
         self.EESG = EESG_Opt('CONMINdriver','EESG_Cost.Costs',0)
-        self.EESG.Target_Efficiency = 93
-        # Initial design variables for a DD EESG designed for a 5MW turbine
         
+        # Initial design variables for a DD EESG designed for a 5MW turbine
+        self.EESG.Eta_target= 93
         self.EESG.P_rated=5.0e6
         self.EESG.T_rated=4.143289e6
         self.EESG.N_rated=12.1
@@ -165,7 +162,7 @@ class Test_EESG(unittest.TestCase):
         
         self.EESG.run()
         
-        self.assertEqual(round(self.EESG.Mass/1000,1), 147.8)
+        self.assertEqual(round(self.EESG.Mass/1000,1), 147.9)
 
 
 class Test_SCIG(unittest.TestCase):
@@ -237,7 +234,7 @@ class Test_DFIG(unittest.TestCase):
         
         self.DFIG.run()
         
-        self.assertEqual(round(self.DFIG.Mass/1000,1), 25.1)
+        self.assertEqual(round(self.DFIG.Mass/1000,1), 25.2)
 
 
 
