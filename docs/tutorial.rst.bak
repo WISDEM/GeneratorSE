@@ -172,10 +172,10 @@ The results should appear as below listing the parameters together with their li
 >>>44               Rotor leakage inductance      0.000695358												-
 >>>45                   Generator Efficiency           98.339												%
 >>>46          Overall drivetrain Efficiency          93.9137            93					%
->>>47                              Iron mass          6.59953												Tons
->>>48                            Copper mass          1.09704												Tons
->>>49                  Structural Steel mass          17.4623												Tons
->>>50                             Total Mass          25.1589												Tons
+>>>47                              Iron mass          6.59953												Ton
+>>>48                            Copper mass          1.09704												Ton
+>>>49                  Structural Steel mass          17.4623												Ton
+>>>50                             Total Mass          25.1589												Ton
 >>>51                    Total Material Cost          17.6752     									$1000
 
 These result file can be read into the the MATALB script [Par_GeneratorSE_FEMM_DFIG.m] to populate the 2D finite element mesh model in FEMM and perform a magnetostatic analysis.
