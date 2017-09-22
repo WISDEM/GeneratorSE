@@ -790,7 +790,7 @@ def EESG_Opt_example():
 		
 		opt_problem.run()
 		
-		""" Uncomment to print solution to an excel file
+		"""Uncomment to print solution to an excel file 
 		
 		import pandas
 		
@@ -801,9 +801,10 @@ def EESG_Opt_example():
 		
 		df=pandas.DataFrame(raw_data, columns=['Parameters','Values','Limit','Units'])
 		print df
+		
 		df.to_excel('EESG_'+str(opt_problem.P_rated/1e6)+'MW.xlsx')
 		
-		 """ 
+		""" 
 
 		
 if __name__=="__main__":
