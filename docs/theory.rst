@@ -3,7 +3,7 @@
 Theory
 ------
 
-The theory, verification and validation of the model set in this software can be found in an NREL technical report that will be available in the fall of 2017.
+The theory, verification and validation of the model set in this software can be found in an NREL technical report here : https://www.nrel.gov/docs/fy17osti/66462.pdf
 
 
 .. only:: html
