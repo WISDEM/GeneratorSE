@@ -617,7 +617,7 @@ class PMSG_disc_Opt(Assembly):
 		Opt1=globals()[self.Optimiser]
 		self.add('driver',Opt1())
 		self.driver.add_objective(self.Objective_function)
-		
+		self.driver.workflow.add(['PMSG','PMSG_Cost'])
 		# set up design variables for the PMSG_arms generator
 		self.driver.design_vars=['PMSG_r_s','PMSG_l_s','PMSG_h_s','PMSG_tau_p','PMSG_h_m','PMSG_h_ys','PMSG_h_yr','PMSG_n_s','PMSG_b_st','PMSG_d_s','PMSG_t_d','PMSG_t_ws']
 		self.driver.add_parameter('PMSG_r_s', low=0.5, high=9)

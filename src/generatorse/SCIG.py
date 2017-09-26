@@ -572,7 +572,7 @@ class SCIG_Opt(Assembly):
         self.Objective_function=Objective_function
         Opt1=globals()[self.Optimiser]
         self.add('driver',Opt1())
-        
+        self.driver.workflow.add(['SCIG','SCIG_Cost'])
         self.driver.add_objective(self.Objective_function)
 
         # set up design variables for the SCIG generator

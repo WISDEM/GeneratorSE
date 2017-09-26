@@ -519,7 +519,7 @@ class DFIG_Opt(Assembly):
 				self.Objective_function=Objective_function
 				Opt1=globals()[self.Optimiser]
 				self.add('driver',Opt1())
-				
+				self.driver.workflow.add(['DFIG','DFIG_Cost'])
 				self.driver.add_objective(self.Objective_function)
 				# set up design variables for the DFIG generator
 				self.driver.design_vars=['DFIG_r_s','DFIG_l_s','DFIG_h_s','DFIG_h_r','DFIG_S_Nmax','DFIG_B_symax','DFIG_I_0']

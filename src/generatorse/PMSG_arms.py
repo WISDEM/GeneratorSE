@@ -526,6 +526,7 @@ class PMSG_Cost(Component):
 		K_gen=self.Copper*self.C_Cu+self.Iron*self.C_Fe+self.C_PM*self.mass_PM
 		Cost_str=self.C_Fes*self.Structural_mass
 		self.Costs=K_gen+Cost_str
+		
   
 ####################################################OPTIMISATION SET_UP ###############################################################
 
@@ -540,6 +541,7 @@ class PMSG_arms_Opt(Assembly):
 	Optimiser=Str(iotype = 'in')
 	L=Float(iotype='out')
 	Mass=Float(iotype='out')
+	Costs=Float(iotype='out')
 	Efficiency=Float(iotype='out')
 	r_s=Float(iotype='out', desc='Optimised radius')
 	l_s=Float(iotype='out', desc='Optimised generator length')
@@ -627,6 +629,7 @@ class PMSG_arms_Opt(Assembly):
 		self.connect('PMSG.Copper','PMSG_Cost.Copper')
 		self.connect('PMSG.mass_PM','PMSG_Cost.mass_PM')
 		self.connect('PMSG.Structural_mass','PMSG_Cost.Structural_mass')
+		self.connect('PMSG_Cost.Costs','Costs')
 		
 		# add optimizer and set-up problem (using user defined input on objective function"
 		self.Optimiser=Optimiser
@@ -634,7 +637,7 @@ class PMSG_arms_Opt(Assembly):
 		Opt1=globals()[self.Optimiser]
 		self.add('driver',Opt1())
 		self.driver.add_objective(self.Objective_function)
-		
+		self.driver.workflow.add(['PMSG','PMSG_Cost'])
 		# set up design variables for the PMSG_arms generator
 		self.driver.design_vars=['PMSG_r_s','PMSG_l_s','PMSG_h_s','PMSG_tau_p','PMSG_h_m','PMSG_h_ys','PMSG_h_yr','PMSG_n_r','PMSG_n_s','PMSG_b_r','PMSG_b_st','PMSG_d_r','PMSG_d_st','PMSG_t_wr','PMSG_t_ws']
 		self.driver.add_parameter('PMSG_r_s', low=0.5, high=9)
@@ -682,7 +685,7 @@ class PMSG_arms_Opt(Assembly):
 		self.driver.add_constraint('PMSG.Slot_aspect_ratio>=4')						#24
 		self.driver.add_constraint('PMSG.Slot_aspect_ratio<=10')					#25	
 		self.driver.add_constraint('PMSG.gen_eff>=Eta_target')			#26
-		
+
 				
 def PMSG_arms_Opt_example():
 	
@@ -727,20 +730,20 @@ def PMSG_arms_Opt_example():
 	#Run optimization
 	opt_problem.run()
 	
-	""" Uncomment to print solution to an excel file
+	"""Uncomment to print solution to an excel file 
 	
 	import pandas
 	
 	raw_data = {'Parameters': ['Rating','Stator Arms', 'Stator Axial arm dimension','Stator Circumferential arm dimension',' Stator arm Thickness' ,'Rotor arms','Rotor Axial arm dimension','Rotor Circumferential arm dimension' ,'Rotor arm Thickness',' Stator Radial deflection', 'Stator Axial deflection','Stator circum deflection',' Rotor Radial deflection', 'Rotor Axial deflection','Rotor circum deflection', 'Air gap diameter','Overall Outer diameter', 'Stator length', 'l/d ratio','Slot_aspect_ratio','Pole pitch', 'Stator slot height','Stator slotwidth','Stator tooth width', 'Stator yoke height', 'Rotor yoke height', 'Magnet height', 'Magnet width', 'Peak air gap flux density fundamental','Peak stator yoke flux density','Peak rotor yoke flux density','Flux density above magnet','Maximum Stator flux density','Maximum tooth flux density','Pole pairs', 'Generator output frequency', 'Generator output phase voltage', 'Generator Output phase current', 'Stator resistance','Synchronous inductance', 'Stator slots','Stator turns','Conductor cross-section','Stator Current density ','Specific current loading','Generator Efficiency ','Iron mass','Magnet mass','Copper mass','Mass of Arms', 'Total Mass','Total Material Cost'],
-		'Values': [opt_problem.PMSG.machine_rating/1000000,opt_problem.PMSG.n_s,opt_problem.PMSG.d_s*1000,opt_problem.PMSG.b_st*1000,opt_problem.PMSG.t_ws*1000,opt_problem.PMSG.n_r,opt_problem.PMSG.d_r*1000,opt_problem.PMSG.b_r*1000,opt_problem.PMSG.t_wr*1000,opt_problem.PMSG.u_As*1000,opt_problem.PMSG.y_As*1000,opt_problem.PMSG.z_A_s*1000,opt_problem.PMSG.u_Ar*1000,opt_problem.PMSG.y_Ar*1000,opt_problem.PMSG.z_A_r*1000,2*opt_problem.PMSG.r_s,opt_problem.PMSG.R_out*2,opt_problem.PMSG.l_s,opt_problem.PMSG.K_rad,opt_problem.PMSG.Slot_aspect_ratio,opt_problem.PMSG.tau_p*1000,opt_problem.PMSG.h_s*1000,opt_problem.PMSG.b_s*1000,opt_problem.PMSG.b_t*1000,opt_problem.PMSG.t_s*1000,opt_problem.PMSG.t*1000,opt_problem.PMSG.h_m*1000,opt_problem.PMSG.b_m*1000,opt_problem.PMSG.B_g,opt_problem.PMSG.B_symax,opt_problem.PMSG.B_rymax,opt_problem.PMSG.B_pm1,opt_problem.PMSG.B_smax,opt_problem.PMSG.B_tmax,opt_problem.PMSG.p,opt_problem.PMSG.f,opt_problem.PMSG.E_p,opt_problem.PMSG.I_s,opt_problem.PMSG.R_s,opt_problem.PMSG.L_s,opt_problem.PMSG.S,opt_problem.PMSG.N_s,opt_problem.PMSG.A_Cuscalc,opt_problem.PMSG.J_s,opt_problem.PMSG.A_1/1000,opt_problem.PMSG.gen_eff,opt_problem.PMSG.Iron/1000,opt_problem.PMSG.mass_PM/1000,opt_problem.PMSG.Copper/1000,opt_problem.PMSG.Structural_mass/1000,opt_problem.PMSG.Mass/1000,opt_problem.PMSG_Cost.Costs/1000],
+		'Values': [opt_problem.PMSG.machine_rating/1000000,opt_problem.PMSG.n_s,opt_problem.PMSG.d_s*1000,opt_problem.PMSG.b_st*1000,opt_problem.PMSG.t_ws*1000,opt_problem.PMSG.n_r,opt_problem.PMSG.d_r*1000,opt_problem.PMSG.b_r*1000,opt_problem.PMSG.t_wr*1000,opt_problem.PMSG.u_As*1000,opt_problem.PMSG.y_As*1000,opt_problem.PMSG.z_A_s*1000,opt_problem.PMSG.u_Ar*1000,opt_problem.PMSG.y_Ar*1000,opt_problem.PMSG.z_A_r*1000,2*opt_problem.PMSG.r_s,opt_problem.PMSG.R_out*2,opt_problem.PMSG.l_s,opt_problem.PMSG.K_rad,opt_problem.PMSG.Slot_aspect_ratio,opt_problem.PMSG.tau_p*1000,opt_problem.PMSG.h_s*1000,opt_problem.PMSG.b_s*1000,opt_problem.PMSG.b_t*1000,opt_problem.PMSG.t_s*1000,opt_problem.PMSG.t*1000,opt_problem.PMSG.h_m*1000,opt_problem.PMSG.b_m*1000,opt_problem.PMSG.B_g,opt_problem.PMSG.B_symax,opt_problem.PMSG.B_rymax,opt_problem.PMSG.B_pm1,opt_problem.PMSG.B_smax,opt_problem.PMSG.B_tmax,opt_problem.PMSG.p,opt_problem.PMSG.f,opt_problem.PMSG.E_p,opt_problem.PMSG.I_s,opt_problem.PMSG.R_s,opt_problem.PMSG.L_s,opt_problem.PMSG.S,opt_problem.PMSG.N_s,opt_problem.PMSG.A_Cuscalc,opt_problem.PMSG.J_s,opt_problem.PMSG.A_1/1000,opt_problem.PMSG.gen_eff,opt_problem.PMSG.Iron/1000,opt_problem.PMSG.mass_PM/1000,opt_problem.PMSG.Copper/1000,opt_problem.PMSG.Structural_mass/1000,opt_problem.PMSG.Mass/1000,opt_problem.Costs/1000],
 			'Limit': ['','','',opt_problem.PMSG.b_all_s*1000,'','','',opt_problem.PMSG.b_all_r*1000,'',opt_problem.PMSG.u_all_s*1000,opt_problem.PMSG.y_all*1000,opt_problem.PMSG.z_all_s*1000,opt_problem.PMSG.u_all_r*1000,opt_problem.PMSG.y_all*1000,opt_problem.PMSG.z_all_r*1000,'','','','(0.2-0.27)','(4-10)','','','','','','','','','','<2','<2','<2',opt_problem.PMSG.B_g,'','','','','>500','','','','','5','3-6','60','>93%','','','','','',''],
 				'Units':['MW','unit','mm','mm','mm','mm','mm','','mm','mm','mm','mm','mm','mm','mm','m','m','m','','','mm','mm','mm','mm','mm','mm','mm','mm','T','T','T','T','T','T','-','Hz','V','A','ohm/phase','p.u','A/mm^2','slots','turns','mm^2','kA/m','%','tons','tons','tons','tons','tons','k$']}
 					
 	df=pandas.DataFrame(raw_data, columns=['Parameters','Values','Limit','Units'])
 	print df
-	df.to_excel('PMSG_'+str(opt_problem.P_rated/1e6)+'_arms_MW.xlsx')
+	df.to_excel('PMSG_'+str(opt_problem.P_rated/1e6)+'_arms_MW.xlsx')"""
 	
-	"""
+	
 if __name__=="__main__":
 	# Run an example optimization of PMSG generator on cost
     PMSG_arms_Opt_example()
