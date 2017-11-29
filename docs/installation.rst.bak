@@ -27,11 +27,10 @@ To check if installation was successful try to import the module from within an 
 
 .. code-block:: python
 
-    > import generatorsE.PMSG_arms
-    > import generatorsE.PMSG_disc
-    > import generatorse.EESG
-    > import generatorse.DFIG
-    > import generatorse.SCIG
+    > import GeneratorSE.PMSG
+    > import GeneratorSE.EESG
+    > import GeneratorSE.DFIG
+    > import GeneratorSE.SCIG
 
 or run the unit tests which include functional and gradient tests.  Analytic gradients are provided for variables only so warnings will appear for missing gradients on model input parameters; these can be ignored.
 
