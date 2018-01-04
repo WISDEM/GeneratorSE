@@ -11,7 +11,7 @@ Installation
 	Supporting python packages: Pandas, Algopy, Zope.interface, Sphinx, Xlrd, PyOpt, py2exe, Pyzmq, Sphinxcontrib-bibtex, Sphinxcontrib-zopeext, Numpydoc, Ipython
 
 Clone the repository at `<https://github.com/WISDEM/GeneratorSE>`_
-or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the `GeneratorSE site<http://nwtc.nrel.gov/GeneratorSE>`_.
+or download the releases and uncompress/unpack (GeneratorSE.py-|release|.tar.gz or GeneratorSE.py-|release|.zip) from the website link at the bottom the `GeneratorSE site <http://nwtc.nrel.gov/GeneratorSE>`_.
 
 To install GeneratorSE, first activate the OpenMDAO environment and then install with the following command.
 
@@ -27,10 +27,11 @@ To check if installation was successful try to import the module from within an 
 
 .. code-block:: python
 
-    > import GeneratorSE.PMSG
-    > import GeneratorSE.EESG
-    > import GeneratorSE.DFIG
-    > import GeneratorSE.SCIG
+    > import generatorsE.PMSG_arms
+    > import generatorsE.PMSG_disc
+    > import generatorse.EESG
+    > import generatorse.DFIG
+    > import generatorse.SCIG
 
 or run the unit tests which include functional and gradient tests.  Analytic gradients are provided for variables only so warnings will appear for missing gradients on model input parameters; these can be ignored.
 
