@@ -1,3 +1,11 @@
+# DEPRECATED
+------------
+
+**THIS REPOSITORY IS DEPRECATED AND WILL BE ARCHIVED (READ-ONLY) IN NOVEMBER 2019.**
+
+WISDEM has moved to a single, integrated repository at https://github.com/wisdem/wisdem
+
+---------------
 # GeneratorSE
 
 GeneratorSE is a set of analytical tools for sizing variable speed wind turbine Generators. The analytical framework involves electromagnetic, structural, and basic thermal design that are integrated to provide the optimal generator design dimensions using conventional magnetic circuit laws. 
