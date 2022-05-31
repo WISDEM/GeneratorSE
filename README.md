@@ -1,16 +1,13 @@
-# DEPRECATED
-------------
-
-**THIS REPOSITORY IS DEPRECATED AND WILL BE ARCHIVED (READ-ONLY) IN NOVEMBER 2019.**
-
-WISDEM has moved to a single, integrated repository at https://github.com/wisdem/wisdem
-
 ---------------
 # GeneratorSE
 
-GeneratorSE is a set of analytical tools for sizing variable speed wind turbine Generators. The analytical framework involves electromagnetic, structural, and basic thermal design that are integrated to provide the optimal generator design dimensions using conventional magnetic circuit laws. 
+GeneratorSE is a set of numerical tools for sizing two technologies of variable speed wind turbine generators:
+	- Interior permanent magnet synchronous generators (PMSG)
+	- Low temperature superconducting generators (LTS)
 
-The tool is structured on OpenMDAO and mainly considers available torque, mechanical power, normal and shear stresses, material properties, and costs to optimize designs of variable-speed wind turbine generators by satisfying specific design criteria. 
+This repository contains the codes based on the open-source library pyFEMM. The purely analytical tools to size PMSG machines have instead been integrated within [WISDEM](https://github.com/wisdem/wisdem)
+
+The codes adopt the optimization library [OpenMDAO](https://openmdao.org) and mainly considers available torque, mechanical power, normal and shear stresses, material properties, and costs to optimize designs by satisfying specific design criteria. 
 
 Author: [NREL WISDEM Team](mailto:systems.engineering@nrel.gov) 
 
@@ -20,19 +17,23 @@ See local documentation in the `docs`-directory or access the online version at 
 
 ## Installation
 
-For detailed installation instructions of WISDEM modules see <https://github.com/WISDEM/WISDEM> or to install GeneratorSE by itself do:
+To run the code, follow these steps
 
-    $ python setup.py install
+1. Download and install pyfemm from https://www.femm.info/wiki/pyFEMM
 
-## Run Unit Tests
+2. In an anaconda environment, type 
 
-To check if installation was successful try to import the package.
+        pip install pyfemm
+        conda install openmdao
 
-	$ python
-	> import XXX
+3. In your preferred folder, clone and compile the repository
 
-You may also run the unit tests which include functional and gradient tests.  Analytic gradients are provided for variables only so warnings will appear for missing gradients on model input parameters; these can be ignored.
+		git clone git@github.com:WISDEM/GeneratorSE.git # or git clone https://github.com/WISDEM/GeneratorSE.git
+		pip install -e .
 
-	$ python src/test/test_GeneratorSE.py
 
-For software issues please use <https://github.com/WISDEM/GeneratorSE/issues>.  For functionality and theory related questions and comments please use the NWTC forum for [Systems Engineering Software Questions](https://wind.nrel.gov/forum/wind/viewtopic.php?f=34&t=1002).
+For functionality, theory, or software issues please use <https://github.com/WISDEM/GeneratorSE/issues>
+
+## Acknowledgments
+
+The technical support of David Meeker, Ph.D., author of the Femm library is gratefully acknowledged
