@@ -1,10 +1,11 @@
 ---------------
 # GeneratorSE
 
-GeneratorSE is a set of numerical tools for sizing two technologies of variable speed wind turbine generators:
-	- Direct-drive interior permanent magnet synchronous generators (DD-PMSG)
-	- Geared medium-speed interior permanent magnet synchronous generators (MS-PMSG)
-	- Direct-drive low temperature superconducting generators (LTS)
+GeneratorSE is a set of numerical tools for sizing three technologies of variable speed wind turbine generators:
+
+ Markup : 	* Direct-drive interior permanent magnet synchronous generators (DD-PMSG)
+			* Geared medium-speed interior permanent magnet synchronous generators (MS-PMSG)
+			* Direct-drive low temperature superconducting generators (LTS)
 
 This repository contains the codes based on the open-source library pyFEMM. The purely analytical tools to size PMSG machines have instead been integrated within [WISDEM](https://github.com/wisdem/wisdem)
 
