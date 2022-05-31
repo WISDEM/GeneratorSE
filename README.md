@@ -15,7 +15,7 @@ Author: [NREL WISDEM Team](mailto:systems.engineering@nrel.gov)
 
 ## Documentation
 
-See local documentation in the `docs`-directory or access the online version at <http://wisdem.github.io/GeneratorSE/>
+The WISDEM team is working on a relevant publication. The link to it will be provided here.
 
 ## Installation
 
