@@ -1,11 +1,11 @@
 import setuptools
 
 metadata = dict(
-    name="lts",
-    url='https://github.com/WISDEM/LTS',
+    name="generatorse",
+    url='https://github.com/WISDEM/GneeratorSE',
     version="0.0.1",
-    description="Design model for low-temperature superconducting generators",
-    author="Latha Sethuraman",
+    description="Design model for DD-IPM, DD-LTS, and MS-IPM wind turbine generators",
+    author="Latha Sethuraman, Garrett Barter and Pietro Bortolotti",
     packages=setuptools.find_packages(exclude=["test", "examples"]),
     python_requires=">=3.7",
     zip_safe=True,
