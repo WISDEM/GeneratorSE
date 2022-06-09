@@ -198,8 +198,8 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
 #
 class FEMM_Geometry(om.ExplicitComponent):
     def setup(self):
-        self.add_discrete_input("m", 3, desc="number of phases")
-        self.add_discrete_input("k_sfil", 0.65, desc="slot fill")
+        self.add_input("m", 3, desc="number of phases")
+        self.add_input("k_sfil", 0.65, desc="slot fill")
         self.add_input("l_s", 0.0, units="m", desc="Stack length ")
         self.add_input("L_t", 0.0, units="m", desc="effective stator length for support structure")
 
@@ -210,8 +210,8 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
         self.add_input("f", 0.0, units="Hz", desc="frequency")
-        self.add_discrete_input("h_s1", 0.010, desc="Slot Opening height")
-        self.add_discrete_input("h_s2", 0.010, desc="Wedge Opening height")
+        self.add_input("h_s1", 0.010, desc="Slot Opening height")
+        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
         self.add_input("ratio", 0.00, desc="Wpole width to pole pitch")
 
         self.add_output("h_t", 0.0, units="m", desc="tooth height")
@@ -241,7 +241,7 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         # Unpack variables
         l_s = float(inputs["l_s"])
@@ -252,11 +252,11 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         h_ys = float(inputs["h_ys"])
         tau_s = float(inputs["tau_s"])
-        m = float(discrete_inputs["m"])
+        m = float(inputs["m"])
 
-        m = float(discrete_inputs["m"])
-        h_s1 = float(discrete_inputs["h_s1"])
-        h_s2 = float(discrete_inputs["h_s2"])
+        m = float(inputs["m"])
+        h_s1 = float(inputs["h_s1"])
+        h_s2 = float(inputs["h_s2"])
         ratio = float(inputs["ratio"])
         r_g = float(inputs["r_g"])
         N_c = int(inputs["N_c"])

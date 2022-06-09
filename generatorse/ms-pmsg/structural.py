@@ -36,8 +36,8 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_input("g", 0.0, units="m", desc="airgap length")
         self.add_input("R_sh", 0.0, units="m", desc="shaft radius")
         self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
-        self.add_discrete_input("E", 2.0e11, "permeability of free space")
-        self.add_discrete_input("g1", 9.806, "Acceleration due to gravity")
+        self.add_input("E", 2.0e11, "permeability of free space")
+        self.add_input("g1", 9.806, "Acceleration due to gravity")
         self.add_input("rho_PM", 0.0, units="kg/m**3", desc="Magnet density kg/m^3")
         self.add_input("ratio", 0.0, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
         self.add_input("Sigma_normal", 0.0, units="N/m**2", desc="Normal stress")
@@ -51,7 +51,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         r_g = inputs["r_g"]
         g = inputs["g"]
@@ -66,9 +66,9 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         l = inputs["l_s"]
         t = h_yr + h_sr
         u_allow_pcent = inputs["u_allow_pcent"]
-        E = discrete_inputs["E"]
+        E = inputs["E"]
         ratio = inputs["ratio"]
-        g1 = discrete_inputs["g1"]
+        g1 = inputs["g1"]
         rho_PM = inputs["rho_PM"]
         Sigma_normal = inputs["Sigma_normal"]
         Sigma_shear = inputs["Sigma_shear"]
@@ -168,8 +168,8 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("h_ss", 0.0, units="m", desc="stator rim thickness")
         self.add_input("L_t", 0.0, units="m", desc="effective length for support structure design")
         self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
-        self.add_discrete_input("E", 2.0e11, "Youngs modulus")
-        self.add_discrete_input("g1", 9.806, "Acceleration due to gravity")
+        self.add_input("E", 2.0e11, "Youngs modulus")
+        self.add_input("g1", 9.806, "Acceleration due to gravity")
         self.add_input("R_no", 0.0, units="m", desc="nose radius")
         self.add_input("Sigma_normal", 0.0, units="N/m**2", desc="Normal stress")
         self.add_input("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
@@ -183,12 +183,12 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_output("Structural_stator", 0.0, units="kg", desc="Structural mass of stator")
         self.add_output("mass_structural", 0.0, units="kg", desc="Total structural mass")
         self.add_output("Total_mass", 0.0, units="kg", desc="Total mass")
-        self.add_discrete_input("h_s1", 0.010, desc="Slot Opening height")
-        self.add_discrete_input("h_s2", 0.010, desc="Wedge Opening height")
+        self.add_input("h_s1", 0.010, desc="Slot Opening height")
+        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         Sigma_shear = inputs["Sigma_shear"]
         r_g = inputs["r_g"]
@@ -202,7 +202,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         R_no = inputs["R_no"]
         t_s = h_ys + h_ss
         Sigma_normal = inputs["Sigma_normal"]
-        E = discrete_inputs["E"]
+        E = inputs["E"]
         rho_Fes = inputs["rho_Fes"]
         rho_Fe = inputs["rho_Fe"]
         Copper = inputs["Copper"]
@@ -211,9 +211,9 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         phi = inputs["phi"]
         y_all_pcent = inputs["y_allow_pcent"]
         z_allow_deg = inputs["z_allow_deg"]
-        g1 = discrete_inputs["g1"]
-        h_s1 = float(discrete_inputs["h_s1"])
-        h_s2 = float(discrete_inputs["h_s2"])
+        g1 = inputs["g1"]
+        h_s1 = float(inputs["h_s1"])
+        h_s2 = float(inputs["h_s2"])
 
         # stator structure deflection calculation
         a_s = (b_st * d_s) - ((b_st - 2 * t_ws) * (d_s - 2 * t_ws))  # cross-sectional area of stator armms

@@ -16,7 +16,7 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("g", 0.0, units="m", desc="airgap length")
         self.add_input("l_s", 0.0, units="m", desc="Stator core length ")
         self.add_input("h_s", 0.0, units="m", desc="Yoke height h_s")
-        self.add_discrete_input("cofi", 0.8, desc="Power factor")
+        self.add_input("cofi", 0.8, desc="Power factor")
         self.add_output("tau_p", 0.0, units="m", desc="Pole pitch self.tau_p")
         self.add_output("tau_s", 0.0, units="m", desc="Stator slot pitch")
 
@@ -26,16 +26,16 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
         self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
         self.add_input("N_c", 0.0, desc="turns per coil")
-        self.add_discrete_input("b_s_tau_s", 0.45, desc="ratio of Slot width to slot pitch ")
+        self.add_input("b_s_tau_s", 0.45, desc="ratio of Slot width to slot pitch ")
         self.add_input("B_r", 0, units="T", desc="Tesla remnant flux density")
         self.add_input("ratio", 0.00, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
-        self.add_discrete_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
+        self.add_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
         self.add_input("mu_r", 0.0, desc="relative permeability ")
-        self.add_discrete_input("k_sfil", 0.65, desc="slot fill factor")
+        self.add_input("k_sfil", 0.65, desc="slot fill factor")
 
         self.add_input("phi", 0.0, units="deg", desc="tilt angle (rotor tilt -90 degrees during transportation")
 
-        self.add_discrete_input("m", 3, desc=" no of phases")
+        self.add_input("m", 3, desc=" no of phases")
         self.add_input("q1", 1, desc=" no of slots per pole per phase")
         # specific hysteresis losses W/kg @ 1.5 T
         self.add_input("rho_Cu", 0.0, units="ohm*m", desc=" Copper resisitivty")
@@ -67,8 +67,8 @@ class PMSG_active(om.ExplicitComponent):
         # Objective functions
         self.add_output("Mass", 0.0, units="kg", desc="Actual mass")
         self.add_output("K_rad", 0.0, desc="Aspect ratio")
-        self.add_discrete_input("h_s1", 0.010, desc="Slot Opening height")
-        self.add_discrete_input("h_s2", 0.010, desc="Wedge Opening height")
+        self.add_input("h_s1", 0.010, desc="Slot Opening height")
+        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
         # Other parameters
         self.add_output("S", desc="Stator slots")
@@ -87,12 +87,12 @@ class PMSG_active(om.ExplicitComponent):
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         # Unpack inputs
         r_g = inputs["r_g"]
         g = inputs["g"]
-        m = discrete_inputs["m"]
+        m = inputs["m"]
         q1 = inputs["q1"]
         l_s = inputs["l_s"]
         h_s = inputs["h_s"]
@@ -104,8 +104,8 @@ class PMSG_active(om.ExplicitComponent):
 
         T_rated = inputs["T_rated"]
         N_nom = inputs["N_nom"]
-        b_s_tau_s = discrete_inputs["b_s_tau_s"]
-        k_sfil = discrete_inputs["k_sfil"]
+        b_s_tau_s = inputs["b_s_tau_s"]
+        k_sfil = inputs["k_sfil"]
         ratio = inputs["ratio"]
         B_r = inputs["B_r"]
         N_c = inputs["N_c"]
@@ -115,12 +115,12 @@ class PMSG_active(om.ExplicitComponent):
 
         rho_Copper = inputs["rho_Copper"]
 
-        mu_0 = discrete_inputs["mu_0"]
+        mu_0 = inputs["mu_0"]
         ratio = inputs["ratio"]
         mu_r = inputs["mu_r"]
-        cofi = discrete_inputs["cofi"]
-        h_s1 = float(discrete_inputs["h_s1"])
-        h_s2 = float(discrete_inputs["h_s2"])
+        cofi = inputs["cofi"]
+        h_s1 = float(inputs["h_s1"])
+        h_s2 = float(inputs["h_s2"])
         # Assign values to design constants
 
         h_i = 0.001  # coil insulation thickness
@@ -197,7 +197,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_input("tau_s", 0.0, units="m", desc="Slot pitch")
         self.add_input("tau_p", 0.0, units="m", desc="Pole pitch ")
         self.add_input("T_rated", 0.0, units="N*m", desc="Machine rating")
-        self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
+        #self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
         self.add_input("h_m", 0.0, units="m", desc="magnet height")
 
         self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
@@ -205,9 +205,9 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_input("N_s", 0.0, desc="turns per phase")
         self.add_output("L_s", 0.0, units="m", desc="Stator synchronising inductance")
         self.add_input("B_r", 0.0, units="T", desc="Tesla remnant flux density")
-        self.add_discrete_input("mu_0", np.pi * 4 * 1e-7, desc="permeability of free space")
+        self.add_input("mu_0", np.pi * 4 * 1e-7, desc="permeability of free space")
         self.add_input("mu_r", 0.0, desc="relative permeability ")
-        self.add_discrete_input("m", 3, desc=" no of phases")
+        self.add_input("m", 3, desc=" no of phases")
         self.add_input("q1", 1, desc=" no of slots per pole per phase")
         self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_output("M_Fesy", 0.0, units="kg", desc="Stator yoke mass")
@@ -220,8 +220,8 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_input("b_s", 0.0, units="m", desc="slot width")
 
         self.add_input("A_1", 0.0, units="A/m", desc="specific current loading")
-        self.add_discrete_input("h_s1", 0.010, desc="Slot Opening height")
-        self.add_discrete_input("h_s2", 0.010, desc="Wedge Opening height")
+        self.add_input("h_s1", 0.010, desc="Slot Opening height")
+        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
         self.add_input("p", desc="No of pole pairs")
 
@@ -234,10 +234,10 @@ class Results_by_analytical_model(om.ExplicitComponent):
 
         # Rotor magnet dimension
         self.add_input("b_m", 0.0, units="m", desc="magnet width")
-        self.add_discrete_input("k_fes", 0.95, desc="Iron stacking factor")
+        self.add_input("k_fes", 0.95, desc="Iron stacking factor")
         self.add_input("ratio", 0.0, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
 
-        self.add_input("I_s", 0.0, units="A", desc="Generator output phase current")
+        #self.add_input("I_s", 0.0, units="A", desc="Generator output phase current")
 
         # Objective functions
 
@@ -247,7 +247,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         # Unpack inputs
         r_g = inputs["r_g"]
@@ -257,14 +257,14 @@ class Results_by_analytical_model(om.ExplicitComponent):
         h_yr = inputs["h_yr"]
         h_m = inputs["h_m"]
         b_m = inputs["b_m"]
-        I_s = inputs["I_s"]
-        N_nom = inputs["N_nom"]
+        #I_s = inputs["I_s"]
+        #N_nom = inputs["N_nom"]
         B_r = inputs["B_r"]
         p = np.round(inputs["p"])
-        m = discrete_inputs["m"]
+        m = inputs["m"]
         mu_r = inputs["mu_r"]
-        k_fes = discrete_inputs["k_fes"]
-        mu_0 = discrete_inputs["mu_0"]
+        k_fes = inputs["k_fes"]
+        mu_0 = inputs["mu_0"]
         print(mu_0)
         q1 = inputs["q1"]
         rho_Fe = inputs["rho_Fe"]
@@ -277,9 +277,10 @@ class Results_by_analytical_model(om.ExplicitComponent):
         h_s = inputs["h_s"]
         N_s = inputs["N_s"]
         ratio = inputs["ratio"]
+        A_1 = inputs["A_1"]
 
-        h_s1 = discrete_inputs["h_s1"]
-        h_s2 = discrete_inputs["h_s2"]
+        h_s1 = inputs["h_s1"]
+        h_s2 = inputs["h_s2"]
         h_w = h_s2
         alpha_p = np.pi / 2 * ratio
         b_so = 2 * g  # Slot opening
@@ -288,7 +289,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         l_u = k_fes * l_s  # useful iron stack length
         # air gap diameter
 
-        l_b = 2 * tau_p  # end winding length
+        #l_b = 2 * tau_p  # end winding length
         l_e = l_s + 2 * g  # equivalent core length
 
         h_w = h_s1 + h_s2
@@ -304,8 +305,8 @@ class Results_by_analytical_model(om.ExplicitComponent):
         k_C = tau_s / (tau_s - gamma * (g + h_m / mu_r))  # carter coefficient
         g_eff = k_C * (g + h_m / mu_r)
         # angular frequency in radians
-        om_m = 2 * np.pi * N_nom / 60
-        om_e = p * om_m
+        #om_m = 2 * np.pi * N_nom / 60
+        #om_e = p * om_m
 
         # Calculating winding factor
         k_wd = np.sin(np.pi / 6) / q1 / np.sin(np.pi / 6 / q1)
@@ -317,26 +318,21 @@ class Results_by_analytical_model(om.ExplicitComponent):
         V_Fesy = L_t * np.pi * ((r_g + h_s + h_ys) ** 2 - (r_g + h_s) ** 2)  # volume of iron in stator yoke
         V_Fery = L_t * np.pi * ((r_r - h_m) ** 2 - (r_r - h_m - h_yr) ** 2)
 
-        outputs["M_Fest"] = M_Fest = V_Fest * rho_Fe  # Mass of stator tooth
+        outputs["M_Fest"] = V_Fest * rho_Fe  # Mass of stator tooth
         outputs["M_Fesy"] = V_Fesy * rho_Fe  # Mass of stator yoke
         outputs["M_Fery"] = V_Fery * rho_Fe  # Mass of rotor yoke
         outputs["Iron"] = outputs["M_Fest"] + outputs["M_Fesy"] + outputs["M_Fery"]
 
         L_m = 2 * m * k_wd**2 * (N_s) ** 2 * mu_0 * tau_p * L_t / np.pi**2 / g_eff / p
-        L_ssigmas = (
-            2 * mu_0 * l_s * N_s**2 / p / q1 * ((h_s - h_w) / (3 * b_s) + h_w / b_so)
-        )  # slot leakage inductance
-        L_ssigmaew = (
-            (2 * mu_0 * l_s * N_s**2 / p / q1) * 0.34 * g * (l_e - 0.64 * tau_p * y_tau_p) / l_s
-        )  # end winding leakage inductance
-        L_ssigmag = (
-            2 * mu_0 * l_s * N_s**2 / p / q1 * (5 * (g * k_C / b_so) / (5 + 4 * (g * k_C / b_so)))
-        )  # tooth tip leakage inductance#tooth tip leakage inductance
+        # slot leakage inductance
+        L_ssigmas = 2 * mu_0 * l_s * N_s**2 / p / q1 * ((h_s - h_w) / (3 * b_s) + h_w / b_so)
+        # end winding leakage inductance
+        L_ssigmaew = (2 * mu_0 * l_s * N_s**2 / p / q1) * 0.34 * g * (l_e - 0.64 * tau_p * y_tau_p) / l_s
+        # tooth tip leakage inductance#tooth tip leakage inductance
+        L_ssigmag = 2 * mu_0 * l_s * N_s**2 / p / q1 * (5 * (g * k_C / b_so) / (5 + 4 * (g * k_C / b_so)))
         L_ssigma = L_ssigmas + L_ssigmaew + L_ssigmag
-
         outputs["L_s"] = L_m + L_ssigma
-
-        X_snom = om_e * (L_m + L_ssigma)
+        #X_snom = om_e * (L_m + L_ssigma)
 
         # Calculating magnetic loading
         outputs["B_pm1"] = B_r * h_m / mu_r / (g_eff)
@@ -345,9 +341,9 @@ class Results_by_analytical_model(om.ExplicitComponent):
         outputs["B_rymax"] = B_g * b_m * l_e / (2 * h_yr * l_s)
         outputs["B_tmax"] = B_g * tau_s / b_t
 
-        outputs["Sigma_shear"] = 0.707 * outputs["B_g"] * inputs["A_1"]
-        outputs["T_e"] = T_e = outputs["Sigma_shear"] * 2 * np.pi * r_g**2 * l_s
-        outputs["Sigma_normal"] = (outputs["B_g"] ** 2) / (2 * mu_0)
+        outputs["Sigma_shear"] = 0.707 * B_g * A_1
+        outputs["T_e"] = outputs["Sigma_shear"] * 2 * np.pi * r_g**2 * l_s
+        outputs["Sigma_normal"] = (B_g**2) / (2 * mu_0)
 
 
 class Results(om.ExplicitComponent):
@@ -361,8 +357,8 @@ class Results(om.ExplicitComponent):
         self.add_input("M_Fesy", 0.0, units="kg", desc="Stator yoke mass")
         self.add_input("M_Fery", 0.0, units="kg", desc="Rotor yoke mass")
         self.add_input("h_m", 0.0, units="m", desc="magnet thickness")
-        self.add_discrete_input("P_Fe0h", 4.0, desc="specific hysteresis losses W/kg @ 1.5 T")
-        self.add_discrete_input("P_Fe0e", 1.0, desc="specific eddy losses W/kg @ 1.5 T")
+        self.add_input("P_Fe0h", 4.0, desc="specific hysteresis losses W/kg @ 1.5 T")
+        self.add_input("P_Fe0e", 1.0, desc="specific eddy losses W/kg @ 1.5 T")
         self.add_input("P_Cu", 0.0, units="W", desc="Copper losses ")
         self.add_input("P_Ftm", 0.0, units="W", desc="Magnet losses")
         self.add_input("P_rated", 0.0, units="W", desc="Machine rating")
@@ -384,15 +380,15 @@ class Results(om.ExplicitComponent):
         self.add_output("demag_mmf_ratio", 0.0, desc="torque constraint")
         self.add_input("k_wd", 0.0, desc="winding factor")
         self.add_input("B_r", 0, units="T", desc="remnant flux density")
-        self.add_discrete_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
+        self.add_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
         self.add_input("mu_r", 0.0, desc="relative permeability of magnet")
         self.add_input("H_c", 0.0, units="A/m", desc="coercivity")
         self.add_input("g", 0.0, units="m", desc="air gap length")
-        self.add_discrete_input("k_sfil", 0.65, desc="slot fill factor")
+        self.add_input("k_sfil", 0.65, desc="slot fill factor")
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         # Unpack inputs
         B_g = inputs["B_g"]
@@ -402,9 +398,9 @@ class Results(om.ExplicitComponent):
         M_Fery = inputs["M_Fery"]
         M_Fesy = inputs["M_Fesy"]
         M_Fest = inputs["M_Fest"]
-        P_Fe0h = discrete_inputs["P_Fe0h"]
-        P_Fe0e = discrete_inputs["P_Fe0e"]
-        mu_0 = discrete_inputs["mu_0"]
+        P_Fe0h = inputs["P_Fe0h"]
+        P_Fe0e = inputs["P_Fe0e"]
+        mu_0 = inputs["mu_0"]
         B_r = inputs["B_r"]
         mu_r = inputs["mu_r"]
         H_c = inputs["H_c"]
@@ -423,6 +419,7 @@ class Results(om.ExplicitComponent):
         I_s = inputs["I_s"]
         p = inputs["p"]
         h_m = inputs["h_m"]
+        T_e = inputs["T_e"]
 
         # Calculating Losses
         om_m = 2 * np.pi * N_nom / 60
@@ -453,7 +450,7 @@ class Results(om.ExplicitComponent):
         outputs["demag_mmf_ratio"] = H_demag / H_c
 
         om_m = 2 * np.pi * N_nom / 60
-        outputs["E_p"] = E_p = np.sqrt(3) * N_s * l_s * r_g * k_wd * om_m * inputs["B_g"] * 0.707
+        outputs["E_p"] = E_p = np.sqrt(3) * N_s * l_s * r_g * k_wd * om_m * B_g * 0.707
 
         outputs["E_p_ratio"] = E_p / E_p_target
-        outputs["torque_ratio"] = inputs["T_e"] / T_rated
+        outputs["torque_ratio"] = T_e / T_rated

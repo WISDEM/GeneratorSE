@@ -54,7 +54,7 @@ class PMSG_Inner_rotor_Opt(om.Group):
 
         ivcs = om.IndepVarComp()
 
-        ivcs.add_discrete_output("Eta_target", 0.0, desc="Target drivetrain efficiency")
+        ivcs.add_output("Eta_target", 0.0, desc="Target drivetrain efficiency")
         ivcs.add_output("P_rated", 0.0, units="W", desc="Rated Power")
         ivcs.add_output("T_rated", 0.0, units="N*m", desc="Torque")
         ivcs.add_output("E_p_target", 0.0, units="V", desc="Target voltage")
@@ -101,8 +101,16 @@ class PMSG_Inner_rotor_Opt(om.Group):
         if self.options["magnetics_by_fea"]:
             self.add_subsystem("geom", FEMM_Geometry(), promotes=["*"])
         else:
-            self.add_subsystem("Results_by_analytical_model", Results_by_analytical_model(), promotes=["*"])
+            self.add_subsystem("Results_by_analytical_model", md.Results_by_analytical_model(), promotes=["*"])
 
         self.add_subsystem("results", md.Results(), promotes=["*"])
         self.add_subsystem("struct", PMSG_Inner_Rotor_Structural(), promotes=["*"])
-        self.add_subsystem("cost", PMSG_Cost(), promotes=["*"])
+        self.add_subsystem("cost", MS_PMSG_Cost(), promotes=["*"])
+
+if __name__ == "__main__":
+    prob = om.Problem()
+    prob.model = PMSG_Inner_rotor_Opt(magnetics_by_fea=False)
+    prob.setup()
+    prob.run_model()
+    
+    
