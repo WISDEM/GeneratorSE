@@ -1,8 +1,8 @@
 
 import openmdao.api as om
-import ipm.magnetics_design as md
-from ipm.femm_fea import FEMM_Geometry
-from ipm.structural import PMSG_Outer_Rotor_Structural
+import generatorse.ipm.magnetics_design as md
+from generatorse.ipm.femm_fea import FEMM_Geometry
+from generatorse.ipm.structural import PMSG_Outer_Rotor_Structural
 
 
 class PMSG_Cost(om.ExplicitComponent):

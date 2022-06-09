@@ -15,8 +15,8 @@ McDonald,A.S. et al. IET Renewable Power Generation(2008),2(1):3 http://dx.doi.o
 
 import numpy as np
 import openmdao.api as om
-from ipm.femm_fea import FEMM_Geometry
-from ipm.structural import PMSG_Outer_Rotor_Structural
+from generatorse.ipm.femm_fea import FEMM_Geometry
+from generatorse.ipm.structural import PMSG_Outer_Rotor_Structural
 
 
 class PMSG_active(om.ExplicitComponent):

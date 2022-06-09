@@ -1,6 +1,6 @@
 import openmdao.api as om
-from ipm.IPM import PMSG_Outer_rotor_Opt
-from ipm.structural import PMSG_Outer_Rotor_Structural
+from generatorse.ipm.IPM import PMSG_Outer_rotor_Opt
+from generatorse.ipm.structural import PMSG_Outer_Rotor_Structural
 import os
 import pandas as pd
 import numpy as np

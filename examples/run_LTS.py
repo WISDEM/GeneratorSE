@@ -1,7 +1,7 @@
 import openmdao.api as om
-from lts.lts import LTS_Outer_Rotor_Opt
-from lts.structural import LTS_Outer_Rotor_Structural
-from lts.nlopt_driver import NLoptDriver
+from generatorse.lts.lts import LTS_Outer_Rotor_Opt
+from generatorse.lts.structural import LTS_Outer_Rotor_Structural
+from generatorse.driver.nlopt_driver import NLoptDriver
 import os
 import pandas as pd
 import numpy as np

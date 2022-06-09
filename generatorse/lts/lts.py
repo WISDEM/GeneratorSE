@@ -1,7 +1,7 @@
 import openmdao.api as om
-import lts.magnetics_design as md
-from lts.femm_fea import FEMM_Geometry
-from lts.structural import LTS_Outer_Rotor_Structural
+import generatorse.lts.magnetics_design as md
+from generatorse.lts.femm_fea import FEMM_Geometry
+from generatorse.lts.structural import LTS_Outer_Rotor_Structural
 
 
 class LTS_Cost(om.ExplicitComponent):
