@@ -124,8 +124,9 @@ class PMSG_Inner_rotor_Opt(om.Group):
         self.add_subsystem("cost", MS_PMSG_Cost(), promotes=["*"])
 
 if __name__ == "__main__":
+    femm_flag = True
     prob = om.Problem()
-    prob.model = PMSG_Inner_rotor_Opt(magnetics_by_fea=False)
+    prob.model = PMSG_Inner_rotor_Opt(magnetics_by_fea=femm_flag)
     prob.setup()
     prob.run_model()
     

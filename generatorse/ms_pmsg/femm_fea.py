@@ -208,13 +208,11 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("b_s", 0.0, units="m", desc="slot width")
         self.add_input("tau_s", 0.0, units="m", desc="slot pitch")
 
-        self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
+        #self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
         self.add_input("f", 0.0, units="Hz", desc="frequency")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
-        self.add_input("ratio", 0.00, desc="Wpole width to pole pitch")
-
-        self.add_output("h_t", 0.0, units="m", desc="tooth height")
+        #self.add_input("ratio", 0.00, desc="Wpole width to pole pitch")
 
         self.add_input("h_m", 0.0, units="m", desc="magnet height")
         self.add_input("b_m", 0.0, units="m", desc="magnet width ")
@@ -226,6 +224,10 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("I_s", 0.0, units="A", desc="Stator current ")
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
         self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical Steel density ")
+
+        self.add_output("h_t", 0.0, units="m", desc="tooth height")
+
+        self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density B_g")
         self.add_output("B_pm1", 0.0, units="T", desc="Peak air gap flux density ")
         self.add_output("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
         self.add_output("B_symax", 0.0, units="T", desc="Peak flux density in thestator yoke")
@@ -257,7 +259,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         m = float(inputs["m"])
         h_s1 = float(inputs["h_s1"])
         h_s2 = float(inputs["h_s2"])
-        ratio = float(inputs["ratio"])
+        #ratio = float(inputs["ratio"])
         r_g = float(inputs["r_g"])
         N_c = float(inputs["N_c"])
         I_s = float(inputs["I_s"])
@@ -267,12 +269,12 @@ class FEMM_Geometry(om.ExplicitComponent):
         b_m = float(inputs["b_m"])
         b_s = float(inputs["b_s"])
         f = float(inputs["f"])
-        N_nom = float(inputs["N_nom"])
+        #N_nom = float(inputs["N_nom"])
         tau_s = float(inputs["tau_s"])
 
         q = 1
         p = float(inputs["p"])
-        Slots = 2 * q * m * p
+        #Slots = 2 * q * m * p
 
         # Assign values to design constants
 
