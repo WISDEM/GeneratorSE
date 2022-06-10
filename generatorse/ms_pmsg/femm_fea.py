@@ -7,10 +7,10 @@ Created on Fri Dec 31 12:28:2 2021
 import femm
 import numpy as np
 import openmdao.api as om
-from sympy import Point, Line, Segment, Polygon, intersection
-from sympy.geometry.util import centroid
+from sympy import Point, Segment
+#from sympy.geometry.util import centroid
 import random
-import csv
+#import csv
 import os
 import platform
 
@@ -39,14 +39,14 @@ def bad_inputs(outputs):
     outputs["B_g"] = 2.5
     outputs["B_rymax"] = 2.5
     outputs["B_symax"] = 2.5
-    outputs["Sigma_normal"] = 100000
+    outputs["Sigma_normal"] = 1e9
     outputs["M_Fes"] = 100000
     outputs["M_Fery"] = 100000
     outputs["M_Fesy"] = 100000
     outputs["M_Fest"] = 100000
-    outputs["Iron"] = 2000000
-    outputs["T_e"] = 50e6
-    outputs["Sigma_shear"] = 150000
+    outputs["Iron"] = 1e8
+    outputs["T_e"] = 1e9
+    outputs["Sigma_shear"] = 1e9
     femm.mi_saveas("IPM_new_bad_geomtery.fem")
     return outputs
 
@@ -191,7 +191,7 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
     sigma_t = abs(1 / (4 * np.pi * 1e-7) * force) / circ
     torque = np.pi / 2 * sigma_t * (2 * r_g) ** 2 * l_s
     torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
-    print(torque[0], torque[1], torque.mean())
+    #print(torque[0], torque[1], torque.mean())
     return torque.mean(), sigma_t.mean()
 
 
@@ -259,7 +259,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         h_s2 = float(inputs["h_s2"])
         ratio = float(inputs["ratio"])
         r_g = float(inputs["r_g"])
-        N_c = int(inputs["N_c"])
+        N_c = float(inputs["N_c"])
         I_s = float(inputs["I_s"])
         rho_Fe = float(inputs["rho_Fe"])
         f = float(inputs["f"])
@@ -271,7 +271,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         tau_s = float(inputs["tau_s"])
 
         q = 1
-        p = np.round(float(inputs["p"]))
+        p = float(inputs["p"])
         Slots = 2 * q * m * p
 
         # Assign values to design constants
@@ -720,7 +720,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         #
         except:
 
-            print(r_g, l_s, h_s, p, g, h_ys, h_yr, N_c, I_s, h_m, ratio)
+            #print(r_g, l_s, h_s, p, g, h_ys, h_yr, N_c, I_s, h_m, ratio)
             outputs = bad_inputs(outputs)
 
 

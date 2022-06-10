@@ -16,24 +16,22 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("g", 0.0, units="m", desc="airgap length")
         self.add_input("l_s", 0.0, units="m", desc="Stator core length ")
         self.add_input("h_s", 0.0, units="m", desc="Yoke height h_s")
-        self.add_input("cofi", 0.8, desc="Power factor")
+        #self.add_input("cofi", 0.8, desc="Power factor")
         self.add_output("tau_p", 0.0, units="m", desc="Pole pitch self.tau_p")
         self.add_output("tau_s", 0.0, units="m", desc="Stator slot pitch")
 
         self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
-        self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
-        self.add_input("h_m", 0.0, units="m", desc="magnet height")
-        self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
-        self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
+        #self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
+        #self.add_input("h_m", 0.0, units="m", desc="magnet height")
+        #self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
+        #self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
         self.add_input("N_c", 0.0, desc="turns per coil")
         self.add_input("b_s_tau_s", 0.45, desc="ratio of Slot width to slot pitch ")
-        self.add_input("B_r", 0, units="T", desc="Tesla remnant flux density")
+        #self.add_input("B_r", 0, units="T", desc="Tesla remnant flux density")
         self.add_input("ratio", 0.00, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
-        self.add_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
-        self.add_input("mu_r", 0.0, desc="relative permeability ")
+        #self.add_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
+        #self.add_input("mu_r", 0.0, desc="relative permeability ")
         self.add_input("k_sfil", 0.65, desc="slot fill factor")
-
-        self.add_input("phi", 0.0, units="deg", desc="tilt angle (rotor tilt -90 degrees during transportation")
 
         self.add_input("m", 3, desc=" no of phases")
         self.add_input("q1", 1, desc=" no of slots per pole per phase")
@@ -67,8 +65,8 @@ class PMSG_active(om.ExplicitComponent):
         # Objective functions
         self.add_output("Mass", 0.0, units="kg", desc="Actual mass")
         self.add_output("K_rad", 0.0, desc="Aspect ratio")
-        self.add_input("h_s1", 0.010, desc="Slot Opening height")
-        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
+        #self.add_input("h_s1", 0.010, desc="Slot Opening height")
+        #self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
         # Other parameters
         self.add_output("S", desc="Stator slots")
@@ -97,17 +95,17 @@ class PMSG_active(om.ExplicitComponent):
         l_s = inputs["l_s"]
         h_s = inputs["h_s"]
         p = inputs["p"]
-        h_ys = inputs["h_ys"]
-        h_yr = inputs["h_yr"]
-        h_m = inputs["h_m"]
+        #h_ys = inputs["h_ys"]
+        #h_yr = inputs["h_yr"]
+        #h_m = inputs["h_m"]
         I_s = inputs["I_s"]
 
-        T_rated = inputs["T_rated"]
+        #T_rated = inputs["T_rated"]
         N_nom = inputs["N_nom"]
         b_s_tau_s = inputs["b_s_tau_s"]
         k_sfil = inputs["k_sfil"]
         ratio = inputs["ratio"]
-        B_r = inputs["B_r"]
+        #B_r = inputs["B_r"]
         N_c = inputs["N_c"]
 
         # specific hysteresis losses W/kg @ 1.5 T
@@ -115,28 +113,28 @@ class PMSG_active(om.ExplicitComponent):
 
         rho_Copper = inputs["rho_Copper"]
 
-        mu_0 = inputs["mu_0"]
+        #mu_0 = inputs["mu_0"]
         ratio = inputs["ratio"]
-        mu_r = inputs["mu_r"]
-        cofi = inputs["cofi"]
-        h_s1 = float(inputs["h_s1"])
-        h_s2 = float(inputs["h_s2"])
+        #mu_r = inputs["mu_r"]
+        #cofi = inputs["cofi"]
+        #h_s1 = float(inputs["h_s1"])
+        #h_s2 = float(inputs["h_s2"])
         # Assign values to design constants
 
-        h_i = 0.001  # coil insulation thickness
+        #h_i = 0.001  # coil insulation thickness
 
-        k_fes = 0.9  # Stator iron fill factor per Grauers
-        b_so = 2 * g  # Slot opening
-        alpha_p = np.pi / 2 * ratio
-        N_c = np.round(N_c)
+        #k_fes = 0.9  # Stator iron fill factor per Grauers
+        #b_so = 2 * g  # Slot opening
+        #alpha_p = np.pi / 2 * ratio
+        #N_c = np.round(N_c)
+        #p = np.round(p)
 
         outputs["K_rad"] = l_s / (2 * r_g)  # Aspect ratio
 
-        p = np.round(p)
         dia = 2 * r_g  # air gap diameter
         outputs["tau_p"] = tau_p = 2 * np.pi * (r_g - g) / (2 * p)
         # equivalent core length
-        outputs["b_m"] = b_m = ratio * tau_p  # magnet width
+        outputs["b_m"] = ratio * tau_p  # magnet width
 
         outputs["f"] = N_nom * p / 60  # outout frequency
         outputs["S"] = 2 * p * q1 * m  # Stator slots
@@ -144,24 +142,23 @@ class PMSG_active(om.ExplicitComponent):
         outputs["tau_s"] = tau_s = np.pi * dia / outputs["S"]
         # Stator slot pitch
         outputs["b_s"] = b_s = b_s_tau_s * outputs["tau_s"]  # slot width
-        outputs["b_t"] = b_t = tau_s - (outputs["b_s"])  # tooth width
+        outputs["b_t"] = tau_s - (outputs["b_s"])  # tooth width
         outputs["Slot_aspect_ratio"] = h_s / outputs["b_s"]
 
-        om_m = 2 * np.pi * N_nom / 60
-        om_e = p * om_m / 2
+        #om_m = 2 * np.pi * N_nom / 60
+        #om_e = p * om_m / 2
 
         # Calculating winding factor
-        outputs["k_wd"] = k_wd = np.sin(np.pi / 6) / q1 / np.sin(np.pi / 6 / q1)
+        outputs["k_wd"] = np.sin(np.pi / 6) / q1 / np.sin(np.pi / 6 / q1)
 
-        outputs["L_t"] = L_t = l_s + 2 * tau_p
-        l = L_t  # length
+        outputs["L_t"] = l_s + 2 * tau_p
         outputs["N_s"] = N_s = inputs["N_c"] * 2 * outputs["S"] / (m * q1)
         # Calculating no-load voltage induced in the stator
 
         l_Cus = N_s * (2 * tau_p + l_s)
         A_s = b_s * (h_s) * 0.5
 
-        A_scalc = A_s * q1 * p
+        #A_scalc = A_s * q1 * p
         A_Cus = A_s * k_sfil / (N_c)
 
         outputs["R_s"] = l_Cus * rho_Cu / (A_Cus)
@@ -260,18 +257,16 @@ class Results_by_analytical_model(om.ExplicitComponent):
         #I_s = inputs["I_s"]
         #N_nom = inputs["N_nom"]
         B_r = inputs["B_r"]
-        p = np.round(inputs["p"])
+        p = inputs["p"]
         m = inputs["m"]
         mu_r = inputs["mu_r"]
         k_fes = inputs["k_fes"]
         mu_0 = inputs["mu_0"]
-        print(mu_0)
         q1 = inputs["q1"]
         rho_Fe = inputs["rho_Fe"]
         L_t = inputs["L_t"]
         tau_p = float(inputs["tau_p"])
         tau_s = float(inputs["tau_s"])
-        p = np.round(inputs["p"])
         b_s = inputs["b_s"]
         b_t = inputs["b_t"]
         h_s = inputs["h_s"]

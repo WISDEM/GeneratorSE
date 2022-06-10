@@ -35,9 +35,9 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_input("h_m", 0.0, units="m", desc="magnet thickness")
         self.add_input("g", 0.0, units="m", desc="airgap length")
         self.add_input("R_sh", 0.0, units="m", desc="shaft radius")
-        self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
-        self.add_input("E", 2.0e11, "permeability of free space")
-        self.add_input("g1", 9.806, "Acceleration due to gravity")
+        #self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
+        self.add_input("E", 2.0e11, desc="permeability of free space")
+        self.add_input("g1", 9.806, desc="Acceleration due to gravity")
         self.add_input("rho_PM", 0.0, units="kg/m**3", desc="Magnet density kg/m^3")
         self.add_input("ratio", 0.0, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
         self.add_input("Sigma_normal", 0.0, units="N/m**2", desc="Normal stress")
@@ -46,8 +46,8 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_input("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
         self.add_output("Structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
         self.add_output("mass_PM", 0.0, units="kg", desc="magnet mass kg")
-        self.add_output("mass_Fe", 0.0, units="kg", desc="Iron massg")
-        self.add_output("Rotor_active", 0.0, units="kg", desc="Iron massg")
+        self.add_output("mass_Fe", 0.0, units="kg", desc="Iron mass")
+        self.add_output("mass_active", 0.0, units="kg", desc="active mass")
 
         self.declare_partials("*", "*", method="fd")
 
@@ -56,7 +56,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         r_g = inputs["r_g"]
         g = inputs["g"]
         h_m = inputs["h_m"]
-        n_r = inputs["n_r"]
+        N_r = inputs["n_r"]
         b_r = inputs["b_r"]
         d_r = inputs["d_r"]
         t_wr = inputs["t_wr"]
@@ -82,7 +82,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
 
         a_r = (b_r * d_r) - ((b_r - 2 * t_wr) * (d_r - 2 * t_wr))  # cross-sectional area of rotor arms
         A_r = l * t  # cross-sectional area of rotor cylinder
-        N_r = np.round(n_r)  # rotor arms
+        #N_r = np.round(n_r)  # rotor arms
         theta_r = np.pi * 1 / N_r  # half angle between spokes
         I_r = l * t**3 / 12  # second moment of area of rotor cylinder
         I_arm_axi_r = (
@@ -137,7 +137,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         outputs["Structural_rotor"] = (N_r * (R_1 - R_sh) * a_r * rho_Fes) + np.pi * (
             (r_g - g - h_m - h_yr) ** 2 - (r_g - g - h_m - t) ** 2
         ) * l * rho_Fes
-        outputs["Rotor_active"] = outputs["mass_PM"] + outputs["mass_Fe"]  # rotor mass
+        outputs["mass_active"] = outputs["mass_PM"] + outputs["mass_Fe"]  # rotor mass
 
 
 #
@@ -167,9 +167,9 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("phi", 0.0, units="deg", desc="tilt angle")
         self.add_input("h_ss", 0.0, units="m", desc="stator rim thickness")
         self.add_input("L_t", 0.0, units="m", desc="effective length for support structure design")
-        self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
-        self.add_input("E", 2.0e11, "Youngs modulus")
-        self.add_input("g1", 9.806, "Acceleration due to gravity")
+        #self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
+        self.add_input("E", 2.0e11, desc="Youngs modulus")
+        self.add_input("g1", 9.806, desc="Acceleration due to gravity")
         self.add_input("R_no", 0.0, units="m", desc="nose radius")
         self.add_input("Sigma_normal", 0.0, units="N/m**2", desc="Normal stress")
         self.add_input("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
@@ -178,7 +178,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("Copper", 0.0, units="kg", desc="Copper Mass")
         self.add_input("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_input("Structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
-        self.add_input("Rotor_active", 0.0, units="kg", desc="Active mass")
+        self.add_input("mass_active", 0.0, units="kg", desc="Active mass")
         self.add_output("Total_active", 0.0, units="kg", desc="Total Active mass")
         self.add_output("Structural_stator", 0.0, units="kg", desc="Structural mass of stator")
         self.add_output("mass_structural", 0.0, units="kg", desc="Total structural mass")
@@ -192,7 +192,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
 
         Sigma_shear = inputs["Sigma_shear"]
         r_g = inputs["r_g"]
-        n_s = inputs["n_s"]
+        N_st = inputs["n_s"]
         b_st = inputs["b_st"]
         d_s = inputs["d_s"]
         t_ws = inputs["t_ws"]
@@ -218,7 +218,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         # stator structure deflection calculation
         a_s = (b_st * d_s) - ((b_st - 2 * t_ws) * (d_s - 2 * t_ws))  # cross-sectional area of stator armms
         A_st = l * t_s  # cross-sectional area of stator cylinder
-        N_st = np.round(n_s)  # stator arms
+        #N_st = np.round(n_s)  # stator arms
         theta_s = np.pi * 1 / N_st  # half angle between spokes
         I_st = l * t_s**3 / 12  # second moment of area of stator cylinder
         k_2 = np.sqrt(I_st / A_st)  # radius of gyration
@@ -307,7 +307,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         outputs["b_all_s"] = 2 * np.pi * R_no / N_st  # allowable circumferential arm dimension
 
         outputs["Structural_stator"] = mass_stru_steel
-        outputs["Total_active"] = inputs["Rotor_active"] + mass_st_lam_s + Copper
+        outputs["Total_active"] = inputs["mass_active"] + mass_st_lam_s + Copper
         outputs["mass_structural"] = outputs["Structural_stator"] + inputs["Structural_rotor"]
         outputs["Total_mass"] = outputs["mass_structural"] + outputs["Total_active"]
 
@@ -340,21 +340,22 @@ class PMSG_Inner_Rotor_Structural(om.Group):
         ivcs.add_output("d_r", 0.0, units="m", desc="rotor arm depth")
         ivcs.add_output("d_s", 0.0, units="m", desc="stator arm depth")
         ivcs.add_output("t_s", 0.0, units="m", desc="Stator disc thickness")
+        #ivcs.add_output("ratio", 0.0, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
 
-        ivcs.add_output("rho_Fes", 0.0, units="kg/m**3", desc="Structural steel mass density")
         ivcs.add_output("u_allow_pcent", 0.0, desc="Radial deflection as a percentage of air gap diameter")
         ivcs.add_output("y_allow_pcent", 0.0, desc="Radial deflection as a percentage of air gap diameter")
         ivcs.add_output("z_allow_deg", 0.0, units="deg", desc="Allowable torsional twist")
 
-        ivcs.add_output("L_t", 0.0, units="m", desc="effective length for support structure design")
-        ivcs.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density")
-        ivcs.add_output("Sigma_normal", 0.0, units="N/m**2", desc="Normal stress")
-        ivcs.add_output("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
+        #ivcs.add_output("L_t", 0.0, units="m", desc="effective length for support structure design")
+        #ivcs.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density")
+        #ivcs.add_output("Sigma_normal", 0.0, units="N/m**2", desc="Normal stress")
+        #ivcs.add_output("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
         ivcs.add_output("rho_Fes", 0.0, units="kg/m**3", desc="Structural Steel density kg/m^3")
-        ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
-        ivcs.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
-        ivcs.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
-        ivcs.add_output("Rotor_active", 0.0, units="kg", desc="Active mass")
+        #ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
+        #ivcs.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
+        #ivcs.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
+        ivcs.add_output("g1", 9.806, desc="Acceleration due to gravity")
+        ivcs.add_output("E", 2.0e11, desc="permeability of free space")
 
         # ivcs.add_output("perc_allowable_radial", 0.0, desc=" Allowable radial % deflection ")
         # ivcs.add_output("perc_allowable_axial", 0.0, desc=" Allowable axial % deflection ")
