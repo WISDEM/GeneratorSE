@@ -15,10 +15,11 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
 
         self.add_output("u_Ar", 0.0, units="m", desc="Rotor radial deflection")
         self.add_output("y_Ar", 0.0, units="m", desc="Rotor axial deflection")
-        self.add_output("z_A_r", 0.0, units="m", desc="Rotor circumferential deflection")
+        self.add_output("z_Ar", 0.0, units="m", desc="Rotor circumferential deflection")
         self.add_output("u_all_r", 0.0, units="m", desc="Allowable radial rotor")
         self.add_output("z_all_r", 0.0, units="m", desc="Allowable circum rotor")
         self.add_output("b_all_r", 0.0, units="m", desc="Allowable arm dimensions")
+        
         self.add_input("u_allow_pcent", 0.0, desc="Allowable radial deflection percent")
         self.add_input("z_allow_deg", 0.0, units="deg", desc="Allowable torsional twist ")
 
@@ -36,7 +37,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_input("g", 0.0, units="m", desc="airgap length")
         self.add_input("R_sh", 0.0, units="m", desc="shaft radius")
         #self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density")
-        self.add_input("E", 2.0e11, desc="permeability of free space")
+        self.add_input("E", 2.0e11, desc="Youngs modulus")
         self.add_input("g1", 9.806, desc="Acceleration due to gravity")
         self.add_input("rho_PM", 0.0, units="kg/m**3", desc="Magnet density kg/m^3")
         self.add_input("ratio", 0.0, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
@@ -49,6 +50,10 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_output("mass_Fe", 0.0, units="kg", desc="Iron mass")
         self.add_output("mass_active", 0.0, units="kg", desc="active mass")
 
+        self.add_output('con_uar', val=0.0, desc='Radial deflection constraint-rotor (<1)')
+        self.add_output('con_yar', val=0.0, desc='Axial deflection constraint-rotor (<1)')
+        self.add_output('con_zar', val=0.0, desc='Torsional deflection constraint-rotor (<1)')
+        
         self.declare_partials("*", "*", method="fd")
 
     def compute(self, inputs, outputs):
@@ -85,12 +90,14 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         #N_r = np.round(n_r)  # rotor arms
         theta_r = np.pi * 1 / N_r  # half angle between spokes
         I_r = l * t**3 / 12  # second moment of area of rotor cylinder
+        # second moment of area of rotor arm
         I_arm_axi_r = (
             (b_r * d_r**3) - ((b_r - 2 * t_wr) * (d_r - 2 * t_wr) ** 3)
-        ) / 12  # second moment of area of rotor arm
+        ) / 12  
+        # second moment of area of rotot arm w.r.t torsion
         I_arm_tor_r = (
             (d_r * b_r**3) - ((d_r - 2 * t_wr) * (b_r - 2 * t_wr) ** 3)
-        ) / 12  # second moment of area of rotot arm w.r.t torsion
+        ) / 12  
         R = r_g - g - h_m - 0.5 * t
 
         # Rotor mean radius
@@ -130,17 +137,22 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         outputs["y_Ar"] = y_a1 + y_a2  # axial deflection
 
         # Calculating # circumferential deflection of the rotor
-        outputs["z_all_r"] = z_allow_deg * 2 * np.pi * R / 360  # allowable torsional deflection
-        outputs["z_A_r"] = (
+        # allowable torsional deflection
+        outputs["z_all_r"] = z_allow_deg * 2 * np.pi * R / 360  
+        # circumferential deflection
+        outputs["z_Ar"] = (
             (2 * np.pi * (R - 0.5 * t) * l / N_r) * Sigma_shear * (l_ir - 0.5 * t) ** 3 / 3 / E / I_arm_tor_r
-        )  # circumferential deflection
+        )
         outputs["Structural_rotor"] = (N_r * (R_1 - R_sh) * a_r * rho_Fes) + np.pi * (
             (r_g - g - h_m - h_yr) ** 2 - (r_g - g - h_m - t) ** 2
         ) * l * rho_Fes
         outputs["mass_active"] = outputs["mass_PM"] + outputs["mass_Fe"]  # rotor mass
 
-
-#
+        # Constraint outputs
+        outputs["con_uar"] = np.abs(outputs["u_Ar"]) / outputs["u_all_r"]
+        outputs["con_yar"] = np.abs(outputs["y_Ar"]) / outputs["y_all_r"]
+        outputs["con_zar"] = np.abs(outputs["z_Ar"]) / outputs["z_all_r"]
+        
 
 
 class PMSG_stator_inactive(om.ExplicitComponent):
@@ -151,14 +163,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("d_s", 0.0, units="m", desc="arm depth d_r")
         self.add_input("t_ws", 0.0, units="m", desc="arm depth thickness self.t_wr")
         self.add_input("t_s", 0.0, units="m", desc="stator back iron ")
-        self.add_output("u_As", 0.0, units="m", desc="Stator radial deflection")
-        self.add_output("y_As", 0.0, units="m", desc="Stator axial deflection")
-        self.add_output("D_out", 0.0, units="m", desc="Stator outer diameter")
-        self.add_output("z_A_s", 0.0, units="m", desc="Stator circumferential deflection")
-        self.add_output("u_all_s", 0.0, units="m", desc="Allowable radial stator")
-        self.add_output("y_all", 0.0, units="m", desc="Allowable axial")
-        self.add_output("b_all_s", 0.0, units="m", desc="Allowable circumferential")
-        self.add_output("z_all_s", 0.0, units="m", desc="Allowable circum stator")
+               
         self.add_input("y_allow_pcent", 0.0, desc="Allowable axial deflection percent")
         self.add_input("z_allow_deg", 0.0, units="deg", desc="Allowable torsional twist ")
         self.add_input("r_g", 0.0, units="m", desc="air gap radius")
@@ -179,12 +184,26 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_input("Structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
         self.add_input("mass_active", 0.0, units="kg", desc="Active mass")
+        self.add_input("h_s1", 0.010, desc="Slot Opening height")
+        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
+
+        self.add_output("u_As", 0.0, units="m", desc="Stator radial deflection")
+        self.add_output("y_As", 0.0, units="m", desc="Stator axial deflection")
+        self.add_output("D_out", 0.0, units="m", desc="Stator outer diameter")
+        self.add_output("z_As", 0.0, units="m", desc="Stator circumferential deflection")
+        self.add_output("u_all_s", 0.0, units="m", desc="Allowable radial stator")
+        self.add_output("y_all_s", 0.0, units="m", desc="Allowable axial")
+        self.add_output("b_all_s", 0.0, units="m", desc="Allowable circumferential")
+        self.add_output("z_all_s", 0.0, units="m", desc="Allowable circum stator")
+
+        self.add_output('con_uar', val=0.0, desc='Radial deflection constraint-rotor (<1)')
+        self.add_output('con_yar', val=0.0, desc='Axial deflection constraint-rotor (<1)')
+        self.add_output('con_zar', val=0.0, desc='Torsional deflection constraint-rotor (<1)')
+
         self.add_output("Total_active", 0.0, units="kg", desc="Total Active mass")
         self.add_output("Structural_stator", 0.0, units="kg", desc="Structural mass of stator")
         self.add_output("mass_structural", 0.0, units="kg", desc="Total structural mass")
         self.add_output("Total_mass", 0.0, units="kg", desc="Total mass")
-        self.add_input("h_s1", 0.010, desc="Slot Opening height")
-        self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
         self.declare_partials("*", "*", method="fd")
 
@@ -263,7 +282,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
             + np.pi * ((R_st + t_s * 0.5) ** 2 - (R_st + t_s * 0.5 - h_ss) ** 2) * l * rho_Fes
         )
 
-        outputs["y_all"] = y_all_pcent * l / 100
+        outputs["y_all_s"] = y_all_pcent * l / 100
         # Calculating radial deflection of the stator
 
         Numers = R_st**3 * (
@@ -291,7 +310,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         outputs["y_As"] = X_comp1 + X_comp2 + X_comp3  # axial deflection
 
         # Calculating circumferential deflection of the stator
-        outputs["z_A_s"] = (
+        outputs["z_As"] = (
             np.pi
             * (R_st + 0.5 * t_s)
             * l
@@ -310,6 +329,11 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         outputs["Total_active"] = inputs["mass_active"] + mass_st_lam_s + Copper
         outputs["mass_structural"] = outputs["Structural_stator"] + inputs["Structural_rotor"]
         outputs["Total_mass"] = outputs["mass_structural"] + outputs["Total_active"]
+
+        # Constraint outputs
+        outputs["con_uas"] = np.abs(outputs["u_As"]) / outputs["u_all_s"]
+        outputs["con_yas"] = np.abs(outputs["y_As"]) / outputs["y_all_s"]
+        outputs["con_zas"] = np.abs(outputs["z_As"]) / outputs["z_all_s"]
 
 
 class PMSG_Inner_Rotor_Structural(om.Group):
@@ -355,7 +379,7 @@ class PMSG_Inner_Rotor_Structural(om.Group):
         #ivcs.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
         #ivcs.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         ivcs.add_output("g1", 9.806, desc="Acceleration due to gravity")
-        ivcs.add_output("E", 2.0e11, desc="permeability of free space")
+        ivcs.add_output("E", 2.0e11, desc="Youngs modulus")
 
         # ivcs.add_output("perc_allowable_radial", 0.0, desc=" Allowable radial % deflection ")
         # ivcs.add_output("perc_allowable_axial", 0.0, desc=" Allowable axial % deflection ")
@@ -421,8 +445,6 @@ if __name__ == "__main__":
     prob_struct["rho_PM"] = 7600
 
     prob_struct["phi"] = 90.0
-    prob_struct["R_sh"] = 1.25
-    prob_struct["R_no"] = 0.95
     prob_struct["u_allow_pcent"] = 10
     prob_struct["y_allow_pcent"] = 20
     prob_struct["z_allow_deg"] = 0.5

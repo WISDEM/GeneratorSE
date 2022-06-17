@@ -36,7 +36,7 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("m", 3, desc=" no of phases")
         self.add_input("q1", 1, desc=" no of slots per pole per phase")
         # specific hysteresis losses W/kg @ 1.5 T
-        self.add_input("rho_Cu", 0.0, units="ohm*m", desc=" Copper resisitivty")
+        self.add_input("resisitivty_Cu", 0.0, units="ohm*m", desc=" Copper resisitivty")
 
         # PMSG_arms generator design outputs
         # Magnetic loading
@@ -109,7 +109,7 @@ class PMSG_active(om.ExplicitComponent):
         N_c = inputs["N_c"]
 
         # specific hysteresis losses W/kg @ 1.5 T
-        rho_Cu = inputs["rho_Cu"]
+        rho_Cu = inputs["resisitivty_Cu"]
 
         rho_Copper = inputs["rho_Copper"]
 
@@ -444,7 +444,6 @@ class Results(om.ExplicitComponent):
 
         outputs["demag_mmf_ratio"] = H_demag / H_c
 
-        om_m = 2 * np.pi * N_nom / 60
         outputs["E_p"] = E_p = np.sqrt(3) * N_s * l_s * r_g * k_wd * om_m * B_g * 0.707
 
         outputs["E_p_ratio"] = E_p / E_p_target

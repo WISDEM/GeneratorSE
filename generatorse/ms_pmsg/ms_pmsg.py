@@ -100,7 +100,6 @@ class PMSG_Inner_rotor_Opt(om.Group):
         ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Electrical steel density")
         ivcs.add_output("rho_Copper", 0.0, units="kg/(m**3)", desc="Copper density")
         ivcs.add_output("rho_PM", 0.0, units="kg/(m**3)", desc="magnet mass density ")
-        ivcs.add_output("rho_Cu", 0.0, units="ohm*m", desc=" Copper resisitivty")
         ivcs.add_output("resisitivty_Cu", 0.0, units="ohm*m", desc="Copper resistivity ")
         ivcs.add_output("C_Cu", 0.0, units="USD/kg", desc="Specific cost of copper")
         ivcs.add_output("C_Fe", 0.0, units="USD/kg", desc="Specific cost of magnetic steel/iron")

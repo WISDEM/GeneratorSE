@@ -1,7 +1,7 @@
 import openmdao.api as om
-from generatorse.lts.lts import LTS_Outer_Rotor_Opt
-from generatorse.lts.structural import LTS_Outer_Rotor_Structural
-from generatorse.driver.nlopt_driver import NLoptDriver
+from lts.lts import LTS_Outer_Rotor_Opt
+from lts.structural import LTS_Outer_Rotor_Structural
+from lts.nlopt_driver import NLoptDriver
 import os
 import pandas as pd
 import numpy as np
@@ -129,16 +129,17 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob = om.Problem()
     prob.model = LTS_Outer_Rotor_Opt()
 
-    prob.driver = NLoptDriver()
-    prob.driver.options['optimizer'] = 'LN_COBYLA'
-    prob.driver.options["maxiter"] = 500
-    #prob.driver = om.ScipyOptimizeDriver()
-    #prob.driver.options['optimizer'] = 'COBYLA' #'SLSQP' #
+    #prob.driver = NLoptDriver()
+    #prob.driver.options['optimizer'] = 'LN_COBYLA'
     #prob.driver.options["maxiter"] = 500
-    #prob.driver = om.DifferentialEvolutionDriver()
-    #prob.driver.options["max_gen"] = 15
-    #prob.driver.options["pop_size"] = 60
-    #prob.driver.options["penalty_exponent"] = 3
+    #prob.driver.options["tol"] = 1e-7
+    #prob.driver = om.ScipyOptimizeDriver()
+    #prob.driver.options['optimizer'] = 'SLSQP'
+    #prob.driver.options["maxiter"] = 75
+    prob.driver = om.DifferentialEvolutionDriver()
+    prob.driver.options["max_gen"] = 15
+    prob.driver.options["pop_size"] = 60
+    prob.driver.options["penalty_exponent"] = 3
 
     recorder = om.SqliteRecorder(os.path.join(output_dir, fsql))
     prob.driver.add_recorder(recorder)
@@ -150,28 +151,25 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     #prob.model.add_design_var("delta_em", lower=0.060, upper=0.15, ref=0.08)
     if obj_str.lower() == "cost":
-        prob.model.add_design_var("D_a", lower=5, upper=9, ref=8)
-        prob.model.add_design_var("h_sc", lower=0.03, upper=0.15, ref=0.06)
+        prob.model.add_design_var("D_a", lower=5, upper=9)
+        prob.model.add_design_var("h_sc", lower=0.03, upper=0.2, ref=0.1)
         prob.model.add_design_var("h_s", lower=0.1, upper=0.4, ref=0.1)
         prob.model.add_design_var("h_yr", lower=0.15, upper=0.3, ref=0.1)
-    pupper = 30 #if ratingMW<19 else 40
-    prob.model.add_design_var("p", lower=20, upper=pupper, ref=25)
+    prob.model.add_design_var("p", lower=20, upper=30, ref=20)
     #prob.model.add_design_var("l_s", lower=1, upper=1.75)
     #prob.model.add_design_var("alpha", lower=0.1, upper=1)
     prob.model.add_design_var("dalpha", lower=1, upper=4)
-    SCupper = 700 if ratingMW<19 else 800
-    prob.model.add_design_var("I_sc_in", lower=400, upper=SCupper, ref=5e2)
+    prob.model.add_design_var("I_sc_in", lower=400, upper=800, ref=5e2)
     prob.model.add_design_var("N_sc", lower=2000, upper=3500, ref=1e3)
     prob.model.add_design_var("N_c", lower=1, upper=7)
-    Iupper = 3000 if ratingMW<19 else 3500
-    prob.model.add_design_var("I_s", lower=500, upper=Iupper, ref=1750)
+    prob.model.add_design_var("I_s", lower=500, upper=3500, ref=1750)
     #prob.model.add_design_var("load_margin", lower=0.85, upper=0.95)
 
     # prob.model.add_constraint("Slot_aspect_ratio", lower=4.0, upper=10.0)  # 11
     prob.model.add_constraint("con_angle", lower=0.001, ref=0.1)
     # Differential evolution driver cannot do double-sided constraints, so have to hack it
-    #prob.model.add_constraint("E_p", lower=0.8 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
+    prob.model.add_constraint("E_p", lower=0.8 * 3300, ref=3000)
+    prob.model.add_constraint("E_p_ratio", upper=1.20)
     prob.model.add_constraint("constr_B_g_coil", upper=1.0)
     prob.model.add_constraint("B_coil_max", lower=6.0)
     #prob.model.add_constraint("Coil_max_ratio", upper=1.2)
@@ -492,7 +490,15 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir)
 
 if __name__ == "__main__":
-    opt_flag = True #False
+    opt_flag = False #True
+    #run_all("outputs15-mass", opt_flag, "mass", 15)
+    #run_all("outputs17-mass", opt_flag, "mass", 17)
+    #run_all("outputs20-mass", opt_flag, "mass", 20)
+    #run_all("outputs25-mass", opt_flag, "mass", 25)
+    #run_all("outputs15-cost", opt_flag, "cost", 15)
+    #run_all("outputs17-cost", opt_flag, "cost", 17)
+    #run_all("outputs20-cost", opt_flag, "cost", 20)
+    #run_all("outputs25-cost", opt_flag, "cost", 25)
     for k in ratings_known:
-        for obj in ["cost"]: #, "mass"]:
+        for obj in ["cost", "mass"]:
             run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
