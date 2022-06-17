@@ -134,3 +134,6 @@ dmypy.json
 # Outputs
 *.xlsx
 *.sql
+
+# Emacs
+*~
