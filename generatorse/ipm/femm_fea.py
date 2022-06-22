@@ -355,7 +355,51 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         theta_m_r2 = l_fe_ratio * theta_m_r
 
-        x0, y0 = 0.0, 0.0
+
+        # Parametrization of the magnets
+
+        def rotate(xo, yo, xp, yp, angle):
+            ## Rotate a point clockwise by a given angle around a given origin.
+            # angle *= -1.
+            qx = xo + np.cos(angle) * (xp - xo) - np.sin(angle) * (yp - yo)
+            qy = yo + np.sin(angle) * (xp - xo) + np.cos(angle) * (yp - yo)
+            return qx, qy
+
+        # We need 14 points to define the geometry, the first one is the center of the rotor at 0,0
+        points = np.zeros((14,2))
+        # Second point stays at y=0 and x=radius of the armature
+        # points[1,:] = np.array([r_i, 0.])
+        # r2 = r_i + air_gap
+        # points[2,:] = np.array([r2, 0])
+        # r3 = r_i + air_gap + struct_offset
+        # points[3,:] = rotate(points[0,0], points[0,1], r3, 0, 0.5 * (alpha_p - alpha_pr))
+        # r6 = r3 + d_mag
+        # points[6,:] = rotate(points[0,0], points[0,1], r6, 0, 0.5 * alpha_p)
+
+        # r7 = r6 + slot_height
+
+        # outer_gen_diameter = r7+struct_offset
+        # points[5,:] = np.array([outer_gen_diameter,0])
+
+        # points[7,:] = rotate(points[0,0], points[0,1], r7, 0, 0.5 * alpha_p)
+        # points[4,:] = rotate(points[0,0], points[0,1], r3 + slot_height, 0, 0.5 * (alpha_p - alpha_pr))
+
+        # p6p3_angle = np.arctan((points[6,1]-points[3,1])/(points[6,0]-points[3,0]))
+        # p6p3p4_angle = p6p3_angle - 0.5 * (alpha_p - alpha_pr)
+        # p4r = rotate(points[3,0], points[3,1], points[4,0], points[4,1], -0.5 * (alpha_p - alpha_pr))
+        # p11r =  (p4r[0] - points[3,0]) * np.cos(p6p3p4_angle) * np.array([np.cos(p6p3p4_angle), np.sin(p6p3p4_angle)]) + points[3,:]
+        # points[11,:] = rotate(points[3,0], points[3,1], p11r[0], p11r[1], 0.5 * (alpha_p - alpha_pr))
+
+        # mml = (points[6,1] - points[11,1]) / np.sin(p6p3_angle) # max magnet length
+        # points[8,:] = points[4,:] + mml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+        # ml = mml * magnet_l_pc
+        # points[9,:] = points[4,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+        # points[10,:] = points[11,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+
+
+
+
+        x0, y0 = points[0,:]
 
         theta_1 = theta_p_r * 0.5 - d_sep / (r_g + d_mag)
         X_1, Y_1 = (r_g + d_mag) * np.cos(theta_1), (r_g + d_mag) * np.sin(theta_1)
