@@ -11,7 +11,7 @@ def myopen():
     femm.smartmesh(0)
 
 
-flag_matplotlib = True
+flag_matplotlib = False
 # Inputs
 n2P = 200 # number pole pairs
 r_g = 5.3 # air gap radius
@@ -94,6 +94,14 @@ ml = mml * magnet_l_pc
 magnet1[8,:] = magnet1[3,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
 magnet1[9,:] = magnet1[10,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
 
+# Mirror the points for the second magnet
+magnet2 = np.zeros_like(magnet1)
+for i in range(len(magnet1[:,0])): 
+    temp = np.zeros(2)
+    temp[0], temp[1] = rotate(0., 0., magnet1[i,0], magnet1[i,1], -0.5 * alpha_p)
+    temp[1] *= -1
+    magnet2[i,:] = rotate(0., 0., temp[0], temp[1], 0.5 * alpha_p)
+
 # Draw the outer rotor
 rotor = np.zeros((4,2))
 rotor[0,0] = r_g
@@ -103,22 +111,15 @@ rotor[3,:] = rotate(0., 0., rotor[0,0], rotor[0,1], alpha_s)
 
 
 
-# Mirror the points for the second magnet
-magnet2 = np.zeros_like(magnet1)
-for i in range(len(magnet1[:,0])): 
-    temp = np.zeros(2)
-    temp[0], temp[1] = rotate(0., 0., magnet1[i,0], magnet1[i,1], -0.5 * alpha_p)
-    temp[1] *= -1
-    magnet2[i,:] = rotate(0., 0., temp[0], temp[1], 0.5 * alpha_p)
 
-# Mirror the points for the third magnet
-magnet3 = np.zeros_like(magnet1)
-for i in range(len(magnet1[:,0])): 
-    magnet3[i,:] = rotate(0., 0., magnet1[i,0], magnet1[i,1], alpha_p)
-# Mirror the points for the fourth magnet
-magnet4 = np.zeros_like(magnet1)
-for i in range(len(magnet1[:,0])): 
-    magnet4[i,:] = rotate(0., 0., magnet2[i,0], magnet2[i,1], alpha_p)
+# # Mirror the points for the third magnet
+# magnet3 = np.zeros_like(magnet1)
+# for i in range(len(magnet1[:,0])): 
+#     magnet3[i,:] = rotate(0., 0., magnet1[i,0], magnet1[i,1], alpha_p)
+# # Mirror the points for the fourth magnet
+# magnet4 = np.zeros_like(magnet1)
+# for i in range(len(magnet1[:,0])): 
+#     magnet4[i,:] = rotate(0., 0., magnet2[i,0], magnet2[i,1], alpha_p)
 
 # Create femm document
 myopen()
@@ -149,18 +150,30 @@ femm.mi_addboundprop("apbc4", 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0)
 femm.mi_addboundprop("apbc5", 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0)
 
 # Draw nodes in femm
+# Stator
 for i in range(len(stator[:,0])):
     femm.mi_addnode(stator[i,0],stator[i,1])
+# Rotor
 for i in range(len(rotor[:,0])):
     femm.mi_addnode(rotor[i,0],rotor[i,1])
+# Coil slot 1
 for i in range(len(coil_slot1[:,0])):
     femm.mi_addnode(coil_slot1[i,0],coil_slot1[i,1])
     femm.mi_selectnode(coil_slot1[i,0],coil_slot1[i,1])
     femm.mi_setgroup(1)
     femm.mi_clearselected()
-
+# Magnet 1
 for i in range(1,len(magnet1[:,0])):
     femm.mi_addnode(magnet1[i,0],magnet1[i,1])
+    femm.mi_selectnode(magnet1[i,0],magnet1[i,1])
+    femm.mi_setgroup(2)
+    femm.mi_clearselected()
+# Magnet 2
+for i in range(1,len(magnet2[:,0])):
+    femm.mi_addnode(magnet2[i,0],magnet2[i,1])
+    femm.mi_selectnode(magnet2[i,0],magnet2[i,1])
+    femm.mi_setgroup(2)
+    femm.mi_clearselected()
 
 # Draw coils
 start_index = np.array([0,1,8,9,1,2,7,2,3,5,6], dtype=int)
@@ -179,19 +192,53 @@ femm.mi_clearselected()
 # Draw stator
 femm.mi_addsegment(stator[0,0],stator[0,1],stator[1,0],stator[1,1])
 femm.mi_addsegment(stator[2,0],stator[2,1],stator[3,0],stator[3,1])
-femm.mi_addarc(stator[3,0],stator[3,1],stator[0,0],stator[0,1], np.rad2deg(alpha_s),1)
+femm.mi_addarc(stator[0,0],stator[0,1], stator[3,0],stator[3,1],np.rad2deg(alpha_s),1)
+
+# Get coordinates of the six slot openings
+slot_o = np.zeros((12,2))
+for i in range(6): 
+    slot_o[i*2,:] = rotate(0., 0., coil_slot1[4,0], coil_slot1[4,1], alpha_y*(i))
+    slot_o[i*2+1,:] = rotate(0., 0., coil_slot1[5,0], coil_slot1[5,1], alpha_y*(i))
+
+# Complete drawing of the six yoke teeth
+femm.mi_addarc(stator[1,0],stator[1,1],slot_o[0,0],slot_o[0,1],np.rad2deg(alpha_y*0.45),1)
+for i in range(5):
+    femm.mi_addarc(slot_o[i*2+1,0],slot_o[i*2+1,1],slot_o[i*2+2,0],slot_o[i*2+2,1],np.rad2deg(alpha_y*0.45),1)
+femm.mi_addarc(slot_o[-1,0],+slot_o[-1,1],stator[2,0],stator[2,1],np.rad2deg(alpha_y*0.45),1)
+
+
 # Draw rotor
-start_index = np.array([0,1,2,3], dtype=int)
-end_index = np.array([1,2,3,0], dtype=int)
+start_index = np.array([0,2], dtype=int)
+end_index = np.array([1,3], dtype=int)
 for i in range(len(start_index)):
     femm.mi_addsegment(rotor[start_index[i],0],rotor[start_index[i],1],rotor[end_index[i],0],rotor[end_index[i],1])
+start_index = np.array([1,0], dtype=int)
+end_index = np.array([2,3], dtype=int)
+for i in range(len(start_index)):
+    femm.mi_addarc(rotor[start_index[i],0],rotor[start_index[i],1],rotor[end_index[i],0],rotor[end_index[i],1],np.rad2deg(alpha_s),1)
 
-# Draw magnet
+# Draw first magnet
 start_index = np.array([2,3,10,3,8,9,8,7,5,5,6], dtype=int)
 end_index = np.array([3,10,2,8,9,10,7,5,9,6,7], dtype=int)
 for i in range(len(start_index)):
     femm.mi_addsegment(magnet1[start_index[i],0],magnet1[start_index[i],1],magnet1[end_index[i],0],magnet1[end_index[i],1])
+    femm.mi_selectsegment((magnet1[start_index[i],0]+magnet1[end_index[i],0])/2,(magnet1[start_index[i],1]+magnet1[end_index[i],1])/2)
+    femm.mi_setgroup(2)
+    femm.mi_clearselected()
 
+# Draw second magnet
+start_index = np.array([2,3,10,3,8,9,8,7,5,5,6], dtype=int)
+end_index = np.array([3,10,2,8,9,10,7,5,9,6,7], dtype=int)
+for i in range(len(start_index)):
+    femm.mi_addsegment(magnet2[start_index[i],0],magnet2[start_index[i],1],magnet2[end_index[i],0],magnet2[end_index[i],1])
+    femm.mi_selectsegment((magnet2[start_index[i],0]+magnet2[end_index[i],0])/2,(magnet2[start_index[i],1]+magnet2[end_index[i],1])/2)
+    femm.mi_setgroup(2)
+    femm.mi_clearselected()
+
+# Copy magnet-pair four times
+femm.mi_selectgroup(2)
+femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p), 4)
+femm.mi_clearselected()
 
 # femm.mi_addsegment(coil_slot1[1,0],coil_slot1[1,1],coil_slot1[8,0],coil_slot1[8,1])
 # femm.mi_addsegment(coil_slot1[8,0],coil_slot1[8,1],coil_slot1[9,0],coil_slot1[9,1])
