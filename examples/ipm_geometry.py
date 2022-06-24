@@ -69,30 +69,24 @@ coil_slot1[7,:] = rotate(0., 0., r_si + h_ys + h_t, 0., alpha_y*0.75)
 coil_slot1[8,:] = rotate(0., 0., r_si + h_ys + h_t/2., 0., alpha_y*0.75)
 coil_slot1[9,:] = rotate(0., 0., r_si + h_ys, 0., alpha_y*0.75)
 
-# Draw the first magnet using 12 points
-magnet1 = np.zeros((11,2))
-magnet1[0,:] = np.array([r_so, 0.])
-r2 = r_g
-magnet1[1,:] = np.array([r2, 0])
-r3 = r_g + h_yr
-magnet1[2,:] = rotate(0., 0., r3, 0, 0.5 * (alpha_p - alpha_pr))
-r6 = r3 + d_mag
-magnet1[5,:] = rotate(0., 0., r6, 0, 0.5 * alpha_p)
-r7 = r6 + slot_height
+# Draw the first magnet using 8 points
+magnet1 = np.zeros((8,2))
+magnet1[0,:] = rotate(0., 0., r_g + h_yr, 0, 0.5 * (alpha_p - alpha_pr))
+magnet1[2,:] = rotate(0., 0., r_g + h_yr + d_mag, 0, 0.5 * alpha_p)
+r7 =  r_g + h_yr + d_mag + slot_height
 r_ro = r7+h_yr # Outer rotor radius
-magnet1[4,:] = np.array([r_ro,0])
-magnet1[6,:] = rotate(0., 0., r7, 0, 0.5 * alpha_p)
-magnet1[3,:] = rotate(0., 0., r3 + slot_height, 0, 0.5 * (alpha_p - alpha_pr))
-p6p3_angle = np.arctan((magnet1[5,1]-magnet1[2,1])/(magnet1[5,0]-magnet1[2,0]))
+magnet1[3,:] = rotate(0., 0., r7, 0, 0.5 * alpha_p)
+magnet1[1,:] = rotate(0., 0., r_g + h_yr + slot_height, 0, 0.5 * (alpha_p - alpha_pr))
+p6p3_angle = np.arctan((magnet1[2,1]-magnet1[0,1])/(magnet1[2,0]-magnet1[0,0]))
 p6p3p4_angle = p6p3_angle - 0.5 * (alpha_p - alpha_pr)
-p4r = rotate(magnet1[2,0], magnet1[2,1], magnet1[3,0], magnet1[3,1], -0.5 * (alpha_p - alpha_pr))
-p11r =  (p4r[0] - magnet1[2,0]) * np.cos(p6p3p4_angle) * np.array([np.cos(p6p3p4_angle), np.sin(p6p3p4_angle)]) + magnet1[2,:]
-magnet1[10,:] = rotate(magnet1[2,0], magnet1[2,1], p11r[0], p11r[1], 0.5 * (alpha_p - alpha_pr))
-mml = (magnet1[5,1] - magnet1[10,1]) / np.sin(p6p3_angle) # max magnet1 length
-magnet1[7,:] = magnet1[3,:] + mml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+p4r = rotate(magnet1[0,0], magnet1[0,1], magnet1[1,0], magnet1[1,1], -0.5 * (alpha_p - alpha_pr))
+p11r =  (p4r[0] - magnet1[0,0]) * np.cos(p6p3p4_angle) * np.array([np.cos(p6p3p4_angle), np.sin(p6p3p4_angle)]) + magnet1[0,:]
+magnet1[7,:] = rotate(magnet1[0,0], magnet1[0,1], p11r[0], p11r[1], 0.5 * (alpha_p - alpha_pr))
+mml = (magnet1[2,1] - magnet1[7,1]) / np.sin(p6p3_angle) # max magnet1 length
+magnet1[4,:] = magnet1[1,:] + mml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
 ml = mml * magnet_l_pc
-magnet1[8,:] = magnet1[3,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
-magnet1[9,:] = magnet1[10,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+magnet1[5,:] = magnet1[1,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+magnet1[6,:] = magnet1[7,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
 
 # Mirror the points for the second magnet
 magnet2 = np.zeros_like(magnet1)
@@ -108,18 +102,6 @@ rotor[0,0] = r_g
 rotor[1,0] = r_ro
 rotor[2,:] = rotate(0., 0., rotor[1,0], rotor[1,1], alpha_s)
 rotor[3,:] = rotate(0., 0., rotor[0,0], rotor[0,1], alpha_s)
-
-
-
-
-# # Mirror the points for the third magnet
-# magnet3 = np.zeros_like(magnet1)
-# for i in range(len(magnet1[:,0])): 
-#     magnet3[i,:] = rotate(0., 0., magnet1[i,0], magnet1[i,1], alpha_p)
-# # Mirror the points for the fourth magnet
-# magnet4 = np.zeros_like(magnet1)
-# for i in range(len(magnet1[:,0])): 
-#     magnet4[i,:] = rotate(0., 0., magnet2[i,0], magnet2[i,1], alpha_p)
 
 # Create femm document
 myopen()
@@ -218,8 +200,8 @@ for i in range(len(start_index)):
     femm.mi_addarc(rotor[start_index[i],0],rotor[start_index[i],1],rotor[end_index[i],0],rotor[end_index[i],1],np.rad2deg(alpha_s),1)
 
 # Draw first magnet
-start_index = np.array([2,3,10,3,8,9,8,7,5,5,6], dtype=int)
-end_index = np.array([3,10,2,8,9,10,7,5,9,6,7], dtype=int)
+start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
+end_index = np.array([1,7,0,5,6,7,4,3,6,3,4], dtype=int)
 for i in range(len(start_index)):
     femm.mi_addsegment(magnet1[start_index[i],0],magnet1[start_index[i],1],magnet1[end_index[i],0],magnet1[end_index[i],1])
     femm.mi_selectsegment((magnet1[start_index[i],0]+magnet1[end_index[i],0])/2,(magnet1[start_index[i],1]+magnet1[end_index[i],1])/2)
@@ -227,8 +209,8 @@ for i in range(len(start_index)):
     femm.mi_clearselected()
 
 # Draw second magnet
-start_index = np.array([2,3,10,3,8,9,8,7,5,5,6], dtype=int)
-end_index = np.array([3,10,2,8,9,10,7,5,9,6,7], dtype=int)
+start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
+end_index = np.array([1,7,0,5,6,7,4,3,6,3,4], dtype=int)
 for i in range(len(start_index)):
     femm.mi_addsegment(magnet2[start_index[i],0],magnet2[start_index[i],1],magnet2[end_index[i],0],magnet2[end_index[i],1])
     femm.mi_selectsegment((magnet2[start_index[i],0]+magnet2[end_index[i],0])/2,(magnet2[start_index[i],1]+magnet2[end_index[i],1])/2)
