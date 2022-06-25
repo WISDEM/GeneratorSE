@@ -95,7 +95,7 @@ class PMSG_Inner_rotor_Opt(om.Group):
         #ivcs.add_output("d_r", 0.0, units="m", desc="rotor arm depth")
         #ivcs.add_output("d_s", 0.0, units="m", desc="stator arm depth")
         #ivcs.add_output("t_s", 0.0, units="m", desc="Stator disc thickness")
-        ivcs.add_output("ratio", 0.0, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
+        ivcs.add_output("ratio", 0.0, desc="ratio of magnet width to pole pitch")
 
         ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Electrical steel density")
         ivcs.add_output("rho_Copper", 0.0, units="kg/(m**3)", desc="Copper density")

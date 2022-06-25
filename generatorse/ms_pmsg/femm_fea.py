@@ -22,17 +22,12 @@ def myopen():
         femm.openfemm(winepath=os.environ["WINEPATH"], femmpath=os.environ["FEMMPATH"])
     femm.smartmesh(0)
 
-
-# The package must be initialized with the openfemm command.
-
-
 def cleanup_femm_files():
     clean_dir = os.getcwd()
     files = os.listdir(clean_dir)
     for file in files:
         if file.endswith(".ans") or file.endswith(".fem") or file.endswith(".csv"):
             os.remove(os.path.join(clean_dir, file))
-
 
 def bad_inputs(outputs):
     print("Bad inputs for geometry")
@@ -47,7 +42,7 @@ def bad_inputs(outputs):
     outputs["Iron"] = 1e8
     outputs["T_e"] = 1e9
     outputs["Sigma_shear"] = 1e9
-    femm.mi_saveas("IPM_new_bad_geomtery.fem")
+    femm.mi_saveas("PMSG_new_bad_geomtery.fem")
     return outputs
 
 
@@ -116,7 +111,7 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
 
     theta_p_d = np.rad2deg(theta_p_r)
 
-    femm.openfemm(1)
+    myopen()
     femm.opendocument("MS_PMSG.fem")
     femm.mi_modifycircprop("A+", 1, I_s * np.sin(-2 * np.pi / 3))
     femm.mi_modifycircprop("B+", 1, I_s * np.sin(0 * np.pi / 3))
@@ -138,7 +133,7 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
     femm.mo_makeplot(3, 100, "B_t_1.csv", 1)
     femm.mo_clearcontour()
     femm.mo_close()
-    femm.openfemm(1)
+    myopen()
     femm.opendocument("MS_PMSG1.fem")
 
     Phases1 = ["A+", "C-", "B+"]
@@ -289,22 +284,16 @@ class FEMM_Geometry(om.ExplicitComponent):
         r_m = r_g - g
 
         theta_b_s = np.arctan(b_s / (r_g))
-
         theta_tau_s = theta_p_r * 2 / Slots_pp
-
         theta_tau_s_new = np.arctan((tau_s * 0.5 - b_so * 0.5) / (r_g))
-
         theta_tau_s_new2 = np.arctan((tau_s * 0.5 - b_s * 0.5) / (r_g))
-
         theta_tau_s_new3 = np.arctan((tau_s * 0.5 + b_so * 0.5) / (r_g))
-
         theta_tau_s_new4 = np.arctan((tau_s * 0.5 + b_s * 0.5) / (r_g))
 
-        theta_b_so = b_so / (r_g)
-
+        #theta_b_so = b_so / (r_g)
         outputs["h_t"] = h_s + h_s1 + h_s2
 
-        femm.openfemm(1)
+        myopen()
         femm.newdocument(0)
         femm.mi_probdef(0, "meters", "planar", 1.0e-8, l_s, 30, 0)
         Current = 0
@@ -718,7 +707,7 @@ class FEMM_Geometry(om.ExplicitComponent):
             )
             if outputs["T_e"] >= 20e6:
                 seed = random.randrange(0, 101, 2)
-                femm.mi_saveas("IPM_new_" + str(seed) + ".fem")
+                femm.mi_saveas("PMSG_new_" + str(seed) + ".fem")
         #
         except:
 

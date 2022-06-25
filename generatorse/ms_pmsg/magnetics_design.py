@@ -28,7 +28,7 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("N_c", 0.0, desc="turns per coil")
         self.add_input("b_s_tau_s", 0.45, desc="ratio of Slot width to slot pitch ")
         #self.add_input("B_r", 0, units="T", desc="Tesla remnant flux density")
-        self.add_input("ratio", 0.00, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
+        self.add_input("ratio", 0.00, desc="ratio of magnet width to pole pitch")
         #self.add_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
         #self.add_input("mu_r", 0.0, desc="relative permeability ")
         self.add_input("k_sfil", 0.65, desc="slot fill factor")
@@ -114,7 +114,6 @@ class PMSG_active(om.ExplicitComponent):
         rho_Copper = inputs["rho_Copper"]
 
         #mu_0 = inputs["mu_0"]
-        ratio = inputs["ratio"]
         #mu_r = inputs["mu_r"]
         #cofi = inputs["cofi"]
         #h_s1 = float(inputs["h_s1"])
