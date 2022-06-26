@@ -250,7 +250,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["z_allow_deg"] = 0.5
         
         if restart_flag:
-            prob = load_data(os.path.join(output_dir, "LTS_output"), prob)
+            prob = load_data(os.path.join(output_dir, "MS-PMSG_output"), prob)
 
         # Have to set these last in case we initiatlized from a different rating
         prob["P_rated"] = ratingMW * 1e6
@@ -375,7 +375,7 @@ def write_all_data(prob, output_dir=None):
         output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
 
-    save_data(os.path.join(output_dir, "LTS_output"), prob)
+    save_data(os.path.join(output_dir, "MS-PMSG_output"), prob)
 
     ratingMW = float(prob.get_val("P_rated", units="MW"))
     raw_data = [
@@ -544,7 +544,7 @@ def write_all_data(prob, output_dir=None):
     ]
 
     df = pd.DataFrame(raw_data, columns=["Parameters", "Symbol", "Values", "Units", "Limit"])
-    df.to_excel(os.path.join(output_dir, f"Optimized_LTSG_{ratingMW}_MW.xlsx"))
+    df.to_excel(os.path.join(output_dir, f"Optimized_MS-PMSG_{ratingMW}_MW.xlsx"))
 
 def run_all(output_str, opt_flag, obj_str, ratingMW):
     output_dir = os.path.join(mydir, output_str)
