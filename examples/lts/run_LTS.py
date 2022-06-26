@@ -1,7 +1,7 @@
 import openmdao.api as om
-from lts.lts import LTS_Outer_Rotor_Opt
-from lts.structural import LTS_Outer_Rotor_Structural
-from lts.nlopt_driver import NLoptDriver
+from generatorse.lts.lts import LTS_Outer_Rotor_Opt
+from generatorse.lts.structural import LTS_Outer_Rotor_Structural
+from generatorse.driver.nlopt_driver import NLoptDriver
 import os
 import pandas as pd
 import numpy as np
@@ -252,7 +252,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["T_rated"] = target_torque
         prob["N_nom"] = rated_speed[ratingMW]
         prob["delta_em"] = 0.06
-        prob["l_s"] = 1.0
+        prob["l_s"] = 0.75
         prob["load_margin"] = 0.95
         if obj_str.lower() == 'cost':
             pass

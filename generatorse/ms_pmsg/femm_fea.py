@@ -436,12 +436,11 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_clearselected()
 
         mag_dir = np.rad2deg(theta_p_m_r + mag_angle / 2)
-        mag_dir2 = np.rad2deg(theta_p_r + mag_angle / 2 + theta_p_m_r) + 180
+        X_mag_center = (r_m - 0.5*h_m) * np.cos(0.5*mag_angle + theta_p_m_r)
+        Y_mag_center = (r_m - 0.5*h_m) * np.sin(0.5*mag_angle + theta_p_m_r)
 
-        line1 = Segment(Point(X_1, Y_1, evaluate=False), Point(X_4, Y_4, evaluate=False))
-        l1 = line1.midpoint.evalf()
-        femm.mi_addblocklabel(l1.x, l1.y)
-        femm.mi_selectlabel(l1.x, l1.y)
+        femm.mi_addblocklabel(X_mag_center, Y_mag_center)
+        femm.mi_selectlabel(X_mag_center, Y_mag_center)
         femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir, 1, 0)
         femm.mi_clearselected()
 

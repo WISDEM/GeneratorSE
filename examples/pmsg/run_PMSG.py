@@ -381,25 +381,18 @@ def write_all_data(prob, output_dir=None):
     raw_data = [
         ["Rating",                        "P_rated",                ratingMW, "MW", ""],
         ["specific current loading"                           , "A_1"               , float(prob.get_val("A_1", units="A/m")), "A/m"],
-        ["Conductor cross-section mm^2"                       , "A_Cuscalc"         , float(prob.get_val("A_Cuscalc", units="mm**2")), "mm**2"],
+        ["Conductor cross-section"                            , "A_Cuscalc"         , float(prob.get_val("A_Cuscalc", units="mm**2")), "mm**2"],
         ["Peak air gap flux density"                          , "B_g"               , float(prob.get_val("B_g", units="T")), "T"],
-        ["Peak air gap flux density B_g"                      , "B_g"               , float(prob.get_val("B_g", units="T")), "T"],
         ["Fundamental component of peak air gap flux density" , "B_pm1"             , float(prob.get_val("B_pm1", units="T")), "T"],
-        ["Tesla remnant flux density"                         , "B_r"               , float(prob.get_val("B_r", units="T")), "T"],
         ["remnant flux density"                               , "B_r"               , float(prob.get_val("B_r", units="T")), "T"],
         ["Peak Rotor yoke flux density"                       , "B_rymax"           , float(prob.get_val("B_rymax", units="T")), "T"],
-        ["Rotor yoke flux density"                            , "B_rymax"           , float(prob.get_val("B_rymax", units="T")), "T"],
-        ["Peak Stator flux density"                           , "B_smax"            , float(prob.get_val("B_smax", units="T")), "T"],
-        ["Peak Stator Yoke flux density B_ymax"               , "B_symax"           , float(prob.get_val("B_symax", units="T")), "T"],
-        ["Stator yoke flux density"                           , "B_symax"           , float(prob.get_val("B_symax", units="T")), "T"],
+        ["Peak Stator Yoke flux density"                      , "B_symax"           , float(prob.get_val("B_symax", units="T")), "T"],
         ["Peak Teeth flux density"                            , "B_tmax"            , float(prob.get_val("B_tmax", units="T")), "T"],
-        ["Tooth yoke flux density"                            , "B_tmax"            , float(prob.get_val("B_tmax", units="T")), "T"],
         ["Specific cost of copper"                            , "C_Cu"              , float(prob.get_val("C_Cu", units="USD/kg")), "USD/kg"],
         ["Specific cost of magnetic steel/iron"               , "C_Fe"              , float(prob.get_val("C_Fe", units="USD/kg")), "USD/kg"],
         ["Specific cost of structural steel"                  , "C_Fes"             , float(prob.get_val("C_Fes", units="USD/kg")), "USD/kg"],
         ["Specific cost of Magnet"                            , "C_PM"              , float(prob.get_val("C_PM", units="USD/kg")), "USD/kg"],
         ["Copper Mass"                                        , "Copper"            , float(prob.get_val("Copper", units="kg")), "kg"],
-        ["Copper mass"                                        , "Copper"            , float(prob.get_val("Copper", units="kg")), "kg"],
         ["Stator outer diameter"                              , "D_out"             , float(prob.get_val("D_out", units="m")), "m"],
         ["Youngs modulus"                                     , "E"                 , float(prob.get_val("E")), "-"],
         ["Stator phase voltage"                               , "E_p"               , float(prob.get_val("E_p", units="V")), "V"],
@@ -411,7 +404,6 @@ def write_all_data(prob, output_dir=None):
         ["Iron mass"                                          , "Iron"              , float(prob.get_val("Iron", units="kg")), "kg"],
         ["Current density"                                    , "J_s"               , float(prob.get_val("J_s", units="A/mm**2")), "A/mm**2"],
         ["Aspect ratio"                                       , "K_rad"             , float(prob.get_val("K_rad")), "-"],
-        ["Stator synchronising inductance"                    , "L_s"               , float(prob.get_val("L_s", units="m")), "m"],
         ["Stator core length"                                 , "L_t"               , float(prob.get_val("L_t", units="m")), "m"],
         ["Total loss"                                         , "Losses"            , float(prob.get_val("Losses", units="W")), "W"],
         ["Rotor yoke mass"                                    , "M_Fery"            , float(prob.get_val("M_Fery", units="kg")), "kg"],
@@ -432,7 +424,6 @@ def write_all_data(prob, output_dir=None):
 ["Main shaft outer radius"                                    , "R_sh"              , float(prob.get_val("R_sh", units="m")), "m"],
         ["Stator slots"                                       , "S"                 , float(prob.get_val("S")), "-"],
         ["Normal stress"                                      , "Sigma_normal"      , float(prob.get_val("Sigma_normal", units="N/m**2")), "N/m**2"],
-        ["Normal stress"                                      , "Sigma_shear"       , float(prob.get_val("Sigma_shear", units="N/m**2")), "N/m**2"],
         ["Shear stress"                                       , "Sigma_shear"       , float(prob.get_val("Sigma_shear", units="N/m**2")), "N/m**2"],
 ["Slot aspect ratio"                                          , "Slot_aspect_ratio" , float(prob.get_val("Slot_aspect_ratio")), "-"],
         ["Rotor structural mass kg"                           , "Structural_rotor"  , float(prob.get_val("Structural_rotor", units="kg")), "kg"],
@@ -445,11 +436,9 @@ def write_all_data(prob, output_dir=None):
         ["Allowable arm dimensions"                           , "b_all_r"           , float(prob.get_val("b_all_r", units="m")), "m"],
         ["Allowable circumferential"                          , "b_all_s"           , float(prob.get_val("b_all_s", units="m")), "m"],
         ["magnet width"                                       , "b_m"               , float(prob.get_val("b_m", units="m")), "m"],
-        ["arm width b_r"                                      , "b_r"               , float(prob.get_val("b_r", units="m")), "m"],
         ["rotor arm circumferential dimension"                , "b_r"               , float(prob.get_val("b_r", units="m")), "m"],
         ["slot width"                                         , "b_s"               , float(prob.get_val("b_s", units="m")), "m"],
         ["ratio of Slot width to slot pitch"                  , "b_s_tau_s"         , float(prob.get_val("b_s_tau_s")), "-"],
-        ["arm width b_r"                                      , "b_st"              , float(prob.get_val("b_st", units="m")), "m"],
         ["stator arm circumferential dimension"               , "b_st"              , float(prob.get_val("b_st", units="m")), "m"],
         ["tooth width"                                        , "b_t"               , float(prob.get_val("b_t", units="m")), "m"],
         ["Circumferential arm space constraint (<1)"          , "con_bar"           , float(prob.get_val("con_bar")), "-"],
@@ -462,21 +451,15 @@ def write_all_data(prob, output_dir=None):
         ["Torsional deflection constraint-rotor (<1)"         , "con_zas"           , float(prob.get_val("con_zas")), "-"],
         ["Cost to add to total for unaccounted elements"      , "cost_adder"        , float(prob.get_val("cost_adder", units="USD")), "USD"],
         ["Total cost"                                         , "cost_total"        , float(prob.get_val("cost_total", units="USD")), "USD"],
-        ["arm depth d_r"                                      , "d_r"               , float(prob.get_val("d_r", units="m")), "m"],
         ["rotor arm depth"                                    , "d_r"               , float(prob.get_val("d_r", units="m")), "m"],
-        ["arm depth d_r"                                      , "d_s"               , float(prob.get_val("d_s", units="m")), "m"],
         ["stator arm depth"                                   , "d_s"               , float(prob.get_val("d_s", units="m")), "m"],
         ["torque constraint"                                  , "demag_mmf_ratio"   , float(prob.get_val("demag_mmf_ratio")), "-"],
         ["Generator output frequency"                         , "f"                 , float(prob.get_val("f", units="Hz")), "Hz"],
-        ["air gap length"                                     , "g"                 , float(prob.get_val("g", units="m")), "m"],
         ["airgap length"                                      , "g"                 , float(prob.get_val("g", units="m")), "m"],
         ["Acceleration due to gravity"                        , "g1"                , float(prob.get_val("g1")), "-"],
-        [""                                                   , "gen_eff"           , float(prob.get_val("gen_eff")), ""],
         ["None Generator efficiency"                          , "gen_eff"           , float(prob.get_val("gen_eff")), ""],
         ["magnet height"                                      , "h_m"               , float(prob.get_val("h_m", units="m")), "m"],
-        ["magnet thickness"                                   , "h_m"               , float(prob.get_val("h_m", units="m")), "m"],
-        ["Yoke height h_s"                                    , "h_s"               , float(prob.get_val("h_s", units="m")), "m"],
-        ["slot height"                                        , "h_s"               , float(prob.get_val("h_s", units="m")), "m"],
+        ["Yoke height"                                        , "h_s"               , float(prob.get_val("h_s", units="m")), "m"],
         ["Slot Opening height"                                , "h_s1"              , float(prob.get_val("h_s1")), "-"],
         ["Wedge Opening height"                               , "h_s2"              , float(prob.get_val("h_s2")), "-"],
         ["Rotor rim thickness"                                , "h_sr"              , float(prob.get_val("h_sr", units="m")), "m"],
@@ -567,7 +550,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     output_dir = os.path.join(mydir, output_str)
 
     # Optimize just magnetrics with GA and then structural with SLSQP
-    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=True, femm_flag=False)
+    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=True, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=True, femm_flag=False)
     prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), prob_in=prob, femm_flag=True)
     prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag)
 
@@ -591,7 +574,8 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir)
 
 if __name__ == "__main__":
-    opt_flag = True
-    for k in ratings_known:
-        for obj in ["cost", "mass"]:
-            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    opt_flag = False #True
+    run_all("outputs15-cost", opt_flag, "cost", 15)
+    #for k in ratings_known:
+    #    for obj in ["cost", "mass"]:
+    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
