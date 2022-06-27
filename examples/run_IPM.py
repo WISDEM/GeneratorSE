@@ -196,12 +196,12 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["l_s"]            = 2.91813927 #2.5
         prob["h_t"]            = 0.28631632 #0.2
         prob["b_t"]            = 0.26488789
-        prob["p"]              = 69
+        prob["p"]              = 70
         prob["g"]              = 0.0075153
         prob["alpha_v"]        = 137.91 #110
         prob["N_c"]            = 3.22798541 #6
         prob["I_s"]            = 10566.22104108 # 3500
-        prob["h_m"]            = 0.01263283 #0.015
+        prob["h_m"]            = 0.015 #0.015
         prob["d_mag"]          = 0.03870702 #0.08
         prob["d_sep"]          = 0.01159124 #0.010
         prob["m_sep"]          = 0.00476929 #0.005

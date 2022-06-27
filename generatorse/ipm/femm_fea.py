@@ -598,8 +598,6 @@ class FEMM_Geometry(om.ExplicitComponent):
         # Compute outputs
         Time = 60 / (f * 360)
         Theta_elec = (alpha_y * Time * 180 / np.pi) * 2 * np.pi * f
-        r_yoke_stator = r_so - h_t
-        r_inner = r_so - h_t - h_ys
         outputs["r_mag_center"] = r_mag_center
         outputs["tau_p"] = tau_p = np.pi * r_g / n2P
         mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
@@ -619,10 +617,10 @@ class FEMM_Geometry(om.ExplicitComponent):
                 outputs["Sigma_normal"],
                 V_rotor,
                 V_stator,
-            ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_inner, alpha_pr)
+            ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_si, alpha_pr)
 
             outputs["M_Fes"] = V_stator * 2 * rho_Fe * n2P / 10
-            outputs["M_Fest"] = outputs["M_Fes"] - np.pi * (r_yoke_stator**2 - r_inner**2) * l_s * rho_Fe
+            outputs["M_Fest"] = outputs["M_Fes"] - np.pi * ((r_si+h_ys)**2 - r_si**2) * l_s * rho_Fe
             outputs["M_Fer"] = V_rotor * 2 * rho_Fe * n2P / 10
             outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fer"]
             layer_1 = r_si + h_ys + h_t * 0.75
