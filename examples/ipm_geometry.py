@@ -305,6 +305,51 @@ femm.mi_addblocklabel(centroid(rotor_yoke).evalf().x, centroid(rotor_yoke).evalf
 femm.mi_selectlabel(centroid(rotor_yoke).evalf().x, centroid(rotor_yoke).evalf().y)
 femm.mi_setblockprop("M-36 Steel")
 femm.mi_clearselected()
+# Label stator yoke
+stator_yoke = Polygon(
+                Point(stator[0,0], stator[0,1], evaluate=False),
+                Point(stator[1,0], stator[1,1], evaluate=False),
+                Point(coil_slot1[1,0], coil_slot1[1,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(stator_yoke).evalf().x, centroid(stator_yoke).evalf().y)
+femm.mi_selectlabel(centroid(stator_yoke).evalf().x, centroid(stator_yoke).evalf().y)
+femm.mi_setblockprop("M-36 Steel")
+femm.mi_clearselected()
+# Label air gap
+air_gap = Polygon(
+                Point(stator[1,0], stator[1,1], evaluate=False),
+                Point(rotor[0,0], rotor[0,1], evaluate=False),
+                Point(coil_slot1[4,0], coil_slot1[4,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(air_gap).evalf().x, centroid(air_gap).evalf().y)
+femm.mi_selectlabel(centroid(air_gap).evalf().x, centroid(air_gap).evalf().y)
+femm.mi_setblockprop("Air")
+femm.mi_clearselected()
+# Label 12 coils
+labels_coils = ["A-","A-","A+","B-","B+","B+","B-","C+","C-","C-","C+","A-"]
+coil1l = Polygon(
+                Point(coil_slot1[0,0], coil_slot1[0,1], evaluate=False),
+                Point(coil_slot1[1,0], coil_slot1[1,1], evaluate=False),
+                Point(coil_slot1[8,0], coil_slot1[8,1], evaluate=False),
+                Point(coil_slot1[9,0], coil_slot1[9,1], evaluate=False),
+            )
+coil1r = Polygon(
+                Point(coil_slot1[1,0], coil_slot1[1,1], evaluate=False),
+                Point(coil_slot1[2,0], coil_slot1[2,1], evaluate=False),
+                Point(coil_slot1[7,0], coil_slot1[7,1], evaluate=False),
+                Point(coil_slot1[8,0], coil_slot1[8,1], evaluate=False),
+            )
+xy_labels_coils = np.zeros((12,2))
+xy_labels_coils[0,:] = centroid(coil1l).evalf().x, centroid(coil1l).evalf().y
+xy_labels_coils[1,:] = centroid(coil1r).evalf().x, centroid(coil1r).evalf().y
+for i in range(2,len(xy_labels_coils[:,0]),2):
+    xy_labels_coils[i,:] = rotate(0.,0., xy_labels_coils[i-2,0], xy_labels_coils[i-2,1], alpha_y)
+    xy_labels_coils[i+1,:] = rotate(0.,0., xy_labels_coils[i-1,0], xy_labels_coils[i-1,1], alpha_y)
+for i in range(len(xy_labels_coils[:,0])):
+    femm.mi_addblocklabel(xy_labels_coils[i,0],xy_labels_coils[i,1])
+    femm.mi_selectlabel(xy_labels_coils[i,0],xy_labels_coils[i,1])
+    femm.mi_setblockprop("20 SWG", 1, 0, labels_coils[i], 0, 15, N_c)
+    femm.mi_clearselected()
 
 # femm.mi_addsegment(coil_slot1[1,0],coil_slot1[1,1],coil_slot1[8,0],coil_slot1[8,1])
 # femm.mi_addsegment(coil_slot1[8,0],coil_slot1[8,1],coil_slot1[9,0],coil_slot1[9,1])
