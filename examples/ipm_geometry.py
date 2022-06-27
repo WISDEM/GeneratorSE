@@ -202,6 +202,10 @@ end_index = np.array([2,3], dtype=int)
 for i in range(len(start_index)):
     femm.mi_addarc(rotor[start_index[i],0],rotor[start_index[i],1],rotor[end_index[i],0],rotor[end_index[i],1],np.rad2deg(alpha_s),1)
 
+# Close sides of air gap to be able to define boundary conditions, see below
+femm.mi_addsegment(stator[1,0],stator[1,1],rotor[0,0],rotor[0,1])
+femm.mi_addsegment(stator[2,0],stator[2,1],rotor[3,0],rotor[3,1])
+
 # Draw first magnet
 start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
 end_index = np.array([1,7,0,5,6,7,4,3,6,3,4], dtype=int)
@@ -351,21 +355,34 @@ for i in range(len(xy_labels_coils[:,0])):
     femm.mi_setblockprop("20 SWG", 1, 0, labels_coils[i], 0, 15, N_c)
     femm.mi_clearselected()
 
-# femm.mi_addsegment(coil_slot1[1,0],coil_slot1[1,1],coil_slot1[8,0],coil_slot1[8,1])
-# femm.mi_addsegment(coil_slot1[8,0],coil_slot1[8,1],coil_slot1[9,0],coil_slot1[9,1])
-# femm.mi_addsegment(coil_slot1[9,0],coil_slot1[9,1],coil_slot1[0,0],coil_slot1[0,1])
-# femm.mi_addblocklabel((coil_slot1[0,0]+coil_slot1[1,0])/2, (coil_slot1[0,1]+coil_slot1[9,1])/2)
-# femm.mi_selectlabel((coil_slot1[0,0]+coil_slot1[1,0])/2, (coil_slot1[0,1]+coil_slot1[9,1])/2)
-# femm.mi_setblockprop("20 SWG", 1, 0, "A+", 0, 15, N_c)
-# femm.mi_clearselected()
-
-# femm.mi_addsegment(coil_slot1[1,0],coil_slot1[1,1],coil_slot1[2,0],coil_slot1[2,1])
-# femm.mi_addsegment(coil_slot1[2,0],coil_slot1[2,1],coil_slot1[7,0],coil_slot1[7,1])
-# femm.mi_addsegment(coil_slot1[7,0],coil_slot1[7,1],coil_slot1[8,0],coil_slot1[8,1])
-# femm.mi_addblocklabel((coil_slot1[1,0]+coil_slot1[2,0])/2, (coil_slot1[1,1]+coil_slot1[7,1])/2)
-# femm.mi_selectlabel((coil_slot1[1,0]+coil_slot1[2,0])/2, (coil_slot1[1,1]+coil_slot1[7,1])/2)
-# femm.mi_setblockprop("20 SWG", 1, 0, "B-", 0, 15, N_c)
-# femm.mi_clearselected()
+# Add boundary conditions
+# Inner radius stator
+femm.mi_selectarcsegment(stator[0,0], stator[0,1]+1.e-3)
+femm.mi_setarcsegmentprop(1, "Dirichlet", 0, 50)
+femm.mi_clearselected()
+# Outer radius rotor
+femm.mi_selectarcsegment(rotor[1,0], rotor[1,1]+1.e-3)
+femm.mi_setarcsegmentprop(1, "Dirichlet", 0, 50)
+femm.mi_clearselected()
+# Sides sector
+femm.mi_selectsegment((stator[0,0]+stator[1,0])/2., (stator[0,1]+stator[1,1])/2.)
+femm.mi_setsegmentprop("apbc1", 0, 1, 0, 13)
+femm.mi_clearselected()
+femm.mi_selectsegment((stator[2,0]+stator[3,0])/2., (stator[2,1]+stator[3,1])/2.)
+femm.mi_setsegmentprop("apbc1", 0, 1, 0, 13)
+femm.mi_clearselected()
+femm.mi_selectsegment((rotor[0,0]+stator[1,0])/2., (rotor[0,1]+stator[1,1])/2.)
+femm.mi_setsegmentprop("apbc2", 0, 1, 0, 13)
+femm.mi_clearselected()
+femm.mi_selectsegment((stator[2,0]+rotor[3,0])/2., (stator[2,1]+rotor[3,1])/2.)
+femm.mi_setsegmentprop("apbc2", 0, 1, 0, 13)
+femm.mi_clearselected()
+femm.mi_selectsegment((rotor[0,0]+rotor[1,0])/2., (rotor[0,1]+rotor[1,1])/2.)
+femm.mi_setsegmentprop("apbc3", 0, 1, 0, 13)
+femm.mi_clearselected()
+femm.mi_selectsegment((rotor[2,0]+rotor[3,0])/2., (rotor[2,1]+rotor[3,1])/2.)
+femm.mi_setsegmentprop("apbc3", 0, 1, 0, 13)
+femm.mi_clearselected()
 
 femm.mi_saveas("IPM_param.fem")
 
