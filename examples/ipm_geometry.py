@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import femm
 import os, platform
+from sympy import Point, Polygon
+from sympy.geometry.util import centroid
 
 def myopen():
     if platform.system().lower() == 'windows':
@@ -145,13 +147,13 @@ for i in range(len(coil_slot1[:,0])):
     femm.mi_setgroup(1)
     femm.mi_clearselected()
 # Magnet 1
-for i in range(1,len(magnet1[:,0])):
+for i in range(len(magnet1[:,0])):
     femm.mi_addnode(magnet1[i,0],magnet1[i,1])
     femm.mi_selectnode(magnet1[i,0],magnet1[i,1])
     femm.mi_setgroup(2)
     femm.mi_clearselected()
 # Magnet 2
-for i in range(1,len(magnet2[:,0])):
+for i in range(len(magnet2[:,0])):
     femm.mi_addnode(magnet2[i,0],magnet2[i,1])
     femm.mi_selectnode(magnet2[i,0],magnet2[i,1])
     femm.mi_setgroup(2)
@@ -207,6 +209,28 @@ for i in range(len(start_index)):
     femm.mi_selectsegment((magnet1[start_index[i],0]+magnet1[end_index[i],0])/2,(magnet1[start_index[i],1]+magnet1[end_index[i],1])/2)
     femm.mi_setgroup(2)
     femm.mi_clearselected()
+# Add labels first magnet
+# Air
+air_1 = Polygon(
+                Point(magnet1[0,0], magnet1[0,1], evaluate=False),
+                Point(magnet1[1,0], magnet1[1,1], evaluate=False),
+                Point(magnet1[7,0], magnet1[7,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
+femm.mi_selectlabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
+femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
+femm.mi_setgroup(2)
+femm.mi_clearselected()
+air_2 = Polygon(
+                Point(magnet1[2,0], magnet1[2,1], evaluate=False),
+                Point(magnet1[3,0], magnet1[3,1], evaluate=False),
+                Point(magnet1[4,0], magnet1[4,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
+femm.mi_selectlabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
+femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
+femm.mi_setgroup(2)
+femm.mi_clearselected()
 
 # Draw second magnet
 start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
@@ -216,6 +240,28 @@ for i in range(len(start_index)):
     femm.mi_selectsegment((magnet2[start_index[i],0]+magnet2[end_index[i],0])/2,(magnet2[start_index[i],1]+magnet2[end_index[i],1])/2)
     femm.mi_setgroup(2)
     femm.mi_clearselected()
+# Add labels second magnet
+# Air
+air_1 = Polygon(
+                Point(magnet2[0,0], magnet2[0,1], evaluate=False),
+                Point(magnet2[1,0], magnet2[1,1], evaluate=False),
+                Point(magnet2[7,0], magnet2[7,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
+femm.mi_selectlabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
+femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
+femm.mi_setgroup(2)
+femm.mi_clearselected()
+air_2 = Polygon(
+                Point(magnet2[2,0], magnet2[2,1], evaluate=False),
+                Point(magnet2[3,0], magnet2[3,1], evaluate=False),
+                Point(magnet2[4,0], magnet2[4,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
+femm.mi_selectlabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
+femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
+femm.mi_setgroup(2)
+femm.mi_clearselected()
 
 # Copy magnet-pair four times
 femm.mi_selectgroup(2)
