@@ -177,8 +177,6 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
 
 class FEMM_Geometry(om.ExplicitComponent):
     def setup(self):
-        self.add_discrete_input("m", 3, desc="Number of phases")
-
         # Inputs
         self.add_input("p1", 0.0, desc="Number of pole pairs")
         self.add_input("r_g", 0.0, units="m", desc="Air gap radius")
@@ -219,7 +217,7 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
         # Inputs
         n2P = float(inputs['p1']) # 200 # number pole pairs
