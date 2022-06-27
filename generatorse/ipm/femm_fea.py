@@ -196,6 +196,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("I_s", 0.0, units="A", desc="Stator current ")
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
         self.add_input("tau_s", 0.0, units="m", desc="Slot pitch")
+        self.add_input('magnet_l_pc', 1.0, desc = "Length of magnet divided by max magnet length")
 
 
         # Unused inputs
@@ -242,7 +243,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         D_a = float(inputs['D_a']) # 5.295 * 2. # stator outer diameter
         slot_height = float(inputs['h_s1']) # 0.01
         d_mag = float(inputs['d_mag']) # 0.04 # magnet distance from inner radius
-        magnet_l_pc = float(0.7) # length of magnet divided by max magnet length
+        magnet_l_pc = float(inputs['magnet_l_pc']) # length of magnet divided by max magnet length
         # magnet_h_pc float(= 0.8 # height of magnet divided by max magnet height
         h_yr = float(inputs['h_yr']) # 0.01 # Rotor yoke height
         h_ys = float(inputs['h_ys']) # 0.01 # Stator yoke height
@@ -257,8 +258,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         tau_s = float(inputs['tau_s'])
 
         # Preprocess inputs
-        nP = n2P / 2. # number pole pairs
-        alpha_p = np.pi / nP # pole sector
+        alpha_p = np.pi / n2P # pole sector
         alpha_pr = 0.9 * alpha_p # pole sector reduced to 90%
         r_so = D_a / 2. # Outer radius of the stator
         g = r_g - r_so # Air gap length
