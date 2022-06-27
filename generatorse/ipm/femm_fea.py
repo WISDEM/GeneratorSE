@@ -8,7 +8,7 @@ Created on Fri Dec 31 12:28:2 2021
 import femm
 import numpy as np
 import openmdao.api as om
-from sympy import Point, Line, Segment, Polygon
+from sympy import Point, Segment, Polygon
 from sympy.geometry.util import centroid
 #import random
 import os
@@ -185,33 +185,33 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("r_g", 0.0, units="m", desc="air gap radius ")
         self.add_input("D_a", 0.0, units="m", desc="Stator outer diameter")
         self.add_input("d_mag", 0.0, units="m", desc=" magnet distance from inner radius")
-        self.add_input("g", 0.0, units="m", desc="air gap length ")
         self.add_input("l_s", 0.0, units="m", desc="Stack length ")
-
-
-
-        #self.add_input("b", 0.0, desc="v-angle")
-        #self.add_input("c", 0.0, desc="pole pairs ")
+        self.add_input("f", 0.0, units="Hz", desc="frequency")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
-        self.add_input("alpha_v", 0.0, units="deg", desc="v-angle")
-        self.add_input("alpha_m", 0.5, desc="pole pair width")
-        self.add_input("tau_s", 0.0, units="m", desc="Slot pitch")
-
-        #self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
-        self.add_input("f", 0.0, units="Hz", desc="frequency")
-        self.add_input("l_fe_ratio", 0, desc="bridge length")
-        self.add_input("ratio", 0.0, desc="pole to bridge ratio")
-        self.add_input("h_m", 0.0, units="m", desc="magnet height")
         self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
         self.add_input("h_ys", 0.0, units="m", desc="stator yoke height")
         self.add_input("h_t", 0.0, units="m", desc="stator tooth height")
+        self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical Steel density ")
         self.add_input("I_s", 0.0, units="A", desc="Stator current ")
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
+        self.add_input("tau_s", 0.0, units="m", desc="Slot pitch")
+
+
+        # Unused inputs
+        #self.add_input("b", 0.0, desc="v-angle")
+        #self.add_input("c", 0.0, desc="pole pairs ")
+        self.add_input("g", 0.0, units="m", desc="air gap length ")
+        self.add_input("alpha_v", 0.0, units="deg", desc="v-angle")
+        self.add_input("alpha_m", 0.5, desc="pole pair width")
+
+        #self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
+        self.add_input("l_fe_ratio", 0, desc="bridge length")
+        self.add_input("ratio", 0.0, desc="pole to bridge ratio")
+        self.add_input("h_m", 0.0, units="m", desc="magnet height")
         #self.add_input("J_s", 0.0, units="A/mm**2", desc="Conductor cross-section")
         self.add_input("d_sep", 0.0, units="m", desc=" bridge separation width")
         self.add_input("m_sep", 0.0, units="m", desc=" bridge separation width")
-        self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical Steel density ")
 
         # Outputs
         self.add_output("b_s", 0.0, units="m", desc="slot width")
@@ -251,13 +251,17 @@ class FEMM_Geometry(om.ExplicitComponent):
         h_t =  float(inputs['h_t']) # 0.27 # Stator tooth height
         l_s = float(inputs['l_s']) # 2.918 # stack length
         N_c = float(inputs['N_c']) # 3 # Number of turns per coil in series
-
+        f = float(inputs["f"])
+        rho_Fe = float(inputs['rho_Fe'])
+        I_s = float(inputs['I_s'])
+        tau_s = float(inputs['tau_s'])
 
         # Preprocess inputs
         nP = n2P / 2. # number pole pairs
         alpha_p = np.pi / nP # pole sector
         alpha_pr = 0.9 * alpha_p # pole sector reduced to 90%
         r_so = D_a / 2. # Outer radius of the stator
+        g = r_g - r_so # Air gap length
         r_si = r_so - (h_so + h_wo + h_t + h_ys) # Inner radius of the stator
 
 
@@ -465,6 +469,7 @@ class FEMM_Geometry(om.ExplicitComponent):
                         Point(magnet1[5,0], magnet1[5,1], evaluate=False),
                         Point(magnet1[6,0], magnet1[6,1], evaluate=False),
                     )
+        r_mag_center = (centroid(mm).evalf().x ** 2 + centroid(mm).evalf().y ** 2) ** 0.5
         femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
         femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
         mag_dir = np.rad2deg(p2p0_angle)-90.
@@ -607,10 +612,20 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_clearselected()
 
         femm.mi_saveas("IPM_new.fem")
+
+        # Compute outputs
         Time = 60 / (f * 360)
-        Theta_elec = (theta_tau_s * Time * 180 / np.pi) * 2 * np.pi * f
-        r_yoke_stator = r_a - h_t
-        r_inner = r_a - h_t - h_ys
+        Theta_elec = (alpha_y * Time * 180 / np.pi) * 2 * np.pi * f
+        r_yoke_stator = r_so - h_t
+        r_inner = r_so - h_t - h_ys
+        outputs["r_mag_center"] = r_mag_center
+        outputs["tau_p"] = tau_p = np.pi * r_g / n2P
+        mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
+        outputs["l_m"] = mag.length
+        bs_taus = 0.5
+        outputs["b_s"] = bs_taus * tau_s
+        outputs["h_s"] = h_s = h_t - h_so - h_wo
+        outputs["r_outer_active"] = r_ro
         try:
             femm.mi_createmesh()
             femm.smartmesh(0)
@@ -622,37 +637,18 @@ class FEMM_Geometry(om.ExplicitComponent):
                 outputs["Sigma_normal"],
                 V_rotor,
                 V_stator,
-            ) = run_post_process(D_a, g, r_outer, h_yr, h_ys, r_inner, theta_p_r)
+            ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_inner, alpha_pr)
 
-            outputs["M_Fes"] = V_stator * 2 * rho_Fe * p1 / 10
+            outputs["M_Fes"] = V_stator * 2 * rho_Fe * n2P / 10
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * (r_yoke_stator**2 - r_inner**2) * l_s * rho_Fe
-            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * p1 / 10
+            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * n2P / 10
             outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fer"]
+            layer_1 = r_si + h_ys + h_t * 0.75
+            layer_2 = r_si + h_ys + h_t * 0.25
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
-                Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, layer_2, N_c, tau_p
+                Theta_elec, D_a, l_s, n2P, g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
             )
-            #if outputs["T_e"] >= 20e6:
-            #    seed = random.randrange(0, 101, 2)
-            #    femm.mi_saveas("IPM_new_" + str(seed) + ".fem")
 
         except Exception as e:
-            #print(
-            #    D_a,
-            #    l_s,
-            #    h_t,
-            #    p1,
-            #    g,
-            #    h_ys,
-            #    h_yr,
-            #    alpha_v,
-            #    N_c,
-            #    I_s,
-            #    h_m,
-            #    d_mag,
-            #    d_sep,
-            #    m_sep * line2.length,
-            #    l_fe_ratio,
-            #    ratio,
-            #)
             outputs = bad_inputs(outputs)
             raise(e)
