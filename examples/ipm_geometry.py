@@ -79,16 +79,17 @@ r7 =  r_g + h_yr + d_mag + slot_height
 r_ro = r7+h_yr # Outer rotor radius
 magnet1[3,:] = rotate(0., 0., r7, 0, 0.5 * alpha_p)
 magnet1[1,:] = rotate(0., 0., r_g + h_yr + slot_height, 0, 0.5 * (alpha_p - alpha_pr))
-p6p3_angle = np.arctan((magnet1[2,1]-magnet1[0,1])/(magnet1[2,0]-magnet1[0,0]))
-p6p3p4_angle = p6p3_angle - 0.5 * (alpha_p - alpha_pr)
+# We might need only one angle here
+p2p0_angle = np.arctan((magnet1[2,1]-magnet1[0,1])/(magnet1[2,0]-magnet1[0,0]))
+p2p0p1_angle = p2p0_angle - 0.5 * (alpha_p - alpha_pr)
 p4r = rotate(magnet1[0,0], magnet1[0,1], magnet1[1,0], magnet1[1,1], -0.5 * (alpha_p - alpha_pr))
-p11r =  (p4r[0] - magnet1[0,0]) * np.cos(p6p3p4_angle) * np.array([np.cos(p6p3p4_angle), np.sin(p6p3p4_angle)]) + magnet1[0,:]
+p11r =  (p4r[0] - magnet1[0,0]) * np.cos(p2p0p1_angle) * np.array([np.cos(p2p0p1_angle), np.sin(p2p0p1_angle)]) + magnet1[0,:]
 magnet1[7,:] = rotate(magnet1[0,0], magnet1[0,1], p11r[0], p11r[1], 0.5 * (alpha_p - alpha_pr))
-mml = (magnet1[2,1] - magnet1[7,1]) / np.sin(p6p3_angle) # max magnet1 length
-magnet1[4,:] = magnet1[1,:] + mml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+mml = (magnet1[2,1] - magnet1[7,1]) / np.sin(p2p0_angle) # max magnet1 length
+magnet1[4,:] = magnet1[1,:] + mml * np.array([np.cos(p2p0_angle),np.sin(p2p0_angle)])
 ml = mml * magnet_l_pc
-magnet1[5,:] = magnet1[1,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
-magnet1[6,:] = magnet1[7,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
+magnet1[5,:] = magnet1[1,:] + ml * np.array([np.cos(p2p0_angle),np.sin(p2p0_angle)])
+magnet1[6,:] = magnet1[7,:] + ml * np.array([np.cos(p2p0_angle),np.sin(p2p0_angle)])
 
 # Mirror the points for the second magnet
 magnet2 = np.zeros_like(magnet1)
@@ -231,6 +232,19 @@ femm.mi_selectlabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
 femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
 femm.mi_setgroup(2)
 femm.mi_clearselected()
+# Magnet material
+mm = Polygon(
+                Point(magnet1[7,0], magnet1[7,1], evaluate=False),
+                Point(magnet1[1,0], magnet1[1,1], evaluate=False),
+                Point(magnet1[5,0], magnet1[5,1], evaluate=False),
+                Point(magnet1[6,0], magnet1[6,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+mag_dir = np.rad2deg(p2p0_angle)-90.
+femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir, 1, 0)
+femm.mi_setgroup(2)
+femm.mi_clearselected()
 
 # Draw second magnet
 start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
@@ -262,10 +276,34 @@ femm.mi_selectlabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
 femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
 femm.mi_setgroup(2)
 femm.mi_clearselected()
+# Magnet material
+mm = Polygon(
+                Point(magnet2[7,0], magnet2[7,1], evaluate=False),
+                Point(magnet2[1,0], magnet2[1,1], evaluate=False),
+                Point(magnet2[5,0], magnet2[5,1], evaluate=False),
+                Point(magnet2[6,0], magnet2[6,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+mag_dir = 90. - np.rad2deg(p2p0_angle)
+femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir, 1, 0)
+femm.mi_setgroup(2)
+femm.mi_clearselected()
 
 # Copy magnet-pair four times
 femm.mi_selectgroup(2)
 femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p), 4)
+femm.mi_clearselected()
+
+# Label rotor yoke
+rotor_yoke = Polygon(
+                Point(rotor[0,0], rotor[0,1], evaluate=False),
+                Point(rotor[1,0], rotor[1,1], evaluate=False),
+                Point(magnet1[0,0], magnet1[0,1], evaluate=False),
+            )
+femm.mi_addblocklabel(centroid(rotor_yoke).evalf().x, centroid(rotor_yoke).evalf().y)
+femm.mi_selectlabel(centroid(rotor_yoke).evalf().x, centroid(rotor_yoke).evalf().y)
+femm.mi_setblockprop("M-36 Steel")
 femm.mi_clearselected()
 
 # femm.mi_addsegment(coil_slot1[1,0],coil_slot1[1,1],coil_slot1[8,0],coil_slot1[8,1])
