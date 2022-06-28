@@ -147,9 +147,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01)
     prob.model.add_design_var("l_s", lower=1.5, upper=2.5, ref=2.0)
     prob.model.add_design_var("h_t", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("h_ys", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("h_yr", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("h_m", lower=0.005, upper=0.5, ref=0.01)
+    prob.model.add_design_var("h_ys", lower=0.02, upper=0.2, ref=0.1)
+    prob.model.add_design_var("h_yr", lower=0.02, upper=0.2, ref=0.1)
+    prob.model.add_design_var("h_m", lower=0.005, upper=0.1, ref=0.01)
     # prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("p", lower=70, upper=260, ref=100.0)
     #prob.model.add_design_var("l_fe_ratio", lower=0.1, upper=0.9 )
@@ -449,7 +449,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     #cleanup_femm_files(mydir)
 
 if __name__ == "__main__":
-    opt_flag = False
+    opt_flag = True
     run_all("outputs17-mass", opt_flag, "mass", 17)
     #for k in ratings_known:
     #    for obj in ["cost", "mass"]:
