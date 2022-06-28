@@ -451,12 +451,13 @@ class FEMM_Geometry(om.ExplicitComponent):
                         Point(magnet1[5,0], magnet1[5,1], evaluate=False),
                         Point(magnet1[6,0], magnet1[6,1], evaluate=False),
                     )
+        magnet1_centroid_xy = np.array([centroid(mm).evalf().x, centroid(mm).evalf().y])
         r_mag_center = (centroid(mm).evalf().x ** 2 + centroid(mm).evalf().y ** 2) ** 0.5
         femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
         femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
-        mag_dir = np.rad2deg(p2p0_angle)-90.
-        femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir, 1, 0)
-        femm.mi_setgroup(2)
+        magnet1_dir = np.rad2deg(p2p0_angle)-90.
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet1_dir, 1, 0)
+        femm.mi_setgroup(3)
         femm.mi_clearselected()
 
         # Draw second magnet
@@ -496,16 +497,41 @@ class FEMM_Geometry(om.ExplicitComponent):
                         Point(magnet2[5,0], magnet2[5,1], evaluate=False),
                         Point(magnet2[6,0], magnet2[6,1], evaluate=False),
                     )
+        magnet2_centroid_xy = np.array([centroid(mm).evalf().x, centroid(mm).evalf().y])
         femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
         femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
-        mag_dir = 90. - np.rad2deg(p2p0_angle)
-        femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir, 1, 0)
-        femm.mi_setgroup(2)
+        magnet2_dir = 90. - np.rad2deg(p2p0_angle)
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet2_dir, 1, 0)
+        femm.mi_setgroup(3)
         femm.mi_clearselected()
 
         # Copy magnet-pair four times
         femm.mi_selectgroup(2)
         femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p), 4)
+        femm.mi_clearselected()
+        # Handle alternating magnet orientation
+        # Mirror the ones pointing out
+        femm.mi_selectgroup(3)
+        femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p)*2., 2)
+        femm.mi_clearselected()
+        # Assign the first pair pointing in
+        magnet3_centroid_xy = rotate(0., 0., magnet1_centroid_xy[0], magnet1_centroid_xy[1], alpha_p)
+        magnet4_centroid_xy = rotate(0., 0., magnet2_centroid_xy[0], magnet2_centroid_xy[1], alpha_p)
+        femm.mi_addblocklabel(magnet3_centroid_xy[0], magnet3_centroid_xy[1])
+        femm.mi_selectlabel(magnet3_centroid_xy[0], magnet3_centroid_xy[1])
+        magnet3_dir = magnet1_dir + np.rad2deg(alpha_p) + 180.
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet3_dir, 1, 0)
+        femm.mi_setgroup(4)
+        femm.mi_clearselected()
+        femm.mi_addblocklabel(magnet4_centroid_xy[0], magnet4_centroid_xy[1])
+        femm.mi_selectlabel(magnet4_centroid_xy[0], magnet4_centroid_xy[1])
+        magnet4_dir = magnet2_dir + np.rad2deg(alpha_p) + 180.
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet4_dir, 1, 0)
+        femm.mi_setgroup(4)
+        femm.mi_clearselected()
+        # Mirror the ones pointing in
+        femm.mi_selectgroup(4)
+        femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p)*2., 1)
         femm.mi_clearselected()
 
         # Label rotor yoke
