@@ -184,6 +184,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("d_mag", 0.0, units="m", desc="Magnet distance from inner radius")
         self.add_input("l_s", 0.0, units="m", desc="Stack length ")
         self.add_input("f", 0.0, units="Hz", desc="Frequency")
+        self.add_input("h_m", 0.0, units="m", desc="Magnet height")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
         self.add_input("h_yr", 0.0, units="m", desc="Rotor yoke height")
@@ -201,9 +202,9 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_output("h_s", 0.0, units="m", desc="Stator tooth height")
         self.add_output("l_m", 0.0, units="m", desc="Magnet length")
         self.add_output("tau_p", 0.0, units="m", desc="Pole pitch")
-        self.add_output("Slot_aspect_ratio", 0.0, desc="Slot aspect ratio")
+        # self.add_output("Slot_aspect_ratio", 0.0, desc="Slot aspect ratio")
         self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density ")
-        self.add_output("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
+        self.add_output("B_rymax", 0.0, units="T", desc="Peak rotor yoke flux density")
         self.add_output("B_smax", 0.0, units="T", desc="Peak flux density in the stator")
         self.add_output("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_output("Sigma_shear", 0.0, units="Pa", desc="Shear stress")
@@ -223,7 +224,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         n2P = float(inputs['p1']) # 200 # number pole pairs
         r_g = float(inputs['r_g']) # 5.3 # air gap radius
         D_a = float(inputs['D_a']) # 5.295 * 2. # stator outer diameter
-        slot_height = float(inputs['h_s1']) # 0.01
+        h_m = float(inputs['h_m']) # 0.01
         d_mag = float(inputs['d_mag']) # 0.04 # magnet distance from inner radius
         magnet_l_pc = float(inputs['magnet_l_pc']) # length of magnet divided by max magnet length
         # magnet_h_pc float(= 0.8 # height of magnet divided by max magnet height
@@ -280,13 +281,14 @@ class FEMM_Geometry(om.ExplicitComponent):
         coil_slot1[9,:] = rotate(0., 0., r_si + h_ys, 0., alpha_y*0.75)
 
         # Draw the first magnet using 8 points
+        h_ri2m = g # distance between inner rotor radius (air gap) and magnets
         magnet1 = np.zeros((8,2))
-        magnet1[0,:] = rotate(0., 0., r_g + h_yr, 0, 0.5 * (alpha_p - alpha_pr))
-        magnet1[2,:] = rotate(0., 0., r_g + h_yr + d_mag, 0, 0.5 * alpha_p)
-        r7 =  r_g + h_yr + d_mag + slot_height
+        magnet1[0,:] = rotate(0., 0., r_g + h_ri2m, 0, 0.5 * (alpha_p - alpha_pr))
+        magnet1[2,:] = rotate(0., 0., r_g + h_ri2m + d_mag, 0, 0.5 * alpha_p)
+        r7 =  r_g + h_ri2m + d_mag + h_m
         r_ro = r7+h_yr # Outer rotor radius
         magnet1[3,:] = rotate(0., 0., r7, 0, 0.5 * alpha_p)
-        magnet1[1,:] = rotate(0., 0., r_g + h_yr + slot_height, 0, 0.5 * (alpha_p - alpha_pr))
+        magnet1[1,:] = rotate(0., 0., r_g + h_ri2m + h_m, 0, 0.5 * (alpha_p - alpha_pr))
         # We might need only one angle here
         p2p0_angle = np.arctan((magnet1[2,1]-magnet1[0,1])/(magnet1[2,0]-magnet1[0,0]))
         p2p0p1_angle = p2p0_angle - 0.5 * (alpha_p - alpha_pr)
