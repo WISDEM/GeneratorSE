@@ -149,7 +149,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("h_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("h_ys", lower=0.02, upper=0.2, ref=0.1)
     prob.model.add_design_var("h_yr", lower=0.02, upper=0.2, ref=0.1)
-    prob.model.add_design_var("h_m", lower=0.005, upper=0.1, ref=0.01)
+    prob.model.add_design_var("h_m", lower=0.005, upper=0.05, ref=0.01)
     # prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("p", lower=70, upper=260, ref=100.0)
     #prob.model.add_design_var("l_fe_ratio", lower=0.1, upper=0.9 )
