@@ -221,7 +221,7 @@ class FEMM_Geometry(om.ExplicitComponent):
     def compute(self, inputs, outputs):
 
         # Inputs
-        n2P = float(inputs['p1']) # 200 # number pole pairs
+        nPP = float(inputs['p1']) # 200 # number pole pairs
         r_g = float(inputs['r_g']) # 5.3 # air gap radius
         D_a = float(inputs['D_a']) # 5.295 * 2. # stator outer diameter
         h_m = float(inputs['h_m']) # 0.01
@@ -241,7 +241,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         tau_s = float(inputs['tau_s'])
 
         # Preprocess inputs
-        alpha_p = np.pi / n2P # pole sector
+        alpha_p = np.pi / nPP # pole sector
         alpha_pr = 0.9 * alpha_p # pole sector reduced to 90%
         r_so = D_a / 2. # Outer radius of the stator
         g = r_g - r_so # Air gap length
@@ -627,7 +627,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         Time = 60 / (f * 360)
         Theta_elec = (alpha_y * Time * 180 / np.pi) * 2 * np.pi * f
         outputs["r_mag_center"] = r_mag_center
-        outputs["tau_p"] = tau_p = np.pi * r_g / n2P
+        outputs["tau_p"] = tau_p = np.pi * r_g / nPP
         mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
         outputs["l_m"] = mag.length
         bs_taus = 0.5
@@ -647,14 +647,14 @@ class FEMM_Geometry(om.ExplicitComponent):
                 V_stator,
             ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_si, alpha_pr)
 
-            outputs["M_Fes"] = V_stator * 2 * rho_Fe * n2P / 10
+            outputs["M_Fes"] = V_stator * 2 * rho_Fe * nPP / 10
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * ((r_si+h_ys)**2 - r_si**2) * l_s * rho_Fe
-            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * n2P / 10
+            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * nPP / 10
             outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fer"]
             layer_1 = r_si + h_ys + h_t * 0.75
             layer_2 = r_si + h_ys + h_t * 0.25
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
-                Theta_elec, D_a, l_s, n2P, g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
+                Theta_elec, D_a, l_s, nPP, g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
             )
 
         except Exception as e:
