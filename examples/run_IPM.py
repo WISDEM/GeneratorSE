@@ -389,7 +389,7 @@ def write_all_data(prob, output_dir=None):
         # ["Bridge separation width",               "d_sep",             float(prob.get_val("d_sep",units="mm")), "mm", "(0-20)"],
         # ["Bridge separation width",               "m_sep",             float(prob.get_val("m_sep",units="mm")), "mm", "(5-10)"],
         ["Pole:bridge ratio",                     "magnet_l_pc",             float(prob.get_val("magnet_l_pc")), "", "(0.7-1)"],
-        # ["V-angle",                               "alpha_v",           float(prob.get_val("alpha_v",units="deg")), "deg", "(60-160)"],
+        ["V-angle",                               "alpha_v",           float(prob.get_val("alpha_v",units="deg")), "deg", "(60-160)"],
         #["Barrier distance",                      "w_fe",              float(prob.get_val("w_fe",units="mm")), "mm", ""],
         # ["Barrier ratio",                         "l_fe_ratio",        float(prob.get_val("l_fe_ratio")), "", ""],
         ["Peak air gap flux density fundamental", "B_g",               float(prob.get_val("B_g",units="T")), "T", ""],

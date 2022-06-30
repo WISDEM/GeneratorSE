@@ -202,6 +202,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_output("h_s", 0.0, units="m", desc="Stator tooth height")
         self.add_output("l_m", 0.0, units="m", desc="Magnet length")
         self.add_output("tau_p", 0.0, units="m", desc="Pole pitch")
+        self.add_output("alpha_v", 0.0, units="deg", desc="V-angle between the magnets")
         # self.add_output("Slot_aspect_ratio", 0.0, desc="Slot aspect ratio")
         self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density ")
         self.add_output("B_rymax", 0.0, units="T", desc="Peak rotor yoke flux density")
@@ -628,6 +629,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         Theta_elec = (alpha_y * Time * 180 / np.pi) * 2 * np.pi * f
         outputs["r_mag_center"] = r_mag_center
         outputs["tau_p"] = tau_p = np.pi * r_g / nPP
+        outputs["alpha_v"] = np.rad2deg(p2p0_angle) * 2.
         mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
         outputs["l_m"] = mag.length
         bs_taus = 0.5
