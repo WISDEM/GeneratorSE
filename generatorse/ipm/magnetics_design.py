@@ -27,9 +27,9 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("g", 0.0, units="m", desc="Air gap length")
         self.add_input("l_s", 0.0, units="m", desc="Stator core length ")
         #self.add_output("l_eff_stator", 0.0, units="m", desc="Effective Stator core length ")
-        self.add_input("b_t", 0.0, units="m", desc="Stator core length ")
-        #self.add_input("h_s", 0.0, units="m", desc="Stator core length ")
-        #self.add_input("h_t", 0.0, units="m", desc="tooth height ")
+        self.add_input("b_t", 0.0, units="m", desc="tooth width ")
+        self.add_input("h_s", 0.0, units="m", desc="Stator slot height")
+        self.add_input("b_s", 0.0, units="m", desc="slot width")
         self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
         #self.add_input("h_m", 0.0, units="m", desc="magnet height")
         #self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
@@ -108,6 +108,8 @@ class PMSG_active(om.ExplicitComponent):
         resistivity_Cu = float( inputs["resistivity_Cu"] )
         I_s = float( inputs["I_s"] )
         m = int( discrete_inputs["m"] )
+        h_s = float( inputs["h_s"] )
+        b_s = float( inputs["b_s"] )
 
         outputs["r_g"] = r_g = g + D_a * 0.5  # magnet radius
 
@@ -135,6 +137,8 @@ class PMSG_active(om.ExplicitComponent):
         # angular frequency in radians
         outputs["f"] = 2 * p1 * N_nom / 120  # outout frequency
         outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
+        
+        print (N_s, S)
 
         l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
 
@@ -147,16 +151,11 @@ class PMSG_active(om.ExplicitComponent):
         # Calculating stator resistance
 
         L_Cus = N_s * l_Cus
+        A_slot=h_s*b_s
 
-        outputs["R_s"] = R_s = (
-            resistivity_Cu
-            * (1 + 20 * 0.00393)
-            * (N_s)
-            * l_Cus
-            * J_s
-            * 1e6
-            / (I_s)
-        )
+        outputs["R_s"] = R_s = (resistivity_Cu* (1 + 20 * 0.00393)* (N_s)* l_Cus/(A_slot*0.65/N_c))
+        
+        print (outputs["R_s"])
 
         # Calculating Electromagnetically active mass
 

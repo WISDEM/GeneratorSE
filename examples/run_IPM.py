@@ -199,9 +199,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         # prob["b_t"]            = 0.26488789
         prob["p"]              = 70
         prob["g"]              = 0.0075153
-        prob["N_c"]            = 3.22798541 #6
+        prob["N_c"]            = 3 #3.22798541 #6
         prob["I_s"]            = 10566.22104108 # 3500
-        prob["h_m"]            = 0.015 #0.015
+        prob["h_m"]            = 0.020 #0.015
         prob["d_mag"]          = 0.03870702 #0.08
 
         prob["h_ys"]           = 0.025 # 0.05
@@ -449,7 +449,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     #cleanup_femm_files(mydir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False
     run_all("outputs17-mass", opt_flag, "mass", 17)
     #for k in ratings_known:
     #    for obj in ["cost", "mass"]:
