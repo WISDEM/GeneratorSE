@@ -151,10 +151,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("h_yr", lower=0.02, upper=0.2, ref=0.1)
     prob.model.add_design_var("h_m", lower=0.005, upper=0.05, ref=0.01)
     # prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("p", lower=70, upper=260, ref=100.0)
-    #prob.model.add_design_var("l_fe_ratio", lower=0.1, upper=0.9 )
+    prob.model.add_design_var("pp", lower=70, upper=260, ref=100.0)
     # prob.model.add_design_var("alpha_v",lower=60, upper=160, ref=100)
-    prob.model.add_design_var("N_c", lower=2, upper=32, ref=10)
+    prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
     prob.model.add_design_var("I_s",lower=2900, upper=8500, ref=5000)
     prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1)
     # prob.model.add_design_var("d_sep",lower=0.00, upper=0.020, ref=0.01)
@@ -197,16 +196,15 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["l_s"]            = 2. #2.5
         prob["h_t"]            = 0.28631632 #0.2
         # prob["b_t"]            = 0.26488789
-        prob["p"]              = 70
+        prob["pp"]             = 80
         prob["g"]              = 0.0075153
-        prob["N_c"]            = 3 #3.22798541 #6
+        prob["N_c"]            = 6. #3.22798541 #6
         prob["I_s"]            = 10566.22104108 # 3500
         prob["h_m"]            = 0.020 #0.015
         prob["d_mag"]          = 0.03870702 #0.08
 
         prob["h_ys"]           = 0.025 # 0.05
         prob["h_yr"]           = 0.025
-        # prob["l_fe_ratio"]     = 0.85
         prob["magnet_l_pc"]    = 1.0
         prob["J_s"]            = 6
         prob["phi"]            = 90
@@ -388,14 +386,13 @@ def write_all_data(prob, output_dir=None):
         ["Magnet distance from inner radius",     "d_mag",             float(prob.get_val("d_mag",units="mm")), "mm", "(50-250)"],
         # ["Bridge separation width",               "d_sep",             float(prob.get_val("d_sep",units="mm")), "mm", "(0-20)"],
         # ["Bridge separation width",               "m_sep",             float(prob.get_val("m_sep",units="mm")), "mm", "(5-10)"],
-        ["Pole:bridge ratio",                     "magnet_l_pc",             float(prob.get_val("magnet_l_pc")), "", "(0.7-1)"],
+        ["Pole:bridge ratio",                     "magnet_l_pc",       float(prob.get_val("magnet_l_pc")), "", "(0.7-1)"],
         ["V-angle",                               "alpha_v",           float(prob.get_val("alpha_v",units="deg")), "deg", "(60-160)"],
         #["Barrier distance",                      "w_fe",              float(prob.get_val("w_fe",units="mm")), "mm", ""],
-        # ["Barrier ratio",                         "l_fe_ratio",        float(prob.get_val("l_fe_ratio")), "", ""],
         ["Peak air gap flux density fundamental", "B_g",               float(prob.get_val("B_g",units="T")), "T", ""],
         ["Peak statorflux density",               "B_smax",            float(prob.get_val("B_smax",units="T")), "T", ""],
         ["Peak rotor yoke flux density",          "B_rymax",           float(prob.get_val("B_rymax",units="T")), "T", "<2.53"],
-        ["Pole pairs",                            "p1",                float(prob.get_val("p1")), "-", "(70-260)"],
+        ["Pole pairs",                            "pp",                float(prob.get_val("pp")), "-", "(70-260)"],
         ["Generator output frequency",            "f",                 float(prob.get_val("f",units="Hz")), "Hz", ""],
         ["Generator output phase voltage",        "E_p",               float(prob.get_val("E_p",units="V")), "V", ""],
         ["Terminal voltage target",               "E_p_target",        float(prob.get_val("E_p_target", units="V")), "Volts", ""],
@@ -430,13 +427,12 @@ def write_all_data(prob, output_dir=None):
 
     df = pd.DataFrame(raw_data, columns=["Parameters", "Symbol", "Values", "Units", "Limit"])
     df.to_excel(os.path.join(output_dir, f"Optimized_IPM_PMSG_{ratingMW}_MW.xlsx"))
-    #print(df)
 
 def run_all(output_str, opt_flag, obj_str, ratingMW):
     output_dir = os.path.join(mydir, output_str)
 
     # Optimize just magnetrics with GA and then structural with SLSQP
-    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=True)
+    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=False)
     prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag)
 
     # Bring all data together

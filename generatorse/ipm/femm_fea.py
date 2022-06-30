@@ -171,19 +171,18 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     sigma_t = abs(1 / (4 * np.pi * 1e-7) * force) / circ
     torque = np.pi / 2 * sigma_t * D_a**2 * l_s
     #torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
-    print(torque[0], torque[1], torque.mean())
+    #print(torque[0], torque[1], torque.mean())
     return torque.mean(), sigma_t.mean()
 
 
 class FEMM_Geometry(om.ExplicitComponent):
     def setup(self):
         # Inputs
-        self.add_input("p1", 0.0, desc="Number of pole pairs")
-        self.add_input("r_g", 0.0, units="m", desc="Air gap radius")
+        self.add_input("pp", 0.0, desc="Number of pole pairs")
+        self.add_input("g", 0.0, units="m", desc="Air gap length")
         self.add_input("D_a", 0.0, units="m", desc="Stator outer diameter")
         self.add_input("d_mag", 0.0, units="m", desc="Magnet distance from inner radius")
         self.add_input("l_s", 0.0, units="m", desc="Stack length ")
-        self.add_input("f", 0.0, units="Hz", desc="Frequency")
         self.add_input("h_m", 0.0, units="m", desc="Magnet height")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
@@ -193,12 +192,14 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical steel density")
         self.add_input("I_s", 0.0, units="A", desc="Stator current")
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
-        self.add_input("tau_s", 0.0, units="m", desc="Slot pitch")
         self.add_input('magnet_l_pc', 1.0, desc = "Length of magnet divided by max magnet length")
-
+        self.add_input("N_nom", 0.0, units="rpm", desc="Rated speed of the generator")
 
         # Outputs
-        self.add_output("b_s", 0.0, units="m", desc="Slot width")
+        self.add_output("f", 0.0, units="Hz", desc="Generator output frequency")
+        self.add_output("r_g", 0.0, units="m", desc="Air gap radius")
+        self.add_output("tau_s", 0.0, units="m", desc="Slot pitch")
+        self.add_output("b_s", 0.0, units="m", desc="Width of the armature coil slot in the stator")
         self.add_output("h_s", 0.0, units="m", desc="Stator tooth height")
         self.add_output("l_m", 0.0, units="m", desc="Magnet length")
         self.add_output("tau_p", 0.0, units="m", desc="Pole pitch")
@@ -222,10 +223,10 @@ class FEMM_Geometry(om.ExplicitComponent):
     def compute(self, inputs, outputs):
 
         # Inputs
-        nPP = float(inputs['p1']) # 200 # number pole pairs
-        r_g = float(inputs['r_g']) # 5.3 # air gap radius
-        D_a = float(inputs['D_a']) # 5.295 * 2. # stator outer diameter
-        h_m = float(inputs['h_m']) # 0.01
+        pp  = float(inputs['pp']) # number pole pairs
+        g = float(inputs['g']) # air gap length
+        D_a = float(inputs['D_a']) # stator outer diameter
+        h_m = float(inputs['h_m']) # height
         d_mag = float(inputs['d_mag']) # 0.04 # magnet distance from inner radius
         magnet_l_pc = float(inputs['magnet_l_pc']) # length of magnet divided by max magnet length
         # magnet_h_pc float(= 0.8 # height of magnet divided by max magnet height
@@ -236,18 +237,18 @@ class FEMM_Geometry(om.ExplicitComponent):
         h_t =  float(inputs['h_t']) # 0.27 # Stator tooth height
         l_s = float(inputs['l_s']) # 2.918 # stack length
         N_c = float(inputs['N_c']) # 3 # Number of turns per coil in series
-        f = float(inputs["f"])
         rho_Fe = float(inputs['rho_Fe'])
         I_s = float(inputs['I_s'])
-        tau_s = float(inputs['tau_s'])
+        N_nom = float( inputs["N_nom"] )
 
         # Preprocess inputs
-        alpha_p = np.pi / nPP # pole sector
+        alpha_p = np.pi / pp  # pole sector
         alpha_pr = 0.9 * alpha_p # pole sector reduced to 90%
         r_so = D_a / 2. # Outer radius of the stator
-        g = r_g - r_so # Air gap length
+        r_g = g + r_so # Air gap length
         r_si = r_so - (h_so + h_wo + h_t + h_ys) # Inner radius of the stator
-
+        # angular frequency in radians
+        f = 2 * pp * N_nom / 120  # outout frequency
 
         def rotate(xo, yo, xp, yp, angle):
             ## Rotate a point counterclockwise by a given angle around a given origin.
@@ -418,6 +419,11 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_addsegment(stator[2,0],stator[2,1],rotor[3,0],rotor[3,1])
 
         # Draw first magnet
+        # import matplotlib.pyplot as plt
+        # for i in range(len(magnet1[:,0])):
+        #     plt.plot(magnet1[i,0],magnet1[i,1], '*', label=str(i))
+        # plt.legend()
+        # plt.show()
         start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
         end_index = np.array([1,7,0,5,6,7,4,3,6,3,4], dtype=int)
         for i in range(len(start_index)):
@@ -628,14 +634,17 @@ class FEMM_Geometry(om.ExplicitComponent):
         Time = 60 / (f * 360)
         Theta_elec = (alpha_y * Time * 180 / np.pi) * 2 * np.pi * f
         outputs["r_mag_center"] = r_mag_center
-        outputs["tau_p"] = tau_p = np.pi * r_g / nPP
+        outputs["tau_p"] = tau_p = np.pi * r_g / pp 
         outputs["alpha_v"] = np.rad2deg(p2p0_angle) * 2.
         mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
         outputs["l_m"] = mag.length
-        bs_taus = 0.5
-        outputs["b_s"] = bs_taus * tau_s
-        outputs["h_s"] = h_s = h_t - h_so - h_wo
+        outputs["tau_s"] = alpha_pr * D_a / 2.
+        b_s = coil_slot1[-1,1] - coil_slot1[0,1]
+        outputs["b_s"] = b_s
+        outputs["h_s"] = h_t - h_so - h_wo
         outputs["r_outer_active"] = r_ro
+        outputs["r_g"] = r_g
+        outputs["f"] = f
         try:
             femm.mi_createmesh()
             femm.smartmesh(0)
@@ -649,14 +658,14 @@ class FEMM_Geometry(om.ExplicitComponent):
                 V_stator,
             ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_si, alpha_pr)
 
-            outputs["M_Fes"] = V_stator * 2 * rho_Fe * nPP / 10
+            outputs["M_Fes"] = V_stator * 2 * rho_Fe * pp  / 10
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * ((r_si+h_ys)**2 - r_si**2) * l_s * rho_Fe
-            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * nPP / 10
+            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * pp  / 10
             outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fer"]
             layer_1 = r_si + h_ys + h_t * 0.75
             layer_2 = r_si + h_ys + h_t * 0.25
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
-                Theta_elec, D_a, l_s, nPP, g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
+                Theta_elec, D_a, l_s, pp , g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
             )
 
         except Exception as e:

@@ -42,12 +42,6 @@ class PMSG_Cost(om.ExplicitComponent):
 
 class PMSG_Outer_rotor_Opt(om.Group):
     def setup(self):
-        # self.linear_solver = lbgs = om.LinearBlockJac()  # om.LinearBlockGS()
-        # self.nonlinear_solver = nlbgs = om.NonlinearBlockGS()
-        # nlbgs.options["maxiter"] = 3
-        # nlbgs.options["atol"] = 1e-2
-        # nlbgs.options["rtol"] = 1e-8
-        # nlbgs.options["iprint"] = 2
 
         ivcs = om.IndepVarComp()
 
@@ -58,30 +52,20 @@ class PMSG_Outer_rotor_Opt(om.Group):
         ivcs.add_output("D_a", 0.0, units="m", desc="Stator outer diameter")
         ivcs.add_output("l_s", 0.0, units="m", desc="Core length")
         ivcs.add_output("h_t", 0.0, units="m", desc="tooth height")
-        # ivcs.add_output("b_t", 0.0, units="m", desc="Stator core height")
         ivcs.add_output("b", 0.0, desc="Slot pole combination")
         ivcs.add_output("c", 0.0, desc="Slot pole combination")
         ivcs.add_output("h_s1", 0.010, desc="Slot Opening height")
         ivcs.add_output("h_s2", 0.010, desc="Wedge Opening height")
-        ivcs.add_output("p", 0.0, desc="Pole pairs")
+        ivcs.add_output("pp", 0.0, desc="Pole pairs")
         ivcs.add_output("g", 0.0, units="m", desc="air gap length")
         ivcs.add_output("I_s", 0.0, units="A", desc="Stator current")
         ivcs.add_output("N_c", 0.0, desc="Turns")
         ivcs.add_output("J_s", 0.0, units="A/mm**2", desc="Turns")
         ivcs.add_output("d_mag", 0.0, units="m", desc="nagnet distance from rotor inner radius")
-        # ivcs.add_output("d_sep", 0.0, units="m", desc="bridge separation distance")
         ivcs.add_output("h_m", 0.0, units="m", desc="magnet height")
-        # ivcs.add_output("alpha_v", 0.0, units="deg", desc="V-angle")
-        # ivcs.add_output("alpha_m", 0.5, desc="pole pair width")
         ivcs.add_output('magnet_l_pc', 0.0, desc='Length of magnet divided by max magnet length (slot length)' )
         ivcs.add_output("h_yr", 0.0, units="m", desc="Rotor yoke height")
         ivcs.add_output("h_ys", 0.0, units="m", desc="Stator yoke height")
-        #        ivcs.add_output('t_r', 0.0,units='m',desc='Rotor disc thickness')
-        #        ivcs.add_output('t_s', 0.0,units='m',desc='Stator disc thickness' )
-        #        ivcs.add_output('h_ss',0.0,units='m',desc='Stator rim thickness')
-        #        ivcs.add_output('h_sr', 0.0,units='m',desc='Rotor rim thickness')
-        #ivcs.add_output("w_fe", 0.0, units="m", desc="distance from air gap radius ") #unused
-        # ivcs.add_output("l_fe_ratio", 0.0, desc="bridge width ratio ")
         ivcs.add_output("m_sep", 0.0, units="m", desc="magnet distance from center ")
         ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Electrical steel density")
         ivcs.add_output("h_ew", 0.25, desc="??")
@@ -106,8 +90,8 @@ class PMSG_Outer_rotor_Opt(om.Group):
         ivcs.add_output("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
 
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
-        self.add_subsystem("sys", md.PMSG_active(), promotes=["*"])
         self.add_subsystem("geom", FEMM_Geometry(), promotes=["*"])
+        self.add_subsystem("sys", md.PMSG_active(), promotes=["*"])
         self.add_subsystem("results", md.Results(), promotes=["*"])
         self.add_subsystem("struct", PMSG_Outer_Rotor_Structural(), promotes=["*"])
         self.add_subsystem("cost", PMSG_Cost(), promotes=["*"])

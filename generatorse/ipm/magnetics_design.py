@@ -24,69 +24,34 @@ class PMSG_active(om.ExplicitComponent):
     def setup(self):
 
         self.add_input("D_a", 0.0, units="m", desc="Stator diameter ")
-        self.add_input("g", 0.0, units="m", desc="Air gap length")
+        self.add_input("r_g", 0.0, units="m", desc="Air gap radius")
         self.add_input("l_s", 0.0, units="m", desc="Stator core length ")
         #self.add_output("l_eff_stator", 0.0, units="m", desc="Effective Stator core length ")
         self.add_input("b_t", 0.0, units="m", desc="tooth width ")
         self.add_input("h_s", 0.0, units="m", desc="Stator slot height")
         self.add_input("b_s", 0.0, units="m", desc="slot width")
-        self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
-        #self.add_input("h_m", 0.0, units="m", desc="magnet height")
-        #self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
-        #self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
+        self.add_input("pp", 0.0, desc="Number of pole pairs")
         self.add_input("J_s", 0.0, units="A/(mm*mm)", desc="Stator winding current density")
-        self.add_input("N_c", 0.0, desc="Number of turns per coil")
-        self.add_output("N_s", 0.0, desc="Number of turns per coil")
+        self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
+        self.add_input("tau_s", 0.0, units="m", desc="slot pitch")
         self.add_input("b", 0.0, desc="Slot pole combination")
         self.add_input("c", 0.0, desc="Slot pole combination")
-        self.add_input("p", 0.0, desc="Pole pairs ")
-        self.add_output("p1", 0.0, desc="Pole pairs ")
-        self.add_output("r_g", 0.0, units="m", desc="air gap radius ")
-        self.add_output("k_w", 0.0, desc="winding factor ")
-
         # Material properties
         self.add_input("rho_Copper", 0.0, units="kg/(m**3)", desc="Copper density")
         self.add_input("resistivity_Cu", 0.0, units="ohm*m", desc="Copper resistivity ")
-
-        # PMSG_structrual inputs
-        #self.add_input("h_sr", 0.0, units="m", desc="Structural Mass")
-
-        # Magnetic loading
-        #self.add_input("M_Fes", 0.0, units="kg", desc="mstator iron mass ")
-        #self.add_input("M_Fer", 0.0, units="kg", desc="rotor iron mass ")
-
-        #self.add_input("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
-        #self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density ")
-        #self.add_input("tau_p", 0.0, units="m", desc="Pole pitch")
-        self.add_output("tau_s", 0.0, units="m", desc="slot pitch")
-
-        # Stator design
-        self.add_output("A_Cuscalc", 0.0, units="mm**2", desc="Conductor cross-section")
-
-        # Electrical performance
-
-        self.add_output("f", 0.0, units="Hz", desc="Generator output frequency")
         self.add_input("I_s", 0.0, units="A", desc="Generator input phase current")
-        self.add_output("R_s", 0.0, units="ohm", desc="Stator resistance")
-        #self.add_output("J_actual", 0.0, units="A/m**2", desc="Current density")
-
         self.add_discrete_input("m", 3, desc=" no of phases")
-        #self.add_input("k_sfil", 0.65, desc="slot fill factor")
-        #self.add_input("mu_0", 4 * np.pi / 1e7, desc="premeability of free space")
-
-        # Objective functions
+        
+        
+        # Outputs
+        self.add_output("k_w", 0.0, desc="winding factor ")
+        self.add_output("N_s", 0.0, desc="Number of turns per coil")
+        self.add_output("A_Cuscalc", 0.0, units="mm**2", desc="Conductor cross-section")
+        self.add_output("R_s", 0.0, units="ohm", desc="Stator resistance")
         self.add_output("K_rad", desc="Aspect ratio")
-        #self.add_output("Test", 0.0, units="m", desc="GCD ")
         self.add_output("P_Cu", 0, units="W", desc="Copper losses")
-
-        # Other parameters
-        #self.add_output("R_out", 0.0, units="m", desc="Outer radius")
         self.add_output("S", 0.0, desc="Stator slots")
-
-        # Mass Outputs
         self.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
-
-        #self.add_output("I", np.zeros(3), units="kg*m**2", desc="Moment of inertia")
 
         self.declare_partials("*", "*", method="fd")
 
@@ -94,82 +59,41 @@ class PMSG_active(om.ExplicitComponent):
 
         ###################################################### Electromagnetic design#############################################
         # Unpack inputs
-        D_a = float( inputs["D_a"] )
-        g = float( inputs["g"] )
         l_s = float( inputs["l_s"] )
         b_t = float( inputs["b_t"] )
-        N_nom = float( inputs["N_nom"] )
         J_s = float( inputs["J_s"] )
         N_c = float( inputs["N_c"] )
         b = float( inputs["b"] )
         c = float( inputs["c"] )
-        p = float( inputs["p"] )
         rho_Copper = float( inputs["rho_Copper"] )
         resistivity_Cu = float( inputs["resistivity_Cu"] )
         I_s = float( inputs["I_s"] )
         m = int( discrete_inputs["m"] )
         h_s = float( inputs["h_s"] )
         b_s = float( inputs["b_s"] )
+        tau_s = float(inputs["tau_s"])
+        r_g = float(inputs["r_g"])
+        pp = float(inputs["pp"])
 
-        outputs["r_g"] = r_g = g + D_a * 0.5  # magnet radius
 
+        # Computations
         outputs["K_rad"] = l_s / (2 * r_g)  # Aspect ratio
-
-        #b_so = 2 * g  # Slot opening
-
-        outputs["p1"] = p1 = p #np.ceil(p / 5.0) * 5
-        theta_p_d = 180.0 / p1
-        theta_p_r = np.deg2rad(theta_p_d)
-        outputs["tau_s"] = tau_s = theta_p_r * 5 / 6 * D_a / 2
-        
-        # pole pitch
-
-        # Calculating winding factor
-
         Slot_pole = b / c
-
-        outputs["S"] = S = Slot_pole * 2 * p1 * m
-
+        outputs["S"] = Slot_pole * 2 * pp * m
         outputs["k_w"] = 0.933
-
-        #om_e = 2 * np.pi * N_nom / 60 * p1
-
-        # angular frequency in radians
-        outputs["f"] = 2 * p1 * N_nom / 120  # outout frequency
-        outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
-        
-        print (N_s, S)
-
+        outputs["N_s"] = N_s = N_c*(pp*b/c)  # Stator turns per phase
+        # outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
         l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
-
         outputs["A_Cuscalc"] = A_Cuscalc = I_s / J_s
-
-        #A_slot = 2 * N_c * A_Cuscalc * (10**-6) / k_sfil
-
-        #N_coil = 2 * S
-
         # Calculating stator resistance
-
         L_Cus = N_s * l_Cus
-        A_slot=h_s*b_s
-
+        A_slot=h_s*b_s*0.5
         outputs["R_s"] = R_s = (resistivity_Cu* (1 + 20 * 0.00393)* (N_s)* l_Cus/(A_slot*0.65/N_c))
-        
-        print (outputs["R_s"])
-
         # Calculating Electromagnetically active mass
-
         V_Cus = m * L_Cus * (A_Cuscalc * (10**-6))  # copper volume
-
         outputs["Copper"] = V_Cus * rho_Copper
-
-        #h_ew = 0.25
-
         # Calculating Losses
-        ##1. Copper Losses
-
-        K_R = 1.0  # Skin effect correction co-efficient
-
+        K_R = 1.0  # Skin effect correction coefficient
         outputs["P_Cu"] = m * (I_s / 2**0.5) ** 2 * R_s * K_R
 
 
@@ -181,7 +105,7 @@ class Results(om.ExplicitComponent):
         self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
         self.add_input("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_input("P_rated", units="W", desc="Machine rating")
-        self.add_input("p1", 0.0, desc="pole pairs")
+        self.add_input("pp", 0.0, desc="pole pairs")
         self.add_input("P_Cu", units="W", desc="Copper losses")
         self.add_output("P_Ftm", units="W", desc="magnet losses")
         self.add_output("P_Fe", units="W", desc="Iron losses")
@@ -221,7 +145,7 @@ class Results(om.ExplicitComponent):
         T_rated = float( inputs["T_rated"] )
         T_e = float( inputs["T_e"] )
         P_rated = float( inputs["P_rated"] )
-        p1 = float( inputs["p1"] )
+        pp = float( inputs["pp"] )
         P_Cu = float( inputs["P_Cu"] )
         l_s = float( inputs["l_s"] )
         D_a = float( inputs["D_a"] )
@@ -236,21 +160,20 @@ class Results(om.ExplicitComponent):
         P_Fe0h = float( inputs["P_Fe0h"] )
         P_Fe0e = float( inputs["P_Fe0e"] )
         k_w = float( inputs["k_w"] )
-        
+
         # Calculating  voltage per phase
         om_m = 2 * np.pi * N_nom / 60
 
-        om_e = 2 * p1 * N_nom / 120
+        om_e = 2 * pp * N_nom / 120
         outputs["E_p"] = E_p = l_s * (D_a * 0.5 * k_w * B_g * om_m * N_s) * np.sqrt(3 / 2)
-
         outputs["torque_ratio"] = T_e / T_rated
         outputs["E_p_ratio"] = E_p / E_p_target
 
-        outputs["mass_PM"] = 4 * p1 * l_m * h_m * l_s * rho_PM
+        outputs["mass_PM"] = 4 * pp * l_m * h_m * l_s * rho_PM
 
         # specific magnet loss
-        pFtm = 300  
-        outputs["P_Ftm"] = P_Ftm = pFtm * 2 * p1 * l_m * l_s
+        pFtm = 300
+        outputs["P_Ftm"] = P_Ftm = pFtm * 2 * pp * l_m * l_s
 
         # Iron Losses ( from Hysteresis and eddy currents)
         # Hysteresis losses in stator
