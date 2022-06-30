@@ -81,14 +81,21 @@ class PMSG_active(om.ExplicitComponent):
         Slot_pole = b / c
         outputs["S"] = Slot_pole * 2 * pp * m
         outputs["k_w"] = 0.933
-        outputs["N_s"] = N_s = N_c*(pp*b/c)  # Stator turns per phase
+        outputs["N_s"] = N_s = N_c*(pp*b/c)*2  # Stator turns per phase
         # outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
         l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
+        
+
         outputs["A_Cuscalc"] = A_Cuscalc = I_s / J_s
         # Calculating stator resistance
         L_Cus = N_s * l_Cus
-        A_slot=h_s*b_s*0.5
+        A_slot=h_s*b_s
+        
+        print (l_Cus, A_slot)
+        
         outputs["R_s"] = R_s = (resistivity_Cu* (1 + 20 * 0.00393)* (N_s)* l_Cus/(A_slot*0.65/N_c))
+        
+        print (N_s,R_s)
         # Calculating Electromagnetically active mass
         V_Cus = m * L_Cus * (A_Cuscalc * (10**-6))  # copper volume
         outputs["Copper"] = V_Cus * rho_Copper

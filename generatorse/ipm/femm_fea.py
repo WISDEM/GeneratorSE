@@ -171,7 +171,7 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     sigma_t = abs(1 / (4 * np.pi * 1e-7) * force) / circ
     torque = np.pi / 2 * sigma_t * D_a**2 * l_s
     #torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
-    #print(torque[0], torque[1], torque.mean())
+    print(torque[0], torque[1], torque.mean())
     return torque.mean(), sigma_t.mean()
 
 
