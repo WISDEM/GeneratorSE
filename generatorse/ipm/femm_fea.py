@@ -11,16 +11,9 @@ import openmdao.api as om
 from sympy import Point, Line, Segment, Polygon
 from sympy.geometry.util import centroid
 #import random
-import os
-import platform
+from generatorse.common.femm_util import myopen, cleanup_femm_files
 
-def myopen():
-    if platform.system().lower() == 'windows':
-        femm.openfemm(1)
-    else:
-        femm.openfemm(winepath=os.environ["WINEPATH"], femmpath=os.environ["FEMMPATH"])
-    femm.smartmesh(0)
-
+mu0 = 4 * np.pi * 1e-7
 
 def bad_inputs(outputs):
     #print("Bad inputs for geometry")
@@ -40,40 +33,60 @@ def bad_inputs(outputs):
 def run_post_process(D_a, g, r_outer, h_yr, h_ys, r_inner, theta_p_r):
 
     theta_p_d = np.rad2deg(theta_p_r)
+    r_a = 0.5 * D_a
     femm.mi_loadsolution()
-    femm.mo_smooth("off")
+    #femm.mo_smooth("off")
 
     femm.mo_selectblock(
         (r_inner + h_ys * 0.5) * np.cos(theta_p_r * 2.5),
         (r_inner + h_ys * 0.5) * np.sin(theta_p_r * 2.5),
     )
-
     V_stator = femm.mo_blockintegral(10)
     femm.mo_clearblock()
+
+    # Approximate peak field
+    def get_B_max(r1, r2):
+        B_max = 0.0
+        for k in np.linspace(r1, r2, 10):
+            femm.mo_addcontour(k * np.cos(0), k * np.sin(0))
+            femm.mo_addcontour(k * np.cos(5*theta_p_r), k * np.sin(5*theta_p_r))
+            femm.mo_bendcontour(theta_p_d, 0.25)
+            femm.mo_makeplot(1, 1000, "B_mag.csv", 1)
+            femm.mo_clearcontour()
+            B_mag = np.loadtxt("B_mag.csv")
+            B_max = np.maximum(B_max, B_mag.max())
+        return B_max
+
+    B_rymax = get_B_max(r_inner, r_a)
+    B_symax = get_B_max(r_a+g, r_outer)
+
+    '''
     sy_area = []
     ry_area = []
     numelm2 = femm.mo_numelements()
     for r in range(1, numelm2):
         p3, p4, p5, x1, y1, a1, g1 = femm.mo_getelement(r)
         mag = np.sqrt(x1**2 + y1**2)
-        if mag <= D_a / 2:
+        if mag <= r_a:
             a = femm.mo_getb(x1, y1)
             sy_area.append(np.sqrt(a[0] ** 2 + a[1] ** 2))
-        elif mag >= (D_a / 2 + g):
+        elif mag >= (r_a + g):
             b = femm.mo_getb(x1, y1)
             ry_area.append(np.sqrt(b[0] ** 2 + b[1] ** 2))
 
-    B_symax = max(sy_area)
-    B_rymax = max(ry_area)
+    B_symax2 = max(sy_area)
+    B_rymax2 = max(ry_area)
+    print(B_symax, B_symax2)
+    print(B_rymax, B_rymax2)
+    '''
 
-    femm.mo_addcontour((D_a / 2 + g * 0.5) * np.cos(0), (D_a / 2 + g * 0.5) * np.sin(0))
-    femm.mo_addcontour((D_a / 2 + g * 0.5) * np.cos(theta_p_r * 5), (D_a / 2 + g * 0.5) * np.sin(theta_p_r * 5))
+    femm.mo_addcontour((r_a + g * 0.5) * np.cos(0), (r_a + g * 0.5) * np.sin(0))
+    femm.mo_addcontour((r_a + g * 0.5) * np.cos(theta_p_r * 5), (r_a + g * 0.5) * np.sin(theta_p_r * 5))
     femm.mo_bendcontour(theta_p_d * 5, 1)
     femm.mo_makeplot(1, 1000, "gap.csv", 1)
-    femm.mo_makeplot(2, 100, "B_r.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t.csv", 1)
+    femm.mo_makeplot(2, 1000, "B_r.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t.csv", 1)
     femm.mo_clearcontour()
-    # #
     femm.mo_selectblock(
         (r_outer - h_yr * 0.5) * np.cos(theta_p_r * 2.5),
         (r_outer - h_yr * 0.5) * np.sin(theta_p_r * 2.5),
@@ -85,10 +98,8 @@ def run_post_process(D_a, g, r_outer, h_yr, h_ys, r_inner, theta_p_r):
     B_t_normal = np.loadtxt("B_t.csv")
 
     circ = B_r_normal[-1, 0]
-    delta_L = np.diff(B_r_normal[:, 0])[0]
-
-    force = np.sum((B_r_normal[:, 1]) ** 2 - (B_t_normal[:, 1]) ** 2) * delta_L
-    sigma_n = abs(1 / (8 * np.pi * 1e-7) * force) / circ
+    force = np.trapz(B_r_normal[:, 1] ** 2 - B_t_normal[:, 1] ** 2, B_r_normal[:, 0])
+    sigma_n = abs(force / (2*mu0)) / circ
 
     return B_g_peak, B_rymax, B_symax, sigma_n, V_rotor, V_stator
 
@@ -96,9 +107,10 @@ def run_post_process(D_a, g, r_outer, h_yr, h_ys, r_inner, theta_p_r):
 def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, layer_2, N_c, tau_p):
 
     theta_p_d = np.rad2deg(theta_p_r)
+    r_a = 0.5 * D_a
 
-    myopen()
-    femm.opendocument("IPM_new.fem")
+    #myopen()
+    #femm.opendocument("IPM_new.fem")
     femm.mi_modifycircprop("A+", 1, I_s * np.sin(2 * np.pi / 3))
     femm.mi_modifycircprop("B+", 1, I_s * np.sin(0 * np.pi / 3))
     femm.mi_modifycircprop("C+", 1, I_s * np.sin(4 * np.pi / 3))
@@ -107,20 +119,22 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     femm.mi_modifycircprop("C-", 1, -I_s * np.sin(4 * np.pi / 3))
 
     femm.mi_saveas("IPM_new_I1.fem")
-    femm.smartmesh(0)
-    femm.mi_createmesh()
     femm.mi_analyze()
     femm.mi_loadsolution()
 
-    femm.mo_addcontour((D_a / 2 + g * 0.5) * np.cos(0), (D_a / 2 + g * 0.5) * np.sin(0))
-    femm.mo_addcontour((D_a / 2 + g * 0.5) * np.cos(theta_p_r * 5), (D_a / 2 + g * 0.5) * np.sin(theta_p_r * 5))
+    femm.mo_addcontour((r_a + g * 0.5) * np.cos(0), (r_a + g * 0.5) * np.sin(0))
+    femm.mo_addcontour((r_a + g * 0.5) * np.cos(theta_p_r * 5), (r_a + g * 0.5) * np.sin(theta_p_r * 5))
     femm.mo_bendcontour(theta_p_d * 5, 1)
-    femm.mo_makeplot(2, 100, "B_r_1.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_1.csv", 1)
+    femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
     femm.mo_clearcontour()
     femm.mo_close()
-    myopen()
-    femm.opendocument("IPM_new_I1.fem")
+    B_r_1 = np.loadtxt("B_r_1.csv")
+    B_t_1 = np.loadtxt("B_t_1.csv")
+
+    '''
+    #myopen()
+    #femm.opendocument("IPM_new_I1.fem")
 
     Phases1 = ["A+", "B+", "B-", "C-", "C+", "A+"]
     Phases2 = ["B-", "B+", "C+", "C-", "A-", "A+"]
@@ -149,27 +163,28 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     femm.mi_modifycircprop("C-", 1, -I_s * np.sin(Theta_elec + 4 * np.pi / 3))
 
     femm.mi_saveas("IPM_new_I2.fem")
-    femm.smartmesh(0)
     femm.mi_analyze()
     femm.mi_loadsolution()
-    femm.mo_addcontour((D_a / 2 + g * 0.5) * np.cos(0), (D_a / 2 + g * 0.5) * np.sin(0))
-    femm.mo_addcontour((D_a / 2 + g * 0.5) * np.cos(theta_p_r * 5), (D_a / 2 + g * 0.5) * np.sin(theta_p_r * 5))
+    femm.mo_addcontour((r_a + g * 0.5) * np.cos(0), (r_a + g * 0.5) * np.sin(0))
+    femm.mo_addcontour((r_a + g * 0.5) * np.cos(theta_p_r * 5), (r_a + g * 0.5) * np.sin(theta_p_r * 5))
     femm.mo_bendcontour(theta_p_d * 5, 1)
-    femm.mo_makeplot(2, 100, "B_r_2.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_2.csv", 1)
+    femm.mo_makeplot(2, 1000, "B_r_2.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_2.csv", 1)
     femm.mo_clearcontour()
     femm.mo_close()
-
-    B_r_1 = np.loadtxt("B_r_1.csv")
-    B_t_1 = np.loadtxt("B_t_1.csv")
     B_r_2 = np.loadtxt("B_r_2.csv")
     B_t_2 = np.loadtxt("B_t_2.csv")
-    delta_L = np.diff(B_r_1[:, 0])[0]
-    circ = B_r_1[-1, 0]
+    '''
+    B_r_2 = B_r_1
+    B_t_2 = B_t_1
 
-    force = np.array([np.sum(B_r_1[:, 1] * B_t_1[:, 1]), np.sum(B_r_2[:, 1] * B_t_2[:, 1])]) * delta_L
-    sigma_t = abs(1 / (4 * np.pi * 1e-7) * force) / circ
-    torque = np.pi / 2 * sigma_t * D_a**2 * l_s
+    circ = B_r_1[-1, 0]
+    force = np.array(
+        [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
+    )
+    sigma_t = abs(force / mu0) / circ
+    torque = 0.5 * np.pi * sigma_t * D_a**2 * l_s
+
     #torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
     #print(torque[0], torque[1], torque.mean())
     return torque.mean(), sigma_t.mean()
@@ -266,8 +281,10 @@ class FEMM_Geometry(om.ExplicitComponent):
         theta_p_d = 180.0 / p1
         theta_p_r = np.deg2rad(theta_p_d)
         #print(theta_p_d, theta_p_r)
-        r_a = 0.5*D_a
+        r_a = 0.5 * D_a
         b_so = 2 * g
+        r_yoke_stator = r_a - h_t
+        r_inner = r_yoke_stator - h_ys
 
         outputs["tau_p"] = tau_p = np.pi * r_g / p1
 
@@ -854,12 +871,12 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_clearselected()
 
         femm.mi_addblocklabel(
-            (D_a / 2 + (r_g - D_a / 2) * 0.5) * np.cos(theta_p_r * 2.5),
-            (D_a / 2 + (r_g - D_a / 2) * 0.5) * np.sin(theta_p_r * 2.5),
+            (r_a + (r_g - r_a) * 0.5) * np.cos(theta_p_r * 2.5),
+            (r_a + (r_g - r_a) * 0.5) * np.sin(theta_p_r * 2.5),
         )
         femm.mi_selectlabel(
-            (D_a / 2 + (r_g - D_a / 2) * 0.5) * np.cos(theta_p_r * 2.5),
-            (D_a / 2 + (r_g - D_a / 2) * 0.5) * np.sin(theta_p_r * 2.5),
+            (r_a + (r_g - r_a) * 0.5) * np.cos(theta_p_r * 2.5),
+            (r_a + (r_g - r_a) * 0.5) * np.sin(theta_p_r * 2.5),
         )
         femm.mi_setblockprop("Air")
         femm.mi_clearselected()
@@ -908,11 +925,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_saveas("IPM_new.fem")
         Time = 60 / (f * 360)
         Theta_elec = (theta_tau_s * Time * 180 / np.pi) * 2 * np.pi * f
-        r_yoke_stator = r_a - h_t
-        r_inner = r_a - h_t - h_ys
         try:
-            femm.mi_createmesh()
-            femm.smartmesh(0)
             femm.mi_analyze()
             (
                 outputs["B_g"],
@@ -955,3 +968,6 @@ class FEMM_Geometry(om.ExplicitComponent):
             #)
             outputs = bad_inputs(outputs)
             raise(e)
+            
+        femm.closefemm()
+        
