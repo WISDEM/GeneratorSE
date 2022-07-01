@@ -28,7 +28,7 @@ class PMSG_active(om.ExplicitComponent):
         self.add_input("N_c", 0.0, desc="turns per coil")
         self.add_input("b_s_tau_s", 0.45, desc="ratio of Slot width to slot pitch ")
         #self.add_input("B_r", 0, units="T", desc="Tesla remnant flux density")
-        self.add_input("ratio", 0.00, desc="ratio of magnet width to pole pitch(bm/self.tau_p")
+        self.add_input("ratio", 0.00, desc="ratio of magnet width to pole pitch")
         #self.add_input("mu_0", np.pi * 4e-7, desc="permeability of free space")
         #self.add_input("mu_r", 0.0, desc="relative permeability ")
         self.add_input("k_sfil", 0.65, desc="slot fill factor")
@@ -114,7 +114,6 @@ class PMSG_active(om.ExplicitComponent):
         rho_Copper = inputs["rho_Copper"]
 
         #mu_0 = inputs["mu_0"]
-        ratio = inputs["ratio"]
         #mu_r = inputs["mu_r"]
         #cofi = inputs["cofi"]
         #h_s1 = float(inputs["h_s1"])
@@ -200,7 +199,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_input("h_ys", 0.0, units="m", desc="Yoke height")
         self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
         self.add_input("N_s", 0.0, desc="turns per phase")
-        self.add_output("L_s", 0.0, units="m", desc="Stator synchronising inductance")
+        #self.add_output("L_s", 0.0, units="m", desc="Stator synchronising inductance")
         self.add_input("B_r", 0.0, units="T", desc="Tesla remnant flux density")
         self.add_input("mu_0", np.pi * 4 * 1e-7, desc="permeability of free space")
         self.add_input("mu_r", 0.0, desc="relative permeability ")
@@ -225,7 +224,6 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_output("B_symax", 0.0, units="T", desc="Peak Stator Yoke flux density B_ymax")
         self.add_output("B_tmax", 0.0, units="T", desc="Peak Teeth flux density")
         self.add_output("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
-        self.add_output("B_smax", 0.0, units="T", desc="Peak Stator flux density")
         self.add_output("B_pm1", 0.0, units="T", desc="Fundamental component of peak air gap flux density")
         self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density B_g")
 
@@ -326,7 +324,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         # tooth tip leakage inductance#tooth tip leakage inductance
         L_ssigmag = 2 * mu_0 * l_s * N_s**2 / p / q1 * (5 * (g * k_C / b_so) / (5 + 4 * (g * k_C / b_so)))
         L_ssigma = L_ssigmas + L_ssigmaew + L_ssigmag
-        outputs["L_s"] = L_m + L_ssigma
+        L_s = L_m + L_ssigma
         #X_snom = om_e * (L_m + L_ssigma)
 
         # Calculating magnetic loading
