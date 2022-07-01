@@ -2,6 +2,8 @@ import openmdao.api as om
 from generatorse.ms_pmsg.ms_pmsg import PMSG_Inner_rotor_Opt
 from generatorse.ms_pmsg.structural import PMSG_Inner_Rotor_Structural
 from generatorse.driver.nlopt_driver import NLoptDriver
+from generatorse.common.femm_util import cleanup_femm_files
+from generatorse.common.run_util import copy_data, load_data, save_data
 import os
 import pandas as pd
 import numpy as np
@@ -28,92 +30,6 @@ target_eff = 0.97
 fsql = "log.sql"
 
 mydir = os.path.dirname(os.path.realpath(__file__))  # get path to this file
-
-def cleanup_femm_files(clean_dir):
-    files = os.listdir(clean_dir)
-    for file in files:
-        if file.endswith(".ans") or file.endswith(".fem") or file.endswith(".csv"):
-            os.remove(os.path.join(clean_dir, file))
-
-def copy_data(prob_in, prob_out):
-
-    # Get all OpenMDAO inputs and outputs into a dictionary
-    def create_dict(prob):
-        dict_omdao = prob.model.list_inputs(val=True, hierarchical=False, prom_name=True, units=False, desc=False, out_stream=None)
-        temp = prob.model.list_outputs(val=True, hierarchical=False, prom_name=True, units=False, desc=False, out_stream=None)
-        dict_omdao.extend(temp)
-        my_dict = {}
-        for k in range(len(dict_omdao)):
-            my_dict[ dict_omdao[k][1]["prom_name"] ] = dict_omdao[k][1]["val"]
-
-        return my_dict
-
-    in_dict = create_dict(prob_in)
-    out_dict = create_dict(prob_out)
-
-    for k in in_dict:
-        if k in out_dict:
-            prob_out[k] = in_dict[k]
-
-    return prob_out
-
-def save_data(fname, prob):
-    # Remove file extension
-    froot = os.path.splitext(fname)[0]
-
-    # Get all OpenMDAO inputs and outputs into a dictionary
-    var_dict = prob.model.list_inputs(prom_name=True, units=True, desc=True, out_stream=None)
-    out_dict = prob.model.list_outputs(prom_name=True, units=True, desc=True, out_stream=None)
-    var_dict.extend(out_dict)
-
-    data = {}
-    data["variables"] = []
-    data["units"] = []
-    data["values"] = []
-    data["description"] = []
-    for k in range(len(var_dict)):
-        unit_str = var_dict[k][1]["units"]
-        if unit_str is None:
-            unit_str = ""
-
-        iname = var_dict[k][1]["prom_name"]
-        if iname in data["variables"]:
-            continue
-
-        data["variables"].append(iname)
-        data["units"].append(unit_str)
-        data["values"].append(var_dict[k][1]["val"])
-        data["description"].append(var_dict[k][1]["desc"])
-    df = pd.DataFrame(data)
-    #df.to_excel(froot + ".xlsx", index=False)
-    df.to_csv(froot + ".csv", index=False)
-
-def load_data(fname, prob):
-    # Remove file extension
-    fname = os.path.splitext(fname)[0] + ".csv"
-
-    if os.path.exists(fname):
-        df = pd.read_csv(fname)
-
-        for k in range(len(df.index)):
-            key = df["variables"].iloc[k]
-            if key.find("field_coil") >= 0: continue
-            units = str(df["units"].iloc[k])
-            val_str = df["values"].iloc[k]
-            val_str_clean = val_str.replace("[","").replace("]","").strip().replace(" ", ", ")
-            try:
-                #print("TRY",key, val_str, val_str_clean)
-                val = np.fromstring(val_str_clean, sep=",")
-                if units.lower() in ["nan","unavailable"]:
-                    prob.set_val(key, val)
-                else:
-                    prob.set_val(key, val, units=units)
-            except:
-                print("FAIL", key, val_str, val_str_clean)
-                #breakpoint()
-                continue
-
-    return prob
 
 def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, opt_flag=False, restart_flag=True, femm_flag=False, obj_str="cost", ratingMW=17):
     if output_dir is None:
@@ -160,7 +76,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("N_c", lower=2, upper=12)
     prob.model.add_design_var("h_m", lower=0.005, upper=0.025, ref=0.01)
     prob.model.add_design_var("I_s", lower=500, upper=5000, ref=1e3)
-    prob.model.add_design_var("ratio", lower=0.05, upper=0.5)
+    prob.model.add_design_var("ratio", lower=0.7, upper=0.85)
     prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
     prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
     prob.model.add_constraint("gen_eff", lower=0.96)
@@ -236,7 +152,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["phi"] = 90
         prob["q1"] = 1  # slots per pole per phase
         prob["r_g"] = 1.0
-        prob["ratio"]= 0.2
+        prob["ratio"]= 0.7
         
         prob["t_s"] = 0.02
         prob["t_wr"] = 0.02
@@ -551,7 +467,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
     # Optimize just magnetrics with GA and then structural with SLSQP
     prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=True, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=True, femm_flag=False)
-    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), prob_in=prob, femm_flag=True)
+    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), prob_in=prob, femm_flag=True, cleanup_flag=False)
     prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag)
 
     # Bring all data together
@@ -571,7 +487,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     #prob.model.list_inputs(val=True, hierarchical=True, units=True, desc=True)
     #prob.model.list_outputs(val=True, hierarchical=True)
     write_all_data(prob, output_dir=output_dir)
-    cleanup_femm_files(mydir)
+    #cleanup_femm_files(mydir)
 
 if __name__ == "__main__":
     opt_flag = False #True
