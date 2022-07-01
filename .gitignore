@@ -135,6 +135,7 @@ dmypy.json
 *.fem
 *.ans
 *.html
+*.png
 
 # Emacs
 *~
