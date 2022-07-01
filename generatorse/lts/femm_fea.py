@@ -7,15 +7,9 @@ Created on Fri Dec 31 12:28:24 2021
 import femm
 import numpy as np
 import openmdao.api as om
-import os
-import platform
+from generatorse.common.femm_util import myopen, cleanup_femm_files
 
-def myopen():
-    if platform.system().lower() == 'windows':
-        femm.openfemm(1)
-    else:
-        femm.openfemm(winepath=os.environ["WINEPATH"], femmpath=os.environ["FEMMPATH"])
-    femm.smartmesh(0)
+mu0 = 4 * np.pi * 1e-7
 
 def bad_inputs(outputs):
     outputs["B_g"] = 7
@@ -26,57 +20,35 @@ def bad_inputs(outputs):
     outputs["Sigma_normal"] = 1.0e3  # 200000
     return outputs
 
-def cleanup_femm_files():
-    clean_dir = os.getcwd()
-    files = os.listdir(clean_dir)
-    for file in files:
-        if file.endswith(".ans") or file.endswith(".fem") or file.endswith(".csv"):
-            os.remove(os.path.join(clean_dir, file))
-
 
 def run_post_process(D_a, radius_sc, h_sc, slot_radius, theta_p_r, alpha_r, beta_r, n):
     # After looking at the femm results, this function post-processes them, no electrical load condition
-
+    R_a = 0.5 * D_a
     theta_p_d = np.rad2deg(theta_p_r)
 
     femm.mo_addcontour(
-        (D_a / 2 + (radius_sc - D_a / 2) * 0.5) * np.cos(0), (D_a / 2 + (radius_sc - D_a / 2) * 0.5) * np.sin(0)
+        (R_a + (radius_sc - R_a) * 0.5) * np.cos(0), (R_a + (radius_sc - R_a) * 0.5) * np.sin(0)
     )
     femm.mo_addcontour(
-        (D_a / 2 + (radius_sc - D_a / 2) * 0.5) * np.cos(theta_p_r),
-        (D_a / 2 + (radius_sc - D_a / 2) * 0.5) * np.sin(theta_p_r),
+        (R_a + (radius_sc - R_a) * 0.5) * np.cos(theta_p_r),
+        (R_a + (radius_sc - R_a) * 0.5) * np.sin(theta_p_r),
     )
     femm.mo_bendcontour(theta_p_d, 0.25)
     femm.mo_makeplot(1, 1500, "gap_" + str(n) + ".csv", 1)
-    femm.mo_makeplot(2, 100, "B_r_normal" + str(n) + ".csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_normal" + str(n) + ".csv", 1)
-    # temp_force = femm.mo_lineintegral(3)
-    # temp_torque = femm.mo_lineintegral(4)
+    femm.mo_makeplot(2, 1000, "B_r_normal" + str(n) + ".csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_normal" + str(n) + ".csv", 1)
     femm.mo_clearcontour()
 
-    #        femm.mo_addcontour((radius_sc)*np.cos(beta_r),(radius_sc)*np.sin(beta_r))
-    #        femm.mo_addcontour((radius_sc+h_sc)*np.cos(alpha_r),(radius_sc+h_sc)*np.sin(alpha_r))
-    #        femm.mo_addcontour((radius_sc+h_sc)*np.cos(beta_r),(radius_sc+h_sc)*np.sin(beta_r))
-    #        femm.mo_addcontour((radius_sc)*np.cos(beta_r),(radius_sc)*np.sin(beta_r))
-
-#    femm.mo_selectblock(
-#        (radius_sc + h_sc * 0.5) * np.cos(alpha_r + (beta_r - alpha_r) * 0.5),
-#        (radius_sc + h_sc * 0.5) * np.sin(alpha_r + (beta_r - alpha_r) * 0.5),
-#    )
-    femm.mo_smooth("off")
-    numelm = femm.mo_numelements()
-    numnode = femm.mo_numnodes()
-    bcoil_area = []
-    for k in range(numnode+1):
-        try:
-            x, y = femm.mo_getnode(k)
-        except:
-            continue
-        if np.sqrt(x**2+y**2) >= (radius_sc-1e-3):
-            bx, by = femm.mo_getb(x, y)
-            bcoil_area.append(np.sqrt(bx ** 2 + by ** 2))
-    B_coil_max = max(bcoil_area)
-    femm.mo_clearblock()
+    # Approximate peak field
+    B_coil_max = 0.0
+    for k in np.linspace(slot_radius, radius_sc+2*h_sc, 20):
+        femm.mo_addcontour(k * np.cos(0), k * np.sin(0))
+        femm.mo_addcontour(k * np.cos(theta_p_r), k * np.sin(theta_p_r))
+        femm.mo_bendcontour(theta_p_d, 0.25)
+        femm.mo_makeplot(1, 100, "B_mag.csv", 1)
+        femm.mo_clearcontour()
+        B_mag = np.loadtxt("B_mag.csv")
+        B_coil_max = np.maximum(B_coil_max, B_mag.max())
 
     radius_eps = 1e-3
     femm.mo_addcontour((slot_radius - radius_eps) * np.cos(0), (slot_radius - radius_eps) * np.sin(0))
@@ -93,14 +65,7 @@ def run_post_process(D_a, radius_sc, h_sc, slot_radius, theta_p_r, alpha_r, beta
 
     circ = B_r_normal[-1, 0]
     force = np.trapz(B_r_normal[:, 1] ** 2 - B_t_normal[:, 1] ** 2, B_r_normal[:, 0])
-    sigma_n = abs(1 / (8 * np.pi * 1e-7) * force) / circ
-    # print(force, force/delta_L, sigma_n, sigma_n*circ)
-    # print(temp_force, np.linalg.norm(temp_force))
-    # print(temp_torque)
-    # print ((radius_sc)*np.cos(beta_r),(radius_sc)*np.sin(beta_r),(radius_sc)*np.cos(alpha_r),(radius_sc)*np.sin(alpha_r),
-    # (radius_sc+h_sc)*np.cos(alpha_r),(radius_sc+h_sc)*np.sin(alpha_r),(radius_sc+h_sc)*np.cos(beta_r),
-    # (radius_sc+h_sc)*np.sin(beta_r),(radius_sc)*np.cos(beta_r),(radius_sc)*np.sin(beta_r))
-
+    sigma_n = abs(force / (2*mu0)) / circ
     # B_g_peak: peak air-gap flux density
     # B_rymax: peak rotor yoke flux density
     # B_coil_max: peak flux density in the superconducting coil
@@ -108,12 +73,14 @@ def run_post_process(D_a, radius_sc, h_sc, slot_radius, theta_p_r, alpha_r, beta
     return B_g_peak, B_rymax, B_coil_max, sigma_n
 
 
-def B_r_B_t(Theta_elec,D_a, l_s, p1, delta_em, theta_p_r, I_s, theta_b_t, theta_b_s, layer_1, layer_2, Y_q, N_c, tau_p):
+def B_r_B_t(Theta_elec, D_a, l_s, p1, delta_em, theta_p_r, I_s,
+            theta_b_t, theta_b_s, layer_1, layer_2, Y_q, N_c, tau_p):
     # This function loads the machine with electrical currents
     theta_p_d = np.rad2deg(theta_p_r)
+    R_a = 0.5 * D_a
 
-    myopen()
-    femm.opendocument("coil_design_new.fem")
+    #myopen()
+    #femm.opendocument("coil_design_new.fem")
     femm.mi_modifycircprop("A+", 1, I_s * np.sin(0))
     femm.mi_modifycircprop("D+", 1, I_s * np.sin(1 * np.pi / 6))
     femm.mi_modifycircprop("C-", 1, -I_s * np.sin(-4 * np.pi / 6))
@@ -126,21 +93,25 @@ def B_r_B_t(Theta_elec,D_a, l_s, p1, delta_em, theta_p_r, I_s, theta_b_t, theta_
     femm.mi_analyze()
     femm.mi_loadsolution()
 
-    femm.mo_addcontour((D_a / 2 + delta_em * 0.5) * np.cos(0), (D_a / 2 + delta_em * 0.5) * np.sin(0))
-    femm.mo_addcontour((D_a / 2 + delta_em * 0.5) * np.cos(theta_p_r), (D_a / 2 + delta_em * 0.5) * np.sin(theta_p_r))
+    femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(0), (R_a + delta_em * 0.5) * np.sin(0))
+    femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(theta_p_r), (R_a + delta_em * 0.5) * np.sin(theta_p_r))
     femm.mo_bendcontour(theta_p_d, 0.25)
-    femm.mo_makeplot(2, 100, "B_r_1.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_1.csv", 1)
+    femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
+    B_r_1 = np.loadtxt("B_r_1.csv")
+    B_t_1 = np.loadtxt("B_t_1.csv")
+    circ = B_r_1[-1, 0]
     femm.mo_clearcontour()
     femm.mo_close()
-    myopen()
-    femm.opendocument("coil_design_new_I1.fem")
-    pitch = 1
+    #myopen()
+    #femm.opendocument("coil_design_new_I1.fem")
 
+    '''
     Phases = ["D+", "C-", "F-", "B+", "E+", "A-", "D-"]
     # Phases = ["F+", "B+", "E+", "A+", "D+", "C+", "F-"]
-    N_c_a1 = [2 * N_c, 4 * N_c, 4 * N_c, 4 * N_c, 4 * N_c, 4 * N_c, 2 * N_c]
+    # N_c_a1 = [2 * N_c, 4 * N_c, 4 * N_c, 4 * N_c, 4 * N_c, 4 * N_c, 2 * N_c]
 
+    pitch = 1
     count = 0
     angle_r = theta_b_t * 0.5 + theta_b_s * 0.5
     delta_theta = theta_b_t + theta_b_s
@@ -190,38 +161,27 @@ def B_r_B_t(Theta_elec,D_a, l_s, p1, delta_em, theta_p_r, I_s, theta_b_t, theta_
     femm.mi_saveas("coil_design_new_I2.fem")
     femm.mi_analyze()
     femm.mi_loadsolution()
-    femm.mo_addcontour((D_a / 2 + delta_em * 0.5) * np.cos(0), (D_a / 2 + delta_em * 0.5) * np.sin(0))
-    femm.mo_addcontour((D_a / 2 + delta_em * 0.5) * np.cos(theta_p_r), (D_a / 2 + delta_em * 0.5) * np.sin(theta_p_r))
+    femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(0), (R_a + delta_em * 0.5) * np.sin(0))
+    femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(theta_p_r), (R_a + delta_em * 0.5) * np.sin(theta_p_r))
     femm.mo_bendcontour(theta_p_d, 0.25)
-    femm.mo_makeplot(2, 100, "B_r_2.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_2.csv", 1)
-    # temp_Bn = femm.mo_lineintegral(0)
-    # temp_force = femm.mo_lineintegral(3)
-    # temp_torque = femm.mo_lineintegral(4)
-    femm.mo_clearcontour()
-    femm.mo_close()
-
-    B_r_1 = np.loadtxt("B_r_1.csv")
-    B_t_1 = np.loadtxt("B_t_1.csv")
+    femm.mo_makeplot(2, 1000, "B_r_2.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_2.csv", 1)
     B_r_2 = np.loadtxt("B_r_2.csv")
     B_t_2 = np.loadtxt("B_t_2.csv")
-    circ = B_r_1[-1, 0]
+    femm.mo_clearcontour()
+    femm.mo_close()
+    '''
+    B_r_2 = B_r_1
+    B_t_2 = B_t_1
 
     force = np.array(
         [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
     )
-    sigma_t = abs(1 / (4 * np.pi * 1e-7) * force) / circ
+    sigma_t = abs(force / mu0) / circ
     torque = np.pi / 2 * sigma_t * D_a ** 2 * l_s * 1.08440860215053764
-    # print(force[-1], sigma_t[-1], sigma_t[-1]*circ, torque[-1])
-    # print(temp_force, np.linalg.norm(temp_force))
-    # print(temp_torque)
-    # print(temp_Bn, np.trapz(B_r_2[:, 1], B_r_2[:, 0]))
-    # print("Torque values in MNm:")
-    # print(torque[0] / 1e6, torque[1] / 1e6)
 
     # Air gap electro-magnetic torque for the full machine
     # Average shear stress for the full machine
-    #print(torque)
     return torque.mean(), sigma_t.mean()
 
 
@@ -291,6 +251,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         h_sc = float(inputs["h_sc"])
         p1 = float(np.round(inputs["p1"]))
         D_a = float(inputs["D_a"])
+        R_a = 0.5 * D_a
         h_yr = float(inputs["h_yr"])
         h_s = float(inputs["h_s"])
         q = discrete_inputs["q"]
@@ -318,9 +279,9 @@ class FEMM_Geometry(om.ExplicitComponent):
         if (alpha_d <= 0) or (float(inputs["con_angle"]) < 0):
             outputs = bad_inputs(outputs)
         else:
-            slot_radius = D_a * 0.5 - h_s
+            slot_radius = R_a - h_s
             yoke_radius = slot_radius - h_yr
-            h42 = D_a / 2 - 0.5 * h_s
+            h42 = R_a - 0.5 * h_s
             Slots_pp = float(q * m)
             tau_s = np.pi * D_a / Slots
 
@@ -361,8 +322,8 @@ class FEMM_Geometry(om.ExplicitComponent):
             # femm.mi_addnode(0, 0)
 
             # Draw the stator slots and Stator coils
-            femm.mi_addnode(D_a / 2 * np.cos(0), D_a / 2 * np.sin(0))
-            femm.mi_selectnode(D_a / 2 * np.cos(0), D_a / 2 * np.sin(0))
+            femm.mi_addnode(R_a * np.cos(0), R_a * np.sin(0))
+            femm.mi_selectnode(R_a * np.cos(0), R_a * np.sin(0))
             femm.mi_setgroup(1)
             femm.mi_addnode(slot_radius * np.cos(0), slot_radius * np.sin(0))
             femm.mi_selectnode(slot_radius * np.cos(0), slot_radius * np.sin(0))
@@ -370,7 +331,7 @@ class FEMM_Geometry(om.ExplicitComponent):
             femm.mi_addnode(h42 * np.cos(0), h42 * np.sin(0))
             femm.mi_selectnode(h42 * np.cos(0), h42 * np.sin(0))
             femm.mi_setgroup(1)
-            femm.mi_addsegment(D_a / 2 * np.cos(0), D_a / 2 * np.sin(0), h42 * np.cos(0), h42 * np.sin(0))
+            femm.mi_addsegment(R_a * np.cos(0), R_a * np.sin(0), h42 * np.cos(0), h42 * np.sin(0))
             femm.mi_addsegment(h42 * np.cos(0), h42 * np.sin(0), slot_radius * np.cos(0), slot_radius * np.sin(0))
             femm.mi_selectsegment(h42 * np.cos(0), h42 * np.sin(0))
 
@@ -382,7 +343,7 @@ class FEMM_Geometry(om.ExplicitComponent):
             )
             femm.mi_selectarcsegment(slot_radius * np.cos(0), slot_radius * np.sin(0))
             femm.mi_setgroup(1)
-            femm.mi_selectsegment(D_a / 2 * np.cos(0), D_a / 2 * np.sin(0))
+            femm.mi_selectsegment(R_a * np.cos(0), R_a * np.sin(0))
             femm.mi_setgroup(1)
 
             femm.mi_addnode(D_a * 0.5 * np.cos(theta_b_t * 0.5), D_a * 0.5 * np.sin(theta_b_t * 0.5))
@@ -781,10 +742,9 @@ class FEMM_Geometry(om.ExplicitComponent):
                 outputs["Torque_actual"], outputs["Sigma_shear"] = B_r_B_t(Theta_elec,
                     D_a, l_s, p1, delta_em, theta_p_r, I_s, theta_b_t, theta_b_s, layer_1, layer_2, Y_q, N_c, tau_p
                 )
-            except: #Exception as e:
-                #raise(e)
+            except Exception as e:
+                raise(e)
                 outputs = bad_inputs(outputs)
 
             femm.closefemm()
-            #breakpoint()
-            cleanup_femm_files()
+            #cleanup_femm_files()

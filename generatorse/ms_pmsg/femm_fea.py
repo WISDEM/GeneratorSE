@@ -7,27 +7,9 @@ Created on Fri Dec 31 12:28:2 2021
 import femm
 import numpy as np
 import openmdao.api as om
-from sympy import Point, Segment
-#from sympy.geometry.util import centroid
-import random
-#import csv
-import os
-import platform
+from generatorse.common.femm_util import myopen, cleanup_femm_files
 
-
-def myopen():
-    if platform.system().lower() == "windows":
-        femm.openfemm(1)
-    else:
-        femm.openfemm(winepath=os.environ["WINEPATH"], femmpath=os.environ["FEMMPATH"])
-    femm.smartmesh(0)
-
-def cleanup_femm_files():
-    clean_dir = os.getcwd()
-    files = os.listdir(clean_dir)
-    for file in files:
-        if file.endswith(".ans") or file.endswith(".fem") or file.endswith(".csv"):
-            os.remove(os.path.join(clean_dir, file))
+mu0 = 4 * np.pi * 1e-7
 
 def bad_inputs(outputs):
     print("Bad inputs for geometry")
@@ -46,19 +28,37 @@ def bad_inputs(outputs):
     return outputs
 
 
-def run_post_process(r_g, g, r_outer, h_yr, h_ys, r_m, yoke_radius, theta_p_r):
+def run_post_process(r_g, g, r_outer, h_yr, h_ys, r_m, r_yoke, theta_p_r):
 
     theta_p_d = np.rad2deg(theta_p_r)
     femm.mi_loadsolution()
     femm.mo_smooth("off")
 
     femm.mo_selectblock(
-        (yoke_radius + h_yr * 0.5) * np.cos(theta_p_r * 0.5),
-        (yoke_radius + h_yr * 0.5) * np.sin(theta_p_r * 0.5),
+        (r_yoke + h_yr * 0.5) * np.cos(theta_p_r * 0.5),
+        (r_yoke + h_yr * 0.5) * np.sin(theta_p_r * 0.5),
     )
-
     V_rotor = femm.mo_blockintegral(10)
     femm.mo_clearblock()
+
+    # Approximate peak field
+    def get_B_max(r1, r2):
+        B_max = 0.0
+        for k in np.linspace(r1, r2, 10):
+            femm.mo_addcontour(k * np.cos(0), k * np.sin(0))
+            femm.mo_addcontour(k * np.cos(theta_p_r), k * np.sin(theta_p_r))
+            femm.mo_bendcontour(theta_p_d, 0.25)
+            femm.mo_makeplot(1, 1000, "B_mag.csv", 1)
+            femm.mo_clearcontour()
+            B_mag = np.loadtxt("B_mag.csv")
+            B_max = np.maximum(B_max, B_mag.max())
+        return B_max
+
+    B_rymax = get_B_max(r_yoke, r_m)
+    B_symax = get_B_max(r_g, r_outer - h_ys)
+    B_tmax = get_B_max(r_outer-h_ys, r_outer)
+
+    '''
     sy_area = []
     ry_area = []
     t_area = []
@@ -76,18 +76,21 @@ def run_post_process(r_g, g, r_outer, h_yr, h_ys, r_m, yoke_radius, theta_p_r):
             b = femm.mo_getb(x1, y1)
             t_area.append(np.sqrt(b[0] ** 2 + b[1] ** 2))
 
-    B_symax = max(sy_area)
-    B_rymax = max(ry_area)
-    B_tmax = max(t_area)
-
+    B_symax2 = max(sy_area)
+    B_rymax2 = max(ry_area)
+    B_tmax2 = max(t_area)
+    print(B_symax, B_symax2)
+    print(B_rymax, B_rymax2)
+    print(B_tmax, B_tmax2)
+    '''
+    
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(0), (r_g - g * 0.5) * np.sin(0))
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(theta_p_r * 1), (r_g - g * 0.5) * np.sin(theta_p_r * 1))
     femm.mo_bendcontour(theta_p_d * 1, 1)
     femm.mo_makeplot(1, 1000, "gap.csv", 1)
-    femm.mo_makeplot(2, 100, "B_r.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t.csv", 1)
+    femm.mo_makeplot(2, 1000, "B_r.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t.csv", 1)
     femm.mo_clearcontour()
-    # #
     femm.mo_selectblock(
         (r_outer - h_ys * 0.5) * np.cos(theta_p_r * 0.5),
         (r_outer - h_ys * 0.5) * np.sin(theta_p_r * 0.5),
@@ -99,10 +102,8 @@ def run_post_process(r_g, g, r_outer, h_yr, h_ys, r_m, yoke_radius, theta_p_r):
     B_t_normal = np.loadtxt("B_t.csv")
 
     circ = B_r_normal[-1, 0]
-    delta_L = np.diff(B_r_normal[:, 0])[0]
-
-    force = np.sum((B_r_normal[:, 1]) ** 2 - (B_t_normal[:, 1]) ** 2) * delta_L
-    sigma_n = abs(1 / (8 * np.pi * 1e-7) * force) / circ
+    force = np.trapz(B_r_normal[:, 1] ** 2 - B_t_normal[:, 1] ** 2, B_r_normal[:, 0])
+    sigma_n = abs(force / (2*mu0)) / circ
 
     return B_g_peak, B_rymax, B_symax, B_tmax, sigma_n, V_rotor, V_stator
 
@@ -111,8 +112,8 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
 
     theta_p_d = np.rad2deg(theta_p_r)
 
-    myopen()
-    femm.opendocument("MS_PMSG.fem")
+    #myopen()
+    #femm.opendocument("MS_PMSG.fem")
     femm.mi_modifycircprop("A+", 1, I_s * np.sin(-2 * np.pi / 3))
     femm.mi_modifycircprop("B+", 1, I_s * np.sin(0 * np.pi / 3))
     femm.mi_modifycircprop("C+", 1, I_s * np.sin(2 * np.pi / 3))
@@ -121,21 +122,23 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
     femm.mi_modifycircprop("C-", 1, -I_s * np.sin(2 * np.pi / 3))
 
     femm.mi_saveas("MS_PMSG1.fem")
-    femm.smartmesh(0)
-    femm.mi_createmesh()
     femm.mi_analyze()
     femm.mi_loadsolution()
 
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(0), (r_g - g * 0.5) * np.sin(0))
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(theta_p_r * 1), (r_g - g * 0.5) * np.sin(theta_p_r * 1))
     femm.mo_bendcontour(theta_p_d * 1, 1)
-    femm.mo_makeplot(2, 100, "B_r_1.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_1.csv", 1)
+    temp1, temp2 = femm.mo_lineintegral(4)
+    femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
     femm.mo_clearcontour()
     femm.mo_close()
-    myopen()
-    femm.opendocument("MS_PMSG1.fem")
+    B_r_1 = np.loadtxt("B_r_1.csv")
+    B_t_1 = np.loadtxt("B_t_1.csv")
+    #myopen()
+    #femm.opendocument("MS_PMSG1.fem")
 
+    '''
     Phases1 = ["A+", "C-", "B+"]
     Phases2 = ["C-", "B+", "A-"]
 
@@ -164,33 +167,33 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
     femm.mi_modifycircprop("C-", 1, -I_s * np.sin(Theta_elec + 2 * np.pi / 3))
 
     femm.mi_saveas("MS_PMSG2.fem")
-    femm.smartmesh(0)
     femm.mi_analyze()
     femm.mi_loadsolution()
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(0), (r_g - g * 0.5) * np.sin(0))
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(theta_p_r * 1), (r_g - g * 0.5) * np.sin(theta_p_r * 1))
     femm.mo_bendcontour(theta_p_d * 1, 1)
-    femm.mo_makeplot(2, 100, "B_r_2.csv", 1)
-    femm.mo_makeplot(3, 100, "B_t_2.csv", 1)
+    femm.mo_makeplot(2, 1000, "B_r_2.csv", 1)
+    femm.mo_makeplot(3, 1000, "B_t_2.csv", 1)
     femm.mo_clearcontour()
     femm.mo_close()
-
-    B_r_1 = np.loadtxt("B_r_1.csv")
-    B_t_1 = np.loadtxt("B_t_1.csv")
     B_r_2 = np.loadtxt("B_r_2.csv")
     B_t_2 = np.loadtxt("B_t_2.csv")
-    delta_L = np.diff(B_r_1[:, 0])[0]
-    circ = B_r_1[-1, 0]
+    '''
+    B_r_2 = B_r_1
+    B_t_2 = B_t_1
 
-    force = np.array([np.sum(B_r_1[:, 1] * B_t_1[:, 1]), np.sum(B_r_2[:, 1] * B_t_2[:, 1])]) * delta_L
-    sigma_t = abs(1 / (4 * np.pi * 1e-7) * force) / circ
-    torque = np.pi / 2 * sigma_t * (2 * r_g) ** 2 * l_s
-    torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
+    circ = B_r_1[-1, 0]
+    force = np.array(
+        [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
+    )
+    sigma_t = abs(force / mu0) / circ
+    torque = 2 * np.pi * sigma_t * r_g**2 * l_s
+    #torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
     #print(torque[0], torque[1], torque.mean())
     return torque.mean(), sigma_t.mean()
 
 
-#
+
 class FEMM_Geometry(om.ExplicitComponent):
     def setup(self):
         self.add_input("m", 3, desc="number of phases")
@@ -282,6 +285,9 @@ class FEMM_Geometry(om.ExplicitComponent):
         theta_p_r = np.deg2rad(theta_p_d)
 
         r_m = r_g - g
+        r_outer = r_g + h_s1 + h_s2 + h_s + h_ys
+        r_inner = r_g + h_s1 + h_s2 + h_s
+        r_yoke = r_m - h_m - h_yr
 
         theta_b_s = np.arctan(b_s / (r_g))
         theta_tau_s = theta_p_r * 2 / Slots_pp
@@ -358,8 +364,8 @@ class FEMM_Geometry(om.ExplicitComponent):
         X_4, Y_4 = (r_m - h_m) * np.cos(theta_p_m_r), (r_m - h_m) * np.sin(theta_p_m_r)
         X_5, Y_5 = (r_m - h_m) * np.cos(theta_p_r), (r_m - h_m) * np.sin(theta_p_r)
         X_6, Y_6 = r_m - h_m, 0
-        X_7, Y_7 = r_m - h_m - h_yr, 0
-        X_8, Y_8 = (r_m - h_m - h_yr) * np.cos(theta_p_r * 1), (r_m - h_m - h_yr) * np.sin(theta_p_r * 1)
+        X_7, Y_7 = r_yoke, 0
+        X_8, Y_8 = r_yoke * np.cos(theta_p_r * 1), (r_m - h_m - h_yr) * np.sin(theta_p_r * 1)
 
         x0, y0 = 0.0, 0.0
         xc, yc = r_m * np.cos(theta_p_r), r_m * np.sin(theta_p_r)
@@ -483,27 +489,19 @@ class FEMM_Geometry(om.ExplicitComponent):
         X_13, Y_13 = (r_g + h_s1 + h_s2 + h_s / 2) * np.cos(theta_tau_s_new2), (r_g + h_s1 + h_s2 + h_s / 2) * np.sin(
             theta_tau_s_new2
         )
-        X_14, Y_14 = (r_g + h_s1 + h_s2 + h_s) * np.cos(theta_tau_s_new2), (r_g + h_s1 + h_s2 + h_s) * np.sin(
-            theta_tau_s_new2
-        )
+        X_14, Y_14 = r_inner * np.cos(theta_tau_s_new2), r_inner * np.sin(theta_tau_s_new2)
         X_15, Y_15 = (r_g) * np.cos(theta_tau_s_new3), (r_g) * np.sin(theta_tau_s_new3)
         X_16, Y_16 = (r_g + h_s1) * np.cos(theta_tau_s_new3), (r_g + h_s1) * np.sin(theta_tau_s_new3)
         X_17, Y_17 = (r_g + h_s1 + h_s2) * np.cos(theta_tau_s_new4), (r_g + h_s1 + h_s2) * np.sin(theta_tau_s_new4)
         X_18, Y_18 = (r_g + h_s1 + h_s2 + h_s / 2) * np.cos(theta_tau_s_new4), (r_g + h_s1 + h_s2 + h_s / 2) * np.sin(
             theta_tau_s_new4
         )
-        X_19, Y_19 = (r_g + h_s1 + h_s2 + h_s) * np.cos(theta_tau_s_new4), (r_g + h_s1 + h_s2 + h_s) * np.sin(
-            theta_tau_s_new4
-        )
+        X_19, Y_19 = r_inner * np.cos(theta_tau_s_new4), r_inner * np.sin(theta_tau_s_new4)
 
         X_20, Y_20 = r_m, 0
-        X_21, Y_21 = (r_g + h_s1 + h_s2 + h_s + h_ys), 0
-        X_22, Y_22 = (r_g + h_s1 + h_s2 + h_s + h_ys) * np.cos(theta_p_r * 1), (
-            r_g + h_s1 + h_s2 + h_s + h_ys
-        ) * np.sin(theta_p_r * 1)
-        ###
-        ###
-        ##
+        X_21, Y_21 = r_outer, 0
+        X_22, Y_22 = r_outer * np.cos(theta_p_r * 1), r_outer * np.sin(theta_p_r * 1)
+
         femm.mi_addnode(X_9, Y_9)
         femm.mi_selectnode(X_9, Y_9)
         femm.mi_setgroup(2)
@@ -639,12 +637,12 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_clearselected()
 
         femm.mi_addblocklabel(
-            (r_g + h_s1 + h_s2 + h_s + h_ys * 0.5) * np.cos(theta_p_r * 0.5),
-            (r_g + h_s1 + h_s2 + h_s + h_ys * 0.5) * np.sin(theta_p_r * 0.5),
+            (r_inner + h_ys * 0.5) * np.cos(theta_p_r * 0.5),
+            (r_inner + h_ys * 0.5) * np.sin(theta_p_r * 0.5),
         )
         femm.mi_selectlabel(
-            (r_g + h_s1 + h_s2 + h_s + h_ys * 0.5) * np.cos(theta_p_r * 0.5),
-            (r_g + h_s1 + h_s2 + h_s + h_ys * 0.5) * np.sin(theta_p_r * 0.5),
+            (r_inner + h_ys * 0.5) * np.cos(theta_p_r * 0.5),
+            (r_inner + h_ys * 0.5) * np.sin(theta_p_r * 0.5),
         )
         femm.mi_setblockprop("M-36 Steel")
         femm.mi_clearselected()
@@ -668,21 +666,13 @@ class FEMM_Geometry(om.ExplicitComponent):
             )
             femm.mi_setblockprop("20 SWG", 1, 0, Phases2[pitch - 1], 0, 15, N_c)
             femm.mi_clearselected()
-        ###
-        ##
-        ##
+
         femm.mi_saveas("MS_PMSG.fem")
         Time = 60 / (f * 2 * np.pi)
 
         Theta_elec = (theta_tau_s * Time) * 2 * np.pi * f
 
-        r_outer = r_g + h_s1 + h_s2 + h_s + h_ys
-        r_inner = r_g + h_s1 + h_s2 + h_s
-        yoke_radius = r_m - h_m - h_yr
-
         try:
-            femm.mi_createmesh()
-            femm.smartmesh(0)
             femm.mi_analyze()
             (
                 outputs["B_g"],
@@ -692,7 +682,7 @@ class FEMM_Geometry(om.ExplicitComponent):
                 outputs["Sigma_normal"],
                 V_rotor,
                 V_stator,
-            ) = run_post_process(r_g, g, r_outer, h_yr, h_ys, r_m, yoke_radius, theta_p_r)
+            ) = run_post_process(r_g, g, r_outer, h_yr, h_ys, r_m, r_yoke, theta_p_r)
             V_Fesy = L_t * np.pi * ((r_g + h_s + h_ys) ** 2 - (r_g + h_s) ** 2)  # volume of iron in stator yoke
             outputs["M_Fes"] = V_stator * rho_Fe * p
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * (r_outer**2 - r_inner**2) * l_s * rho_Fe
@@ -704,14 +694,9 @@ class FEMM_Geometry(om.ExplicitComponent):
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
                 Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, layer_2, N_c
             )
-            if outputs["T_e"] >= 20e6:
-                seed = random.randrange(0, 101, 2)
-                femm.mi_saveas("PMSG_new_" + str(seed) + ".fem")
-        #
-        except:
-
-            #print(r_g, l_s, h_s, p, g, h_ys, h_yr, N_c, I_s, h_m, ratio)
+        except Exception as e:
             outputs = bad_inputs(outputs)
+            raise(e)
+            
+        femm.closefemm()
 
-
-#
