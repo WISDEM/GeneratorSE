@@ -90,12 +90,9 @@ class PMSG_active(om.ExplicitComponent):
         # Calculating stator resistance
         L_Cus = N_s * l_Cus
         A_slot=h_s*b_s
-        
-        print (l_Cus, A_slot)
-        
+                
         outputs["R_s"] = R_s = (resistivity_Cu* (1 + 20 * 0.00393)* (N_s)* l_Cus/(A_slot*0.65/N_c))
         
-        print (N_s,R_s)
         # Calculating Electromagnetically active mass
         V_Cus = m * L_Cus * (A_Cuscalc * (10**-6))  # copper volume
         outputs["Copper"] = V_Cus * rho_Copper

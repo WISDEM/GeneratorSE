@@ -127,13 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-*.csv
-*.fem
-*.ans
 
 # Outputs
 *.xlsx
 *.sql
+*.csv
+*.fem
+*.ans
+*.html
 
 # Emacs
 *~
