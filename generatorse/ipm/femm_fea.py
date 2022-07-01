@@ -8,7 +8,7 @@ Created on Fri Dec 31 12:28:2 2021
 import femm
 import numpy as np
 import openmdao.api as om
-from sympy import Point, Line, Segment, Polygon
+from sympy import Point, Segment, Polygon
 from sympy.geometry.util import centroid
 #import random
 from generatorse.common.femm_util import myopen, cleanup_femm_files
@@ -192,150 +192,159 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
 
 class FEMM_Geometry(om.ExplicitComponent):
     def setup(self):
-        self.add_discrete_input("m", 3, desc="number of phases")
-        #self.add_input("k_sfil", 0.65, desc="slot fill factor")
-
+        # Inputs
+        self.add_input("pp", 0.0, desc="Number of pole pairs")
+        self.add_input("g", 0.0, units="m", desc="Air gap length")
+        self.add_input("D_a", 0.0, units="m", desc="Stator outer diameter")
+        self.add_input("d_mag", 0.0, units="m", desc="Magnet distance from inner radius")
         self.add_input("l_s", 0.0, units="m", desc="Stack length ")
-        self.add_input("p1", 0.0, desc="pole pairs ")
-        #self.add_input("b", 0.0, desc="v-angle")
-        #self.add_input("c", 0.0, desc="pole pairs ")
+        self.add_input("h_m", 0.0, units="m", desc="Magnet height")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
-        self.add_input("g", 0.0, units="m", desc="air gap length ")
-        self.add_input("alpha_v", 0.0, units="deg", desc="v-angle")
-        self.add_output("b_s", 0.0, units="m", desc="slot width")
-        self.add_input("alpha_m", 0.5, desc="pole pair width")
-        self.add_input("tau_s", 0.0, units="m", desc="Pole pitch")
-
-        #self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
-        self.add_input("f", 0.0, units="Hz", desc="frequency")
-        self.add_input("l_fe_ratio", 0, desc="bridge length")
-        self.add_input("ratio", 0.0, desc="pole to bridge ratio")
-        self.add_input("h_m", 0.0, units="m", desc="magnet height")
-        self.add_output("l_m", 0.0, units="m", desc="magnet length")
-        self.add_output("tau_p", 0.0, units="m", desc="pole pitch")
-        self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
-        self.add_input("h_ys", 0.0, units="m", desc="stator yoke height")
-        self.add_input("h_t", 0.0, units="m", desc="stator tooth height")
-        self.add_output("h_s", 0.0, units="m", desc="stator tooth height")
-        self.add_input("r_g", 0.0, units="m", desc="air gap radius ")
-        self.add_input("D_a", 0.0, units="m", desc="Stator outer diameter")
-        self.add_input("I_s", 0.0, units="A", desc="Stator current ")
+        self.add_input("h_yr", 0.0, units="m", desc="Rotor yoke height")
+        self.add_input("h_ys", 0.0, units="m", desc="Stator yoke height")
+        self.add_input("h_t", 0.0, units="m", desc="Stator tooth height")
+        self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical steel density")
+        self.add_input("I_s", 0.0, units="A", desc="Stator current")
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
-        #self.add_input("J_s", 0.0, units="A/mm**2", desc="Conductor cross-section")
-        self.add_input("d_mag", 0.0, units="m", desc=" magnet distance from inner radius")
-        self.add_input("d_sep", 0.0, units="m", desc=" bridge separation width")
-        self.add_input("m_sep", 0.0, units="m", desc=" bridge separation width")
-        self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical Steel density ")
-        self.add_output("Slot_aspect_ratio", 0.0, desc="Slot aspect ratio")
+        self.add_input('magnet_l_pc', 1.0, desc = "Length of magnet divided by max magnet length")
+        self.add_input("N_nom", 0.0, units="rpm", desc="Rated speed of the generator")
+
+        # Outputs
+        self.add_output("f", 0.0, units="Hz", desc="Generator output frequency")
+        self.add_output("r_g", 0.0, units="m", desc="Air gap radius")
+        self.add_output("tau_s", 0.0, units="m", desc="Slot pitch")
+        self.add_output("b_s", 0.0, units="m", desc="Width of the armature coil slot in the stator")
+        self.add_output("h_s", 0.0, units="m", desc="Stator tooth height")
+        self.add_output("l_m", 0.0, units="m", desc="Magnet length")
+        self.add_output("tau_p", 0.0, units="m", desc="Pole pitch")
+        self.add_output("alpha_v", 0.0, units="deg", desc="V-angle between the magnets")
+        # self.add_output("Slot_aspect_ratio", 0.0, desc="Slot aspect ratio")
         self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density ")
-        self.add_output("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
+        self.add_output("B_rymax", 0.0, units="T", desc="Peak rotor yoke flux density")
         self.add_output("B_smax", 0.0, units="T", desc="Peak flux density in the stator")
         self.add_output("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_output("Sigma_shear", 0.0, units="Pa", desc="Shear stress")
         self.add_output("Sigma_normal", 0.0, units="Pa", desc="Normal stress")
-        self.add_output("Iron", 0.0, units="kg", desc="magnet length ")
-        self.add_output("M_Fes", 0.0, units="kg", desc="mstator iron mass ")
-        self.add_output("M_Fer", 0.0, units="kg", desc="rotor iron mass ")
-        self.add_output("M_Fest", 0.0, units="kg", desc="rotor iron mass ")
-        self.add_output("r_outer_active", 0.0, units="m", desc="rotor outer diameter ")
-        self.add_output("r_mag_center", 0.0, units="m", desc="rotor magnet radius ")
+        self.add_output("Iron", 0.0, units="kg", desc="Magnet length")
+        self.add_output("M_Fes", 0.0, units="kg", desc="Stator iron mass")
+        self.add_output("M_Fer", 0.0, units="kg", desc="Rotor iron mass")
+        self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
+        self.add_output("r_outer_active", 0.0, units="m", desc="Rotor outer diameter")
+        self.add_output("r_mag_center", 0.0, units="m", desc="Rotor magnet radius")
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
+    def compute(self, inputs, outputs):
 
-        # Unpack variables
-        m = int( discrete_inputs["m"] )
-        l_s = float( inputs["l_s"] )
-        p1 = float( inputs["p1"] )
-        #b = float( inputs["b"] )
-        h_s1 = float( inputs["h_s1"] )
-        h_s2 = float( inputs["h_s2"] )
-        g = float( inputs["g"] )
-        alpha_v = float( inputs["alpha_v"] )
-        alpha_m = float( inputs["alpha_m"] )
-        tau_s = float( inputs["tau_s"] )
-        f = float( inputs["f"] )
-        l_fe_ratio = float( inputs["l_fe_ratio"] )
-        ratio = float( inputs["ratio"] )
-        h_m = float( inputs["h_m"] )
-        h_yr = float( inputs["h_yr"] )
-        h_ys = float( inputs["h_ys"] )
-        h_t = float( inputs["h_t"] )
-        r_g = float( inputs["r_g"] )
-        D_a = float( inputs["D_a"] )
-        I_s = float( inputs["I_s"] )
-        N_c = float( inputs["N_c"] )
-        d_mag = float( inputs["d_mag"] )
-        d_sep = float( inputs["d_sep"] )
-        m_sep = float( inputs["m_sep"] )
-        rho_Fe = float( inputs["rho_Fe"] )
+        # Inputs
+        pp  = float(inputs['pp']) # number pole pairs
+        g = float(inputs['g']) # air gap length
+        D_a = float(inputs['D_a']) # stator outer diameter
+        h_m = float(inputs['h_m']) # height
+        d_mag = float(inputs['d_mag']) # 0.04 # magnet distance from inner radius
+        magnet_l_pc = float(inputs['magnet_l_pc']) # length of magnet divided by max magnet length
+        # magnet_h_pc float(= 0.8 # height of magnet divided by max magnet height
+        h_yr = float(inputs['h_yr']) # 0.01 # Rotor yoke height
+        h_ys = float(inputs['h_ys']) # 0.01 # Stator yoke height
+        h_so = float(inputs['h_s1']) # 0.01 # Slot opening height
+        h_wo = float(inputs['h_s2']) # 0.01 # Wedge opening height
+        h_t =  float(inputs['h_t']) # 0.27 # Stator tooth height
+        l_s = float(inputs['l_s']) # 2.918 # stack length
+        N_c = float(inputs['N_c']) # 3 # Number of turns per coil in series
+        rho_Fe = float(inputs['rho_Fe'])
+        I_s = float(inputs['I_s'])
+        N_nom = float( inputs["N_nom"] )
 
-        #q = b / c
-        #Slots = 2 * q * m * p1
-        outputs["h_s"] = h_s = h_t - h_s1 - h_s2
+        # Preprocess inputs
+        alpha_p = np.pi / pp  # pole sector
+        alpha_pr = 0.9 * alpha_p # pole sector reduced to 90%
+        r_so = 0.5 * D_a # Outer radius of the stator
+        r_g = g + r_so # Air gap length
+        r_si = r_so - (h_so + h_wo + h_t + h_ys) # Inner radius of the stator
+        # angular frequency in radians
+        f = 2 * pp * N_nom / 120  # outout frequency
 
-        #Slots_pp = q * m
+        def rotate(xo, yo, xp, yp, angle):
+            ## Rotate a point counterclockwise by a given angle around a given origin.
+            # angle *= -1.
+            qx = xo + np.cos(angle) * (xp - xo) - np.sin(angle) * (yp - yo)
+            qy = yo + np.sin(angle) * (xp - xo) + np.cos(angle) * (yp - yo)
+            return qx, qy
 
-        theta_p_d = 180.0 / p1
-        theta_p_r = np.deg2rad(theta_p_d)
-        #print(theta_p_d, theta_p_r)
-        r_a = 0.5 * D_a
-        b_so = 2 * g
-        r_yoke_stator = r_a - h_t
-        r_inner = r_yoke_stator - h_ys
+        # Get the sector geometry for five magnet
+        alpha_s = alpha_p * 5.
+        # Get the yoke sector for 6 armature coils
+        alpha_y = alpha_s / 6.
 
-        outputs["tau_p"] = tau_p = np.pi * r_g / p1
 
-        bs_taus = 0.5
-        outputs["b_s"] = b_s = bs_taus * tau_s
-        theta_b_s = np.arctan(b_s / (r_a))
-        theta_tau_s = theta_p_r * 5 / 6
+        # Draw the inner stator
+        stator = np.zeros((4,2))
+        stator[0,0] = r_si
+        stator[1,0] = r_so
+        stator[2,:] = rotate(0., 0., stator[1,0], stator[1,1], alpha_s)
+        stator[3,:] = rotate(0., 0., stator[0,0], stator[0,1], alpha_s)
 
-        theta_tau_s_new = np.arctan((tau_s * 0.5 - b_so * 0.5) / (r_a))
-        theta_tau_s_new2 = np.arctan((tau_s * 0.5 - b_s * 0.5) / (r_a))
-        #theta_tau_s_new3 = np.arctan((tau_s * 0.5 + b_so * 0.5) / (r_a))
-        theta_tau_s_new4 = np.arctan((tau_s * 0.5 + b_s * 0.5) / (r_a))
+        # Draw the first of six coil slots located next to six yoke teeth
+        coil_slot1 = np.zeros((10,2))
+        coil_slot1[0,:] = rotate(0., 0., r_si + h_ys, 0., alpha_y*0.25)
+        coil_slot1[1,:] = rotate(0., 0., r_si + h_ys + h_t/2., 0., alpha_y*0.25)
+        coil_slot1[2,:] = rotate(0., 0., r_si + h_ys + h_t, 0., alpha_y*0.25)
+        coil_slot1[3,:] = rotate(0., 0., r_si + h_ys + h_t + h_wo, 0., alpha_y*0.45)
+        coil_slot1[4,:] = rotate(0., 0., r_si + h_ys + h_t + h_wo + h_so, 0., alpha_y*0.45)
+        coil_slot1[5,:] = rotate(0., 0., r_si + h_ys + h_t + h_wo + h_so, 0., alpha_y*0.55)
+        coil_slot1[6,:] = rotate(0., 0., r_si + h_ys + h_t + h_wo, 0., alpha_y*0.55)
+        coil_slot1[7,:] = rotate(0., 0., r_si + h_ys + h_t, 0., alpha_y*0.75)
+        coil_slot1[8,:] = rotate(0., 0., r_si + h_ys + h_t/2., 0., alpha_y*0.75)
+        coil_slot1[9,:] = rotate(0., 0., r_si + h_ys, 0., alpha_y*0.75)
 
-        #theta_b_so = b_so / (r_a)
+        # Draw the first magnet using 8 points
+        h_ri2m = g # distance between inner rotor radius (air gap) and magnets
+        magnet1 = np.zeros((8,2))
+        magnet1[0,:] = rotate(0., 0., r_g + h_ri2m, 0, 0.5 * (alpha_p - alpha_pr))
+        magnet1[2,:] = rotate(0., 0., r_g + h_ri2m + d_mag, 0, 0.5 * alpha_p)
+        r7 =  r_g + h_ri2m + d_mag + h_m
+        r_ro = r7+h_yr # Outer rotor radius
+        magnet1[3,:] = rotate(0., 0., r7, 0, 0.5 * alpha_p)
+        magnet1[1,:] = rotate(0., 0., r_g + h_ri2m + h_m, 0, 0.5 * (alpha_p - alpha_pr))
+        # We might need only one angle here
+        p2p0_angle = np.arctan((magnet1[2,1]-magnet1[0,1])/(magnet1[2,0]-magnet1[0,0]))
+        p2p0p1_angle = p2p0_angle - 0.5 * (alpha_p - alpha_pr)
+        p4r = rotate(magnet1[0,0], magnet1[0,1], magnet1[1,0], magnet1[1,1], -0.5 * (alpha_p - alpha_pr))
+        p11r =  (p4r[0] - magnet1[0,0]) * np.cos(p2p0p1_angle) * np.array([np.cos(p2p0p1_angle), np.sin(p2p0p1_angle)]) + magnet1[0,:]
+        magnet1[7,:] = rotate(magnet1[0,0], magnet1[0,1], p11r[0], p11r[1], 0.5 * (alpha_p - alpha_pr))
+        mml = (magnet1[2,1] - magnet1[7,1]) / np.sin(p2p0_angle) # max magnet1 length
+        magnet1[4,:] = magnet1[1,:] + mml * np.array([np.cos(p2p0_angle),np.sin(p2p0_angle)])
+        ml = mml * magnet_l_pc
+        magnet1[5,:] = magnet1[1,:] + ml * np.array([np.cos(p2p0_angle),np.sin(p2p0_angle)])
+        magnet1[6,:] = magnet1[7,:] + ml * np.array([np.cos(p2p0_angle),np.sin(p2p0_angle)])
 
+        # Mirror the points for the second magnet
+        magnet2 = np.zeros_like(magnet1)
+        for i in range(len(magnet1[:,0])):
+            temp = np.zeros(2)
+            temp[0], temp[1] = rotate(0., 0., magnet1[i,0], magnet1[i,1], -0.5 * alpha_p)
+            temp[1] *= -1
+            magnet2[i,:] = rotate(0., 0., temp[0], temp[1], 0.5 * alpha_p)
+
+        # Draw the outer rotor
+        rotor = np.zeros((4,2))
+        rotor[0,0] = r_g
+        rotor[1,0] = r_ro
+        rotor[2,:] = rotate(0., 0., rotor[1,0], rotor[1,1], alpha_s)
+        rotor[3,:] = rotate(0., 0., rotor[0,0], rotor[0,1], alpha_s)
+
+        # Create femm document
         myopen()
         femm.newdocument(0)
         femm.mi_probdef(0, "meters", "planar", 1.0e-8, l_s, 30, 0)
         Current = 0
-
-        # Define the problem type.  Magnetostatic; Units of mm; Axisymmetric;
-        # Precision of 10^(-8) for the linear solver; a placeholder of 0 for
-        # the depth dimension, and an angle constraint of 30 degrees
-        # Add some block labels materials properties
         femm.mi_addmaterial("Air")
         femm.mi_getmaterial("M-36 Steel")
         femm.mi_getmaterial("20 SWG")
-
         femm.mi_getmaterial("N48")
-
         femm.mi_modifymaterial("N48", 0, "N48SH")
-        #b = [0, 1.27, 1.31, 1.33, 1.34, 1.35, 1.36, 1.37, 1.38, 1.39]
-        #h = [
-        #    0.000000,
-        #    82000.000000,
-        #    232000.000000,
-        #    392000.000000,
-        #    557000.000000,
-        #    717000.000000,
-        #    872000.000000,
-        #    1037000.000000,
-        #    1352000.000000,
-        #    1512000.000000,
-        #]
-
         femm.mi_modifymaterial("N48SH", 5, 0.7142857)
-
-        #        femm.mi_clearbhpoints("N48SH")
-        #        for i in range (0,10):
-        #           femm.mi_addbhpoint('N48SH',b[i],h[i])
-
         femm.mi_modifymaterial("N48SH", 9, 0)
         femm.mi_modifymaterial("N48SH", 3, 1512000)
 
@@ -353,578 +362,305 @@ class FEMM_Geometry(om.ExplicitComponent):
         femm.mi_addboundprop("apbc4", 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0)
         femm.mi_addboundprop("apbc5", 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0)
 
-        theta_m = np.deg2rad(theta_p_d * alpha_m * 0.5)
-
-        #ratio_1 = (1 - alpha_m) * 1.5 / ratio
-        #theta_m_1 = theta_m * ratio_1
-        #theta_m_2 = theta_p_r / 2 * ratio
-        theta_rb = np.deg2rad(180 / p1) - theta_m * 2
-
-        theta_m_r = theta_rb / 2
-
-        xmag1 = 5 * np.cos(theta_p_r)
-        ymag1 = 5 * np.sin(theta_p_r)
-
-        #xmag2 = 5 * np.cos(0.5*theta_p_r)
-        #ymag2 = 5 * np.sin(0.5*theta_p_r)
-
-        #theta_L = 180 - 0.5 * alpha_v - np.rad2deg(theta_m)
-
-        theta_m_r2 = l_fe_ratio * theta_m_r
-
-
-        # Parametrization of the magnets
-
-        def rotate(xo, yo, xp, yp, angle):
-            ## Rotate a point clockwise by a given angle around a given origin.
-            # angle *= -1.
-            qx = xo + np.cos(angle) * (xp - xo) - np.sin(angle) * (yp - yo)
-            qy = yo + np.sin(angle) * (xp - xo) + np.cos(angle) * (yp - yo)
-            return qx, qy
-
-        # We need 14 points to define the geometry, the first one is the center of the rotor at 0,0
-        points = np.zeros((14,2))
-        # Second point stays at y=0 and x=radius of the armature
-        # points[1,:] = np.array([r_i, 0.])
-        # r2 = r_i + air_gap
-        # points[2,:] = np.array([r2, 0])
-        # r3 = r_i + air_gap + struct_offset
-        # points[3,:] = rotate(points[0,0], points[0,1], r3, 0, 0.5 * (alpha_p - alpha_pr))
-        # r6 = r3 + d_mag
-        # points[6,:] = rotate(points[0,0], points[0,1], r6, 0, 0.5 * alpha_p)
-
-        # r7 = r6 + slot_height
-
-        # outer_gen_diameter = r7+struct_offset
-        # points[5,:] = np.array([outer_gen_diameter,0])
-
-        # points[7,:] = rotate(points[0,0], points[0,1], r7, 0, 0.5 * alpha_p)
-        # points[4,:] = rotate(points[0,0], points[0,1], r3 + slot_height, 0, 0.5 * (alpha_p - alpha_pr))
-
-        # p6p3_angle = np.arctan((points[6,1]-points[3,1])/(points[6,0]-points[3,0]))
-        # p6p3p4_angle = p6p3_angle - 0.5 * (alpha_p - alpha_pr)
-        # p4r = rotate(points[3,0], points[3,1], points[4,0], points[4,1], -0.5 * (alpha_p - alpha_pr))
-        # p11r =  (p4r[0] - points[3,0]) * np.cos(p6p3p4_angle) * np.array([np.cos(p6p3p4_angle), np.sin(p6p3p4_angle)]) + points[3,:]
-        # points[11,:] = rotate(points[3,0], points[3,1], p11r[0], p11r[1], 0.5 * (alpha_p - alpha_pr))
-
-        # mml = (points[6,1] - points[11,1]) / np.sin(p6p3_angle) # max magnet length
-        # points[8,:] = points[4,:] + mml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
-        # ml = mml * magnet_l_pc
-        # points[9,:] = points[4,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
-        # points[10,:] = points[11,:] + ml * np.array([np.cos(p6p3_angle),np.sin(p6p3_angle)])
-
-
-
-
-        x0, y0 = points[0,:]
-
-        theta_1 = theta_p_r * 0.5 - d_sep / (r_g + d_mag)
-        X_1, Y_1 = (r_g + d_mag) * np.cos(theta_1), (r_g + d_mag) * np.sin(theta_1)
-
-        bridge_thickness = h_m * np.sin(np.pi / 2) / np.sin(np.deg2rad(alpha_v * 0.5))
-
-        X_2 = (r_g + d_mag + bridge_thickness) * np.cos(theta_1)
-        Y_2 = (r_g + d_mag + bridge_thickness) * np.sin(theta_1)
-        xc = (r_g + d_mag + bridge_thickness) * np.cos(theta_p_r * 0.5)
-        yc = (r_g + d_mag + bridge_thickness) * np.sin(theta_p_r * 0.5)
-        m1 = np.tan(np.deg2rad(180 - (180 - alpha_v * 0.5 - np.rad2deg(theta_1))))
-
-        X_3 = (m1 * X_1 - Y_1) / m1
-
-        X_5 = (r_g + d_mag + bridge_thickness) * np.cos(theta_m_r - theta_m_r2)
-        Y_5 = (r_g + d_mag + bridge_thickness) * np.sin(theta_m_r - theta_m_r2)
-
-        line1 = Line(Point(X_1, Y_1, evaluate=False), Point(X_3, 0, evaluate=False))
-        line3 = Line(Point(0, 0, evaluate=False), Point(X_5, Y_5, evaluate=False))
-
-        r3 = line1.intersection(line3)
-
-        #x4, y4 = 7 * np.cos(theta_m_2), 7 * np.sin(theta_m_2)
-        rad = (r3[0].x ** 2 + r3[0].y ** 2) ** 0.5
-        #mag_dir2 = np.arctan(float(m)) * 180 / np.pi + 180
-
-        line2 = Segment(Point(X_1, Y_1, evaluate=False), Point(r3[0].x, r3[0].y, evaluate=False))
-
-        m_sep = m_sep / line2.length
-        xstart, ystart = (1 - m_sep) * X_1 + m_sep * r3[0].x, (1 - m_sep) * Y_1 + m_sep * r3[0].y
-
-        angle = np.arctan(float(ystart) / float(xstart))
-
-        line4 = Segment(Point(xstart, ystart, evaluate=False), Point(r3[0].x, r3[0].y, evaluate=False))
-        Total_avail_len = line4.length
-        m = -1 / (line4.slope)
-        # mag_dir=np.arctan(float(m))*180/np.pi
-
-        end_dist = (Total_avail_len - ((bridge_thickness**2 - h_m**2) ** 0.5)) * ratio / Total_avail_len
-        xend, yend = (1 - end_dist) * xstart + end_dist * r3[0].x, (1 - end_dist) * ystart + end_dist * r3[0].y
-        mag = Segment(Point(xstart, ystart, evaluate=False), Point(xend, yend, evaluate=False))
-        outputs["l_m"] = mag.length
-
-        femm.mi_addnode(X_1, Y_1)
-        femm.mi_selectnode(X_1, Y_1)
-        femm.mi_setgroup(1)
-        femm.mi_addnode(X_2, Y_2)
-        femm.mi_selectnode(X_2, Y_2)
-        femm.mi_setgroup(1)
-        femm.mi_addnode(r3[0].x, r3[0].y)
-        femm.mi_selectnode(r3[0].x, r3[0].y)
-        femm.mi_setgroup(1)
-        femm.mi_addnode(xstart, ystart)
-        femm.mi_selectnode(xstart, ystart)
-        femm.mi_setgroup(1)
-        femm.mi_addnode(xend, yend)
-        femm.mi_selectnode(xend, yend)
-        femm.mi_setgroup(1)
-
-        X_7 = xstart + h_m / (1 + m**2) ** 0.5
-        Y_7 = m * (X_7 - xstart) + ystart
-        femm.mi_addnode(X_7, Y_7)
-        femm.mi_selectnode(X_7, Y_7)
-        femm.mi_setgroup(1)
-        femm.mi_addsegment(X_1, Y_1, X_2, Y_2)
-        femm.mi_selectsegment(X_2, Y_2)
-        femm.mi_setgroup(1)
-
-        femm.mi_addsegment(X_1, Y_1, xstart, ystart)
-
-        femm.mi_selectsegment(xstart, ystart)
-        femm.mi_setgroup(1)
-        femm.mi_addsegment(xstart, ystart, xend, yend)
-        femm.mi_selectsegment(xend, yend)
-        femm.mi_setgroup(1)
-        femm.mi_addsegment(xstart, ystart, X_7, Y_7)
-
-        femm.mi_selectsegment(X_7, Y_7)
-        femm.mi_setgroup(1)
-        femm.mi_addsegment(X_2, Y_2, X_7, Y_7)
-        g2 = Segment(Point(X_2, Y_2, evaluate=False), Point(X_7, Y_7, evaluate=False))
-        l2 = g2.midpoint.evalf()
-        femm.mi_selectsegment(l2.x, l2.y)
-        femm.mi_setgroup(1)
-
-        if ratio == 1:
-            femm.mi_addsegment(r3[0].x, r3[0].y, xend, yend)
-            g3 = Segment(Point(r3[0].x, r3[0].y, evaluate=False), Point(xend, yend, evaluate=False))
-            l3 = g3.midpoint.evalf()
-            femm.mi_selectsegment(l3.x, l3.y)
+        # Draw nodes in femm
+        # Stator
+        for i in range(len(stator[:,0])):
+            femm.mi_addnode(stator[i,0],stator[i,1])
+        # Rotor
+        for i in range(len(rotor[:,0])):
+            femm.mi_addnode(rotor[i,0],rotor[i,1])
+        # Coil slot 1
+        for i in range(len(coil_slot1[:,0])):
+            femm.mi_addnode(coil_slot1[i,0],coil_slot1[i,1])
+            femm.mi_selectnode(coil_slot1[i,0],coil_slot1[i,1])
             femm.mi_setgroup(1)
-            X_8 = xend + h_m / (1 + m**2) ** 0.5
-            Y_8 = m * (X_8 - xend) + yend
-            femm.mi_addnode(X_8, Y_8)
-            femm.mi_selectnode(X_8, Y_8)
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(X_8, Y_8, xend, yend)
-            g4 = Segment(Point(xend, yend, evaluate=False), Point(X_8, Y_8, evaluate=False))
-            l4 = g4.midpoint.evalf()
-            mag_dir = np.arctan(float(g4.slope)) * 180 / np.pi
-            femm.mi_selectsegment(l4.x, l4.y)
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(r3[0].x, r3[0].y, X_8, Y_8)
-            g5 = Segment(Point(r3[0].x, r3[0].y, evaluate=False), Point(X_8, Y_8, evaluate=False))
-            l5 = g5.midpoint.evalf()
-            femm.mi_selectsegment(l5.x, l5.y)
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(X_8, Y_8, X_7, Y_7)
-            g6 = Segment(Point(X_7, Y_7, evaluate=False), Point(X_8, Y_8, evaluate=False))
-            l6 = g6.midpoint.evalf()
-            femm.mi_selectsegment(l6.x, l6.y)
+            femm.mi_clearselected()
+        # Magnet 1
+        for i in range(len(magnet1[:,0])):
+            femm.mi_addnode(magnet1[i,0],magnet1[i,1])
+            femm.mi_selectnode(magnet1[i,0],magnet1[i,1])
+            femm.mi_setgroup(2)
+            femm.mi_clearselected()
+        # Magnet 2
+        for i in range(len(magnet2[:,0])):
+            femm.mi_addnode(magnet2[i,0],magnet2[i,1])
+            femm.mi_selectnode(magnet2[i,0],magnet2[i,1])
+            femm.mi_setgroup(2)
+            femm.mi_clearselected()
 
+        # Draw coils
+        start_index = np.array([0,1,8,9,1,2,7,2,3,5,6], dtype=int)
+        end_index = np.array([1,8,9,0,2,7,8,3,4,6,7], dtype=int)
+        for i in range(len(start_index)):
+            femm.mi_addsegment(coil_slot1[start_index[i],0],coil_slot1[start_index[i],1],coil_slot1[end_index[i],0],coil_slot1[end_index[i],1])
+            femm.mi_selectsegment((coil_slot1[start_index[i],0]+coil_slot1[end_index[i],0])/2,(coil_slot1[start_index[i],1]+coil_slot1[end_index[i],1])/2)
             femm.mi_setgroup(1)
-            air_1 = Polygon(
-                Point(xend, yend, evaluate=False),
-                Point(r3[0].x, r3[0].y, evaluate=False),
-                Point(X_8, Y_8, evaluate=False),
-            )
-            mag = Polygon(Point(xstart, ystart, evaluate=False), Point(X_8, Y_8, evaluate=False))
-            l1 = mag.midpoint.evalf()
+            femm.mi_clearselected()
 
-        else:
+        # Copy coils five times
+        femm.mi_selectgroup(1)
+        femm.mi_copyrotate(0, 0, np.rad2deg(alpha_y), 5)
+        femm.mi_clearselected()
 
-            angle = np.arctan(float(r3[0].y) / float(r3[0].x))
-            X_6, Y_6 = (rad + bridge_thickness) * np.cos(angle), (rad + bridge_thickness) * np.sin(angle)
-            X_8 = xend + h_m / (1 + m**2) ** 0.5
-            Y_8 = m * (X_8 - xend) + yend
-            femm.mi_addnode(X_8, Y_8)
-            femm.mi_selectnode(X_8, Y_8)
+        # Draw stator
+        femm.mi_addsegment(stator[0,0],stator[0,1],stator[1,0],stator[1,1])
+        femm.mi_addsegment(stator[2,0],stator[2,1],stator[3,0],stator[3,1])
+        femm.mi_addarc(stator[0,0],stator[0,1], stator[3,0],stator[3,1],np.rad2deg(alpha_s),1)
 
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(xend, yend, X_8, Y_8)
-            femm.mi_selectsegment(X_8, Y_8)
-            femm.mi_setgroup(1)
-            g4 = Segment(Point(xend, yend, evaluate=False), Point(X_8, Y_8, evaluate=False))
-            l4 = g4.midpoint.evalf()
-            line4 = Segment(Point(xstart, ystart, evaluate=False), Point(X_7, Y_7, evaluate=False))
-            m = line4.slope
-            mag_dir = np.arctan(float(m)) * 180 / np.pi
-            femm.mi_selectsegment(l4.x, l4.y)
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(r3[0].x, r3[0].y, xend, yend)
-            g5 = Segment(Point(xend, yend, evaluate=False), Point(r3[0].x, r3[0].y, evaluate=False))
-            l5 = g5.midpoint.evalf()
-            femm.mi_selectsegment(l5.x, l5.y)
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(X_8, Y_8, X_7, Y_7)
-            g6 = Segment(Point(X_8, Y_8, evaluate=False), Point(X_7, Y_7, evaluate=False))
-            l6 = g6.midpoint.evalf()
-            femm.mi_selectsegment(l6.x, l6.y)
-            femm.mi_setgroup(1)
-            femm.mi_addnode(X_6, Y_6)
-            femm.mi_selectnode(X_6, Y_6)
-            femm.mi_setgroup(1)
-            femm.mi_addsegment(X_8, Y_8, X_6, Y_6)
-            g7 = Segment(Point(X_8, Y_8, evaluate=False), Point(X_6, Y_6, evaluate=False))
-            l7 = g7.midpoint.evalf()
-            femm.mi_selectsegment(l7.x, l7.y)
-            femm.mi_setgroup(1)
+        # Get coordinates of the six slot openings
+        slot_o = np.zeros((12,2))
+        for i in range(6):
+            slot_o[i*2,:] = rotate(0., 0., coil_slot1[4,0], coil_slot1[4,1], alpha_y*(i))
+            slot_o[i*2+1,:] = rotate(0., 0., coil_slot1[5,0], coil_slot1[5,1], alpha_y*(i))
 
-            femm.mi_addsegment(r3[0].x, r3[0].y, X_6, Y_6)
-            g8 = Segment(Point(r3[0].x, r3[0].y, evaluate=False), Point(X_6, Y_6, evaluate=False))
-            l8 = g8.midpoint.evalf()
-            femm.mi_selectsegment(l8.x, l8.y)
-            femm.mi_setgroup(1)
-            air_1 = Polygon(
-                Point(xend, yend, evaluate=False),
-                Point(r3[0].x, r3[0].y, evaluate=False),
-                Point(X_6, Y_6, evaluate=False),
-                Point(X_8, Y_8, evaluate=False),
-            )
-            mag = Polygon(Point(xstart, ystart, evaluate=False), Point(X_8, Y_8, evaluate=False))
-            l1 = mag.midpoint.evalf()
+        # Complete drawing of the six yoke teeth
+        femm.mi_addarc(stator[1,0],stator[1,1],slot_o[0,0],slot_o[0,1],np.rad2deg(alpha_y*0.45),1)
+        for i in range(5):
+            femm.mi_addarc(slot_o[i*2+1,0],slot_o[i*2+1,1],slot_o[i*2+2,0],slot_o[i*2+2,1],np.rad2deg(alpha_y*0.45),1)
+        femm.mi_addarc(slot_o[-1,0],+slot_o[-1,1],stator[2,0],stator[2,1],np.rad2deg(alpha_y*0.45),1)
 
-        air_2 = Polygon(
-            Point(X_1, Y_1, evaluate=False),
-            Point(X_2, Y_2, evaluate=False),
-            Point(X_7, Y_7, evaluate=False),
-            Point(xstart, ystart, evaluate=False),
-        )
+
+        # Draw rotor
+        start_index = np.array([0,2], dtype=int)
+        end_index = np.array([1,3], dtype=int)
+        for i in range(len(start_index)):
+            femm.mi_addsegment(rotor[start_index[i],0],rotor[start_index[i],1],rotor[end_index[i],0],rotor[end_index[i],1])
+        start_index = np.array([1,0], dtype=int)
+        end_index = np.array([2,3], dtype=int)
+        for i in range(len(start_index)):
+            femm.mi_addarc(rotor[start_index[i],0],rotor[start_index[i],1],rotor[end_index[i],0],rotor[end_index[i],1],np.rad2deg(alpha_s),1)
+
+        # Close sides of air gap to be able to define boundary conditions, see below
+        femm.mi_addsegment(stator[1,0],stator[1,1],rotor[0,0],rotor[0,1])
+        femm.mi_addsegment(stator[2,0],stator[2,1],rotor[3,0],rotor[3,1])
+
+        # Draw first magnet
+        # import matplotlib.pyplot as plt
+        # for i in range(len(magnet1[:,0])):
+        #     plt.plot(magnet1[i,0],magnet1[i,1], '*', label=str(i))
+        # plt.legend()
+        # plt.show()
+        start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
+        end_index = np.array([1,7,0,5,6,7,4,3,6,3,4], dtype=int)
+        for i in range(len(start_index)):
+            femm.mi_addsegment(magnet1[start_index[i],0],magnet1[start_index[i],1],magnet1[end_index[i],0],magnet1[end_index[i],1])
+            femm.mi_selectsegment((magnet1[start_index[i],0]+magnet1[end_index[i],0])/2,(magnet1[start_index[i],1]+magnet1[end_index[i],1])/2)
+            femm.mi_setgroup(2)
+            femm.mi_clearselected()
+        # Add labels first magnet
+        # Air
+        air_1 = Polygon(
+                        Point(magnet1[0,0], magnet1[0,1], evaluate=False),
+                        Point(magnet1[1,0], magnet1[1,1], evaluate=False),
+                        Point(magnet1[7,0], magnet1[7,1], evaluate=False),
+                    )
         femm.mi_addblocklabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
         femm.mi_selectlabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
         femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
+        femm.mi_setgroup(2)
         femm.mi_clearselected()
-
-        femm.mi_addblocklabel(l1.x, l1.y)
-        femm.mi_selectlabel(l1.x, l1.y)
-        femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir, 1, 0)
-        femm.mi_clearselected()
-
+        air_2 = Polygon(
+                        Point(magnet1[2,0], magnet1[2,1], evaluate=False),
+                        Point(magnet1[3,0], magnet1[3,1], evaluate=False),
+                        Point(magnet1[4,0], magnet1[4,1], evaluate=False),
+                    )
         femm.mi_addblocklabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
         femm.mi_selectlabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
         femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
-        femm.mi_clearselected()
-        outputs["r_mag_center"] = r_mag_label = (centroid(mag).evalf().x ** 2 + centroid(mag).evalf().y ** 2) ** 0.5
-
-        femm.mi_selectgroup(1)
-        femm.mi_mirror(x0, y0, xc, yc)
-        femm.mi_clearselected()
-
-        mag1 = np.sqrt(X_2**2 + Y_2**2)
-        mag2 = np.sqrt(X_1**2 + Y_2**2)
-        x9, y9 = femm.mi_selectnode(mag1 * np.cos(theta_p_r - angle), mag1 * np.sin(theta_p_r - angle))
-        x10, y10 = femm.mi_selectnode(mag2 * np.cos(theta_p_r - angle), mag2 * np.sin(theta_p_r - angle))
-        line6 = Segment(Point(x9, y9, evaluate=False), Point(x10, y10, evaluate=False))
-        # mag_dir2=line6.slope*180/np.pi
-        #        femm.mi_clearselected()
-        femm.mi_selectgroup(1)
-        femm.mi_mirror(x0, y0, xmag1, ymag1)
-
-        femm.mi_clearselected()
-        outputs["r_mag_center"] = r_mag_label = (centroid(mag).evalf().x ** 2 + centroid(mag).evalf().y ** 2) ** 0.5
-        r_center = (xc**2 + yc**2) ** 0.5
-        femm.mi_selectlabel(
-            r_mag_label * np.cos(1.25*theta_p_r + 0.5*theta_m_r),
-            r_mag_label * np.sin(1.25*theta_p_r + 0.5*theta_m_r),
-        )
-        femm.mi_setblockprop("N48SH", 1, 1, 0, mag_dir + theta_p_d + 180, 1, 0)
-        femm.mi_clearselected()
-        femm.mi_selectlabel(
-            r_mag_label * np.cos(1.75*theta_p_r),
-            r_mag_label * np.sin(1.75*theta_p_r),
-        )
-        femm.mi_deleteselected()
-        femm.mi_selectlabel(
-            r_mag_label * np.cos(1.25*theta_p_r),
-            r_mag_label * np.sin(1.25*theta_p_r),
-        )
-        femm.mi_mirror(
-            x0,
-            y0,
-            (r_g + d_mag + bridge_thickness) * np.cos(1.5*theta_p_r),
-            (r_g + d_mag + bridge_thickness) * np.sin(1.5*theta_p_r),
-        )
-        femm.mi_clearselected()
-
-        femm.mi_selectgroup(1)
-        femm.mi_copyrotate(x0, y0, theta_p_d * 2, 1)
-        femm.mi_setgroup(1)
-        femm.mi_clearselected()
-
-        outputs["r_outer_active"] = r_outer = r_center + h_yr
-        femm.mi_seteditmode("group")
-        femm.mi_selectrectangle(
-            (r_g - g * 0.5) * np.cos(theta_p_r),
-            (r_g - g * 0.5) * np.sin(theta_p_r),
-            r_outer * np.cos(np.deg2rad(-0.5)),
-            r_outer * np.sin(np.deg2rad(-0.5)),
-        )
-
-        femm.mi_copyrotate(x0, y0, theta_p_d * 4, 1)
-        femm.mi_clearselected()
-        seg = Segment(
-            Point(r3[0].x, r3[0].y, evaluate=False),
-            Point((rad + bridge_thickness) * np.cos(angle), (rad + bridge_thickness) * np.sin(angle), evaluate=False),
-        )
-        l11 = seg.midpoint.evalf()
-        femm.mi_selectsegment(l11.x, l11.y)
-        femm.mi_copyrotate(x0, y0, theta_p_d * 4, 1)
-        femm.mi_clearselected()
-
-        femm.mi_addnode(r_g * np.cos(0), r_g * np.sin(0))
-
-        femm.mi_addnode(r_g * np.cos(theta_p_r * 5), r_g * np.sin(theta_p_r * 5))
-        femm.mi_addarc(
-            r_g * np.cos(0),
-            r_g * np.sin(0),
-            r_g * np.cos(theta_p_r * 5),
-            r_g * np.sin(theta_p_r * 5),
-            theta_p_d * 5,
-            1,
-        )
-
-        femm.mi_selectgroup(1)
-
-        femm.mi_addnode(r_outer * np.cos(0), r_outer * np.sin(0))
-        femm.mi_addnode(r_outer * np.cos(theta_p_r * 5), r_outer * np.sin(theta_p_r * 5))
-        femm.mi_addarc(
-            r_outer * np.cos(0),
-            r_outer * np.sin(0),
-            r_outer * np.cos(theta_p_r * 5),
-            r_outer * np.sin(theta_p_r * 5),
-            theta_p_d * 5,
-            1,
-        )
-
-        # Draw the stator slots and Stator coils
-
-        X_9, Y_9 = r_a, 0
-        X_10, Y_10 = r_a * np.cos(theta_tau_s_new), r_a * np.sin(theta_tau_s_new)
-        X_11, Y_11 = (r_a - h_s1) * np.cos(theta_tau_s_new), (r_a - h_s1) * np.sin(theta_tau_s_new)
-        X_12, Y_12 = (r_a - h_s1 - h_s2) * np.cos(theta_tau_s_new2), (r_a - h_s1 - h_s2) * np.sin(theta_tau_s_new2)
-        X_13, Y_13 = (r_a - h_s1 - h_s2 - h_s / 2) * np.cos(theta_tau_s_new2), (r_a - h_s1 - h_s2 - h_s / 2) * np.sin(
-            theta_tau_s_new2
-        )
-        X_14, Y_14 = (r_a - h_s1 - h_s2 - h_s) * np.cos(theta_tau_s_new2), (r_a - h_s1 - h_s2 - h_s) * np.sin(
-            theta_tau_s_new2
-        )
-        #X_15, Y_15 = (r_a) * np.cos(theta_tau_s_new3), (r_a) * np.sin(theta_tau_s_new3)
-        #X_16, Y_16 = (r_a - h_s1) * np.cos(theta_tau_s_new3), (r_a - h_s1) * np.sin(theta_tau_s_new3)
-        X_17, Y_17 = (r_a - h_s1 - h_s2) * np.cos(theta_tau_s_new4), (r_a - h_s1 - h_s2) * np.sin(theta_tau_s_new4)
-        X_18, Y_18 = (r_a - h_s1 - h_s2 - h_s / 2) * np.cos(theta_tau_s_new4), (r_a - h_s1 - h_s2 - h_s / 2) * np.sin(
-            theta_tau_s_new4
-        )
-        X_19, Y_19 = (r_a - h_s1 - h_s2 - h_s) * np.cos(theta_tau_s_new4), (r_a - h_s1 - h_s2 - h_s) * np.sin(
-            theta_tau_s_new4
-        )
-
-        X_21, Y_21 = (r_a - h_s1 - h_s2 - h_s - h_ys), 0
-        X_22, Y_22 = (r_a - h_s1 - h_s2 - h_s - h_ys) * np.cos(theta_p_r * 5), (
-            r_a - h_s1 - h_s2 - h_s - h_ys
-        ) * np.sin(theta_p_r * 5)
-
-        femm.mi_addnode(X_9, Y_9)
-        femm.mi_selectnode(X_9, Y_9)
-        femm.mi_setgroup(2)
-
-        femm.mi_addnode(X_10, Y_10)
-        femm.mi_selectnode(X_10, Y_10)
-        femm.mi_setgroup(2)
-
-        femm.mi_addnode(X_11, Y_11)
-        femm.mi_selectnode(X_11, Y_11)
-        femm.mi_setgroup(2)
-
-        femm.mi_addnode(X_12, Y_12)
-        femm.mi_selectnode(X_12, Y_12)
-        femm.mi_setgroup(2)
-
-        femm.mi_addnode(X_13, Y_13)
-        femm.mi_selectnode(X_13, Y_13)
-        femm.mi_setgroup(2)
-
-        femm.mi_addnode(X_14, Y_14)
-        femm.mi_selectnode(X_14, Y_14)
-        femm.mi_setgroup(2)
-
-        femm.mi_addarc(X_9, Y_9, X_10, Y_10, np.rad2deg(theta_tau_s_new), 1)
-        femm.mi_selectarcsegment(X_10, Y_10)
         femm.mi_setgroup(2)
         femm.mi_clearselected()
-
-        femm.mi_addsegment(X_11, Y_11, X_10, Y_10)
-        femm.mi_selectsegment(X_10, Y_10)
-        femm.mi_setgroup(2)
+        # Magnet material
+        mm = Polygon(
+                        Point(magnet1[7,0], magnet1[7,1], evaluate=False),
+                        Point(magnet1[1,0], magnet1[1,1], evaluate=False),
+                        Point(magnet1[5,0], magnet1[5,1], evaluate=False),
+                        Point(magnet1[6,0], magnet1[6,1], evaluate=False),
+                    )
+        magnet1_centroid_xy = np.array([centroid(mm).evalf().x, centroid(mm).evalf().y])
+        r_mag_center = (centroid(mm).evalf().x ** 2 + centroid(mm).evalf().y ** 2) ** 0.5
+        femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+        femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+        magnet1_dir = np.rad2deg(p2p0_angle)-90.
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet1_dir, 1, 0)
+        femm.mi_setgroup(3)
         femm.mi_clearselected()
 
-        femm.mi_addsegment(X_11, Y_11, X_12, Y_12)
-        femm.mi_selectsegment(X_12, Y_12)
+        # Draw second magnet
+        start_index = np.array([0,1,7,1,5,6,5,4,2,2,3], dtype=int)
+        end_index = np.array([1,7,0,5,6,7,4,3,6,3,4], dtype=int)
+        for i in range(len(start_index)):
+            femm.mi_addsegment(magnet2[start_index[i],0],magnet2[start_index[i],1],magnet2[end_index[i],0],magnet2[end_index[i],1])
+            femm.mi_selectsegment((magnet2[start_index[i],0]+magnet2[end_index[i],0])/2,(magnet2[start_index[i],1]+magnet2[end_index[i],1])/2)
+            femm.mi_setgroup(2)
+            femm.mi_clearselected()
+        # Add labels second magnet
+        # Air
+        air_1 = Polygon(
+                        Point(magnet2[0,0], magnet2[0,1], evaluate=False),
+                        Point(magnet2[1,0], magnet2[1,1], evaluate=False),
+                        Point(magnet2[7,0], magnet2[7,1], evaluate=False),
+                    )
+        femm.mi_addblocklabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
+        femm.mi_selectlabel(centroid(air_1).evalf().x, centroid(air_1).evalf().y)
+        femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
         femm.mi_setgroup(2)
         femm.mi_clearselected()
-
-        femm.mi_addsegment(X_13, Y_13, X_12, Y_12)
-        femm.mi_selectsegment(X_13, Y_13)
+        air_2 = Polygon(
+                        Point(magnet2[2,0], magnet2[2,1], evaluate=False),
+                        Point(magnet2[3,0], magnet2[3,1], evaluate=False),
+                        Point(magnet2[4,0], magnet2[4,1], evaluate=False),
+                    )
+        femm.mi_addblocklabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
+        femm.mi_selectlabel(centroid(air_2).evalf().x, centroid(air_2).evalf().y)
+        femm.mi_setblockprop("Air", 1, 1, 0, 0, 1, 0)
         femm.mi_setgroup(2)
         femm.mi_clearselected()
-
-        femm.mi_addsegment(X_14, Y_14, X_13, Y_13)
-        femm.mi_selectsegment(X_14, Y_14)
-        femm.mi_setgroup(2)
+        # Magnet material
+        mm = Polygon(
+                        Point(magnet2[7,0], magnet2[7,1], evaluate=False),
+                        Point(magnet2[1,0], magnet2[1,1], evaluate=False),
+                        Point(magnet2[5,0], magnet2[5,1], evaluate=False),
+                        Point(magnet2[6,0], magnet2[6,1], evaluate=False),
+                    )
+        magnet2_centroid_xy = np.array([centroid(mm).evalf().x, centroid(mm).evalf().y])
+        femm.mi_addblocklabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+        femm.mi_selectlabel(centroid(mm).evalf().x, centroid(mm).evalf().y)
+        magnet2_dir = 90. - np.rad2deg(p2p0_angle)
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet2_dir, 1, 0)
+        femm.mi_setgroup(3)
         femm.mi_clearselected()
 
+        # Copy magnet-pair four times
         femm.mi_selectgroup(2)
-        femm.mi_mirror(x0, y0, r_g * np.cos(theta_tau_s * 0.5), r_g * np.sin(theta_tau_s * 0.5))
+        femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p), 4)
+        femm.mi_clearselected()
+        # Handle alternating magnet orientation
+        # Mirror the ones pointing out
+        femm.mi_selectgroup(3)
+        femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p)*2., 2)
+        femm.mi_clearselected()
+        # Assign the first pair pointing in
+        magnet3_centroid_xy = rotate(0., 0., magnet1_centroid_xy[0], magnet1_centroid_xy[1], alpha_p)
+        magnet4_centroid_xy = rotate(0., 0., magnet2_centroid_xy[0], magnet2_centroid_xy[1], alpha_p)
+        femm.mi_addblocklabel(magnet3_centroid_xy[0], magnet3_centroid_xy[1])
+        femm.mi_selectlabel(magnet3_centroid_xy[0], magnet3_centroid_xy[1])
+        magnet3_dir = magnet1_dir + np.rad2deg(alpha_p) + 180.
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet3_dir, 1, 0)
+        femm.mi_setgroup(4)
+        femm.mi_clearselected()
+        femm.mi_addblocklabel(magnet4_centroid_xy[0], magnet4_centroid_xy[1])
+        femm.mi_selectlabel(magnet4_centroid_xy[0], magnet4_centroid_xy[1])
+        magnet4_dir = magnet2_dir + np.rad2deg(alpha_p) + 180.
+        femm.mi_setblockprop("N48SH", 1, 1, 0, magnet4_dir, 1, 0)
+        femm.mi_setgroup(4)
+        femm.mi_clearselected()
+        # Mirror the ones pointing in
+        femm.mi_selectgroup(4)
+        femm.mi_copyrotate(0, 0, np.rad2deg(alpha_p)*2., 1)
         femm.mi_clearselected()
 
-        femm.mi_addarc(X_12, Y_12, X_17, Y_17, np.rad2deg(theta_b_s), 1)
-        femm.mi_selectarcsegment(X_17, Y_17)
-        femm.mi_setgroup(2)
+        # Label rotor yoke
+        rotor_yoke = Polygon(
+                        Point(rotor[0,0], rotor[0,1], evaluate=False),
+                        Point(rotor[1,0], rotor[1,1], evaluate=False),
+                        Point(magnet1[0,0], magnet1[0,1], evaluate=False),
+                    )
+        femm.mi_addblocklabel(centroid(rotor_yoke).evalf().x, centroid(rotor_yoke).evalf().y)
+        femm.mi_selectlabel(centroid(rotor_yoke).evalf().x, centroid(rotor_yoke).evalf().y)
+        femm.mi_setblockprop("M-36 Steel")
         femm.mi_clearselected()
-
-        femm.mi_addarc(X_13, Y_13, X_18, Y_18, np.rad2deg(theta_b_s), 1)
-        femm.mi_selectarcsegment(X_18, Y_18)
-        femm.mi_setgroup(2)
+        # Label stator yoke
+        stator_yoke = Polygon(
+                        Point(stator[0,0], stator[0,1], evaluate=False),
+                        Point(stator[1,0], stator[1,1], evaluate=False),
+                        Point(coil_slot1[1,0], coil_slot1[1,1], evaluate=False),
+                    )
+        femm.mi_addblocklabel(centroid(stator_yoke).evalf().x, centroid(stator_yoke).evalf().y)
+        femm.mi_selectlabel(centroid(stator_yoke).evalf().x, centroid(stator_yoke).evalf().y)
+        femm.mi_setblockprop("M-36 Steel")
         femm.mi_clearselected()
-
-        femm.mi_addarc(X_14, Y_14, X_19, Y_19, np.rad2deg(theta_b_s), 1)
-        femm.mi_selectarcsegment(X_19, Y_19)
-        femm.mi_setgroup(2)
+        # Label air gap
+        air_gap = Polygon(
+                        Point(stator[1,0], stator[1,1], evaluate=False),
+                        Point(rotor[0,0], rotor[0,1], evaluate=False),
+                        Point(coil_slot1[4,0], coil_slot1[4,1], evaluate=False),
+                    )
+        femm.mi_addblocklabel(centroid(air_gap).evalf().x, centroid(air_gap).evalf().y)
+        femm.mi_selectlabel(centroid(air_gap).evalf().x, centroid(air_gap).evalf().y)
+        femm.mi_setblockprop("Air")
         femm.mi_clearselected()
+        # Label 12 coils
+        labels_coils = ["A-","A-","A+","B-","B+","B+","B-","C+","C-","C-","C+","A-"]
+        coil1l = Polygon(
+                        Point(coil_slot1[0,0], coil_slot1[0,1], evaluate=False),
+                        Point(coil_slot1[1,0], coil_slot1[1,1], evaluate=False),
+                        Point(coil_slot1[8,0], coil_slot1[8,1], evaluate=False),
+                        Point(coil_slot1[9,0], coil_slot1[9,1], evaluate=False),
+                    )
+        coil1r = Polygon(
+                        Point(coil_slot1[1,0], coil_slot1[1,1], evaluate=False),
+                        Point(coil_slot1[2,0], coil_slot1[2,1], evaluate=False),
+                        Point(coil_slot1[7,0], coil_slot1[7,1], evaluate=False),
+                        Point(coil_slot1[8,0], coil_slot1[8,1], evaluate=False),
+                    )
+        xy_labels_coils = np.zeros((12,2))
+        xy_labels_coils[0,:] = centroid(coil1l).evalf().x, centroid(coil1l).evalf().y
+        xy_labels_coils[1,:] = centroid(coil1r).evalf().x, centroid(coil1r).evalf().y
+        for i in range(2,len(xy_labels_coils[:,0]),2):
+            xy_labels_coils[i,:] = rotate(0.,0., xy_labels_coils[i-2,0], xy_labels_coils[i-2,1], alpha_y)
+            xy_labels_coils[i+1,:] = rotate(0.,0., xy_labels_coils[i-1,0], xy_labels_coils[i-1,1], alpha_y)
+        for i in range(len(xy_labels_coils[:,0])):
+            femm.mi_addblocklabel(xy_labels_coils[i,0],xy_labels_coils[i,1])
+            femm.mi_selectlabel(xy_labels_coils[i,0],xy_labels_coils[i,1])
+            femm.mi_setblockprop("20 SWG", 1, 0, labels_coils[i], 0, 15, N_c)
+            femm.mi_clearselected()
 
-        femm.mi_selectgroup(2)
-        femm.mi_copyrotate(x0, y0, np.rad2deg(theta_tau_s), 5)
+        # Add boundary conditions
+        # Inner radius stator
+        femm.mi_selectarcsegment(stator[0,0], stator[0,1]+1.e-3)
+        femm.mi_setarcsegmentprop(1, "Dirichlet", 0, 50)
         femm.mi_clearselected()
-
-        femm.mi_addnode(X_21, Y_21)
-        femm.mi_selectnode(X_21, Y_21)
-        femm.mi_setgroup(2)
-
-        femm.mi_addnode(X_22, Y_22)
-        femm.mi_selectnode(X_22, Y_22)
-        femm.mi_setgroup(2)
-
-        femm.mi_addarc(X_21, Y_21, X_22, Y_22, theta_p_d * 5, 1)
-        femm.mi_selectarcsegment(X_22, Y_22)
-        femm.mi_setarcsegmentprop(10, "Dirichlet", 0, 50)
+        # Outer radius rotor
+        femm.mi_selectarcsegment(rotor[1,0], rotor[1,1]+1.e-3)
+        femm.mi_setarcsegmentprop(1, "Dirichlet", 0, 50)
         femm.mi_clearselected()
-
-        femm.mi_addsegment(X_9, Y_9, X_21, Y_21)
-        femm.mi_selectsegment(X_21, Y_21)
-        femm.mi_setgroup(13)
-        femm.mi_clearselected()
-        femm.mi_selectsegment(X_21, Y_21)
+        # Sides sector
+        femm.mi_selectsegment((stator[0,0]+stator[1,0])/2., (stator[0,1]+stator[1,1])/2.)
         femm.mi_setsegmentprop("apbc1", 0, 1, 0, 13)
         femm.mi_clearselected()
-
-        femm.mi_addsegment(X_9, Y_9, r_g, 0)
-        femm.mi_selectsegment(r_g, 0)
-        femm.mi_setgroup(13)
+        femm.mi_selectsegment((stator[2,0]+stator[3,0])/2., (stator[2,1]+stator[3,1])/2.)
+        femm.mi_setsegmentprop("apbc1", 0, 1, 0, 13)
         femm.mi_clearselected()
-        femm.mi_selectsegment(r_g, 0)
+        femm.mi_selectsegment((rotor[0,0]+stator[1,0])/2., (rotor[0,1]+stator[1,1])/2.)
         femm.mi_setsegmentprop("apbc2", 0, 1, 0, 13)
         femm.mi_clearselected()
-
-        femm.mi_addnode(r_outer, 0)
-        femm.mi_selectnode(r_outer, 0)
-        femm.mi_setgroup(2)
-
-        femm.mi_addsegment(r_g, 0, r_outer, 0)
-        femm.mi_selectsegment(r_outer, 0)
-        femm.mi_setgroup(13)
-
+        femm.mi_selectsegment((stator[2,0]+rotor[3,0])/2., (stator[2,1]+rotor[3,1])/2.)
+        femm.mi_setsegmentprop("apbc2", 0, 1, 0, 13)
+        femm.mi_clearselected()
+        femm.mi_selectsegment((rotor[0,0]+rotor[1,0])/2., (rotor[0,1]+rotor[1,1])/2.)
+        femm.mi_setsegmentprop("apbc3", 0, 1, 0, 13)
+        femm.mi_clearselected()
+        femm.mi_selectsegment((rotor[2,0]+rotor[3,0])/2., (rotor[2,1]+rotor[3,1])/2.)
         femm.mi_setsegmentprop("apbc3", 0, 1, 0, 13)
         femm.mi_clearselected()
 
-        femm.mi_selectgroup(13)
-        femm.mi_copyrotate(x0, y0, theta_p_d * 5, 1)
-        femm.mi_clearselected()
-
-        femm.mi_selectarcsegment(r_outer * np.cos(theta_p_r * 2.5), r_outer * np.sin(theta_p_r * 2.5))
-        femm.mi_setarcsegmentprop(10, "Dirichlet", 0, 50)
-        femm.mi_clearselected()
-
-        femm.mi_addblocklabel(
-            (r_a - h_s1 - h_s2 - h_s - h_ys * 0.5) * np.cos(theta_p_r * 2.5),
-            (r_a - h_s1 - h_s2 - h_s - h_ys * 0.5) * np.sin(theta_p_r * 2.5),
-        )
-        femm.mi_selectlabel(
-            (r_a - h_s1 - h_s2 - h_s - h_ys * 0.5) * np.cos(theta_p_r * 2.5),
-            (r_a - h_s1 - h_s2 - h_s - h_ys * 0.5) * np.sin(theta_p_r * 2.5),
-        )
-        femm.mi_setblockprop("M-36 Steel")
-        femm.mi_clearselected()
-
-        femm.mi_addblocklabel(
-            (r_outer - 0.5 * h_yr) * np.cos(theta_p_r * 2.5), (r_outer - 0.5 * h_yr) * np.sin(theta_p_r * 2.5)
-        )
-        femm.mi_selectlabel(
-            (r_outer - 0.5 * h_yr) * np.cos(theta_p_r * 2.5), (r_outer - 0.5 * h_yr) * np.sin(theta_p_r * 2.5)
-        )
-        femm.mi_setblockprop("M-36 Steel")
-        femm.mi_clearselected()
-
-        femm.mi_addblocklabel(
-            (r_a + (r_g - r_a) * 0.5) * np.cos(theta_p_r * 2.5),
-            (r_a + (r_g - r_a) * 0.5) * np.sin(theta_p_r * 2.5),
-        )
-        femm.mi_selectlabel(
-            (r_a + (r_g - r_a) * 0.5) * np.cos(theta_p_r * 2.5),
-            (r_a + (r_g - r_a) * 0.5) * np.sin(theta_p_r * 2.5),
-        )
-        femm.mi_setblockprop("Air")
-        femm.mi_clearselected()
-
-        ##        femm.mi_addblocklabel((yoke_radius*0.5)*np.cos(theta_p_r*2.5),(yoke_radius*0.5)*np.sin(theta_p_r*2.5))
-        ##        femm.mi_selectlabel((yoke_radius*0.5)*np.cos(theta_p_r*2.5),(yoke_radius*0.5)*np.sin(theta_p_r*2.5))
-        ##        femm.mi_setblockprop("Air")
-        ##        femm.mi_clearselected()
-        ##
-        ##        femm.mi_addblocklabel((r_outer*1.5)*np.cos(theta_p_r*2.5),(r_outer*1.5)*np.sin(theta_p_r*2.5))
-        ##        femm.mi_selectlabel((r_outer*1.5)*np.cos(theta_p_r*2.5),(r_outer*1.5)*np.sin(theta_p_r*2.5))
-        ##        femm.mi_setblockprop("Air")
-        ##        femm.mi_clearselected()
-
-        layer_1 = r_a - h_s1 - h_s2 - h_s * 0.25
-        layer_2 = r_a - h_s1 - h_s2 - h_s * 0.75
-
-        femm.mi_addblocklabel(layer_1 * np.cos(theta_tau_s * 0.5), layer_1 * np.sin(theta_tau_s * 0.5))
-        femm.mi_selectlabel(layer_1 * np.cos(theta_tau_s * 0.5), layer_1 * np.sin(theta_tau_s * 0.5))
-        femm.mi_copyrotate(0, 0, np.rad2deg(theta_tau_s), 5)
-
-        femm.mi_addblocklabel(layer_2 * np.cos(theta_tau_s * 0.5), layer_2 * np.sin(theta_tau_s * 0.5))
-        femm.mi_selectlabel(layer_2 * np.cos(theta_tau_s * 0.5), layer_2 * np.sin(theta_tau_s * 0.5))
-        femm.mi_copyrotate(0, 0, np.rad2deg(theta_tau_s), 5)
-
-        Phases1 = ["A-", "A+", "B+", "B-", "C-", "C+"]
-        Phases2 = ["A-", "B-", "B+", "C+", "C-", "A-"]
-
-        angle_r = theta_tau_s * 0.5
-        delta_theta = theta_tau_s
-        for pitch in range(1, 7):
-            femm.mi_selectlabel(
-                layer_2 * np.cos(angle_r + (pitch - 1) * (delta_theta)),
-                layer_2 * np.sin(angle_r + (pitch - 1) * (delta_theta)),
-            )
-
-            femm.mi_setblockprop("20 SWG", 1, 0, Phases1[pitch - 1], 0, 15, N_c)
-            femm.mi_clearselected()
-            femm.mi_selectlabel(
-                layer_1 * np.cos(angle_r + (pitch - 1) * (delta_theta)),
-                layer_1 * np.sin(angle_r + (pitch - 1) * (delta_theta)),
-            )
-            femm.mi_setblockprop("20 SWG", 1, 0, Phases2[pitch - 1], 0, 15, N_c)
-            femm.mi_clearselected()
-
         femm.mi_saveas("IPM_new.fem")
+
+        # Compute outputs
         Time = 60 / (f * 360)
-        Theta_elec = (theta_tau_s * Time * 180 / np.pi) * 2 * np.pi * f
+        Theta_elec = (alpha_y * Time * 180 / np.pi) * 2 * np.pi * f
+        outputs["r_mag_center"] = r_mag_center
+        outputs["tau_p"] = tau_p = np.pi * r_g / pp
+        outputs["alpha_v"] = np.rad2deg(p2p0_angle) * 2.
+        mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
+        outputs["l_m"] = mag.length
+        outputs["tau_s"] = alpha_pr * D_a / 2.
+        b_s = coil_slot1[-1,1] - coil_slot1[0,1]
+        outputs["b_s"] = b_s
+        outputs["h_s"] = h_t - h_so - h_wo
+        outputs["r_outer_active"] = r_ro
+        outputs["r_g"] = r_g
+        outputs["f"] = f
         try:
             femm.mi_analyze()
             (
@@ -934,40 +670,20 @@ class FEMM_Geometry(om.ExplicitComponent):
                 outputs["Sigma_normal"],
                 V_rotor,
                 V_stator,
-            ) = run_post_process(D_a, g, r_outer, h_yr, h_ys, r_inner, theta_p_r)
+            ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_si, alpha_pr)
 
-            outputs["M_Fes"] = V_stator * 2 * rho_Fe * p1 / 10
-            outputs["M_Fest"] = outputs["M_Fes"] - np.pi * (r_yoke_stator**2 - r_inner**2) * l_s * rho_Fe
-            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * p1 / 10
+            outputs["M_Fes"] = V_stator * 2 * rho_Fe * pp  / 10
+            outputs["M_Fest"] = outputs["M_Fes"] - np.pi * ((r_si+h_ys)**2 - r_si**2) * l_s * rho_Fe
+            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * pp  / 10
             outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fer"]
+            layer_1 = r_si + h_ys + h_t * 0.75
+            layer_2 = r_si + h_ys + h_t * 0.25
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
-                Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, layer_2, N_c, tau_p
+                Theta_elec, D_a, l_s, pp , g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
             )
-            #if outputs["T_e"] >= 20e6:
-            #    seed = random.randrange(0, 101, 2)
-            #    femm.mi_saveas("IPM_new_" + str(seed) + ".fem")
 
         except Exception as e:
-            #print(
-            #    D_a,
-            #    l_s,
-            #    h_t,
-            #    p1,
-            #    g,
-            #    h_ys,
-            #    h_yr,
-            #    alpha_v,
-            #    N_c,
-            #    I_s,
-            #    h_m,
-            #    d_mag,
-            #    d_sep,
-            #    m_sep * line2.length,
-            #    l_fe_ratio,
-            #    ratio,
-            #)
             outputs = bad_inputs(outputs)
             raise(e)
-            
+
         femm.closefemm()
-        
