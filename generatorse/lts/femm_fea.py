@@ -96,12 +96,18 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, delta_em, theta_p_r, I_s,
     femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(0), (R_a + delta_em * 0.5) * np.sin(0))
     femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(theta_p_r), (R_a + delta_em * 0.5) * np.sin(theta_p_r))
     femm.mo_bendcontour(theta_p_d, 0.25)
-    femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
-    femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
-    B_r_1 = np.loadtxt("B_r_1.csv")
-    B_t_1 = np.loadtxt("B_t_1.csv")
-    circ = B_r_1[-1, 0]
+    sigma_t_sec, _ = femm.mo_lineintegral(3)
+    torque_sec, _ = femm.mo_lineintegral(4)
+    sigma_t = sigma_t_sec*2*np.pi/theta_p_r
+    torque = torque_sec*2*np.pi/theta_p_r
+    #femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
+    #femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
+    #B_r_1 = np.loadtxt("B_r_1.csv")
+    #B_t_1 = np.loadtxt("B_t_1.csv")
+    #circ = B_r_1[-1, 0]
     femm.mo_clearcontour()
+    #femm.mo_selectblock((R_a + delta_em * 0.5) * np.cos(0.5*theta_p_r), (R_a + delta_em * 0.5) * np.sin(0.5*theta_p_r))
+    #temp = femm.mo_blockintegral(22)
     femm.mo_close()
     #myopen()
     #femm.opendocument("coil_design_new_I1.fem")
@@ -171,18 +177,18 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, delta_em, theta_p_r, I_s,
     femm.mo_clearcontour()
     femm.mo_close()
     '''
-    B_r_2 = B_r_1
-    B_t_2 = B_t_1
+    #B_r_2 = B_r_1
+    #B_t_2 = B_t_1
 
-    force = np.array(
-        [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
-    )
-    sigma_t = abs(force / mu0) / circ
-    torque = np.pi / 2 * sigma_t * D_a ** 2 * l_s * 1.08440860215053764
-
+    #force = np.array(
+    #    [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
+    #)
+    #sigma_t = abs(force / mu0) / circ
+    #torque = np.pi / 2 * sigma_t * D_a ** 2 * l_s
     # Air gap electro-magnetic torque for the full machine
     # Average shear stress for the full machine
-    return torque.mean(), sigma_t.mean()
+    #return torque.mean(), sigma_t.mean()
+    return np.abs(torque), np.abs(sigma_t)
 
 
 class FEMM_Geometry(om.ExplicitComponent):

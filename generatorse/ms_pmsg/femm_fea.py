@@ -128,13 +128,16 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(0), (r_g - g * 0.5) * np.sin(0))
     femm.mo_addcontour((r_g - g * 0.5) * np.cos(theta_p_r * 1), (r_g - g * 0.5) * np.sin(theta_p_r * 1))
     femm.mo_bendcontour(theta_p_d * 1, 1)
-    temp1, temp2 = femm.mo_lineintegral(4)
-    femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
-    femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
+    sigma_t_sec, _ = femm.mo_lineintegral(3)
+    torque_sec, _ = femm.mo_lineintegral(4)
+    sigma_t = sigma_t_sec*2*np.pi/theta_p_r
+    torque = torque_sec*2*np.pi/theta_p_r
+    #femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
+    #femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
     femm.mo_clearcontour()
     femm.mo_close()
-    B_r_1 = np.loadtxt("B_r_1.csv")
-    B_t_1 = np.loadtxt("B_t_1.csv")
+    #B_r_1 = np.loadtxt("B_r_1.csv")
+    #B_t_1 = np.loadtxt("B_t_1.csv")
     #myopen()
     #femm.opendocument("MS_PMSG1.fem")
 
@@ -179,18 +182,19 @@ def B_r_B_t(Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, la
     B_r_2 = np.loadtxt("B_r_2.csv")
     B_t_2 = np.loadtxt("B_t_2.csv")
     '''
-    B_r_2 = B_r_1
-    B_t_2 = B_t_1
+    #B_r_2 = B_r_1
+    #B_t_2 = B_t_1
 
-    circ = B_r_1[-1, 0]
-    force = np.array(
-        [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
-    )
-    sigma_t = abs(force / mu0) / circ
-    torque = 2 * np.pi * sigma_t * r_g**2 * l_s
+    #circ = B_r_1[-1, 0]
+    #force = np.array(
+    #    [np.trapz(B_r_1[:, 1] * B_t_1[:, 1], B_r_1[:, 0]), np.trapz(B_r_2[:, 1] * B_t_2[:, 1], B_r_2[:, 0])]
+    #)
+    #sigma_t = abs(force / mu0) / circ
+    #torque = 2 * np.pi * sigma_t * r_g**2 * l_s
     #torque_ripple = (torque[0] - torque[1]) * 100 / torque.mean()
     #print(torque[0], torque[1], torque.mean())
-    return torque.mean(), sigma_t.mean()
+    #return torque.mean(), sigma_t.mean()
+    return np.abs(torque), np.abs(sigma_t)
 
 
 
