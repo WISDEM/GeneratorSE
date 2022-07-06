@@ -45,7 +45,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model = PMSG_Outer_rotor_Opt()
 
     prob.driver = om.ScipyOptimizeDriver()
-    prob.driver.options["optimizer"] = "SLSQP" # "COBYLA"
+    prob.driver.options["optimizer"] = "COBYLA"
     prob.driver.options["maxiter"] = 500 #50
     # prob.driver = om.DifferentialEvolutionDriver()
     # prob.driver.options["max_gen"] = 20
@@ -60,9 +60,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.driver.recording_options["record_desvars"] = True
     prob.driver.recording_options["record_objectives"] = True
 
-    prob.model.add_design_var("D_a", lower=6, upper=10., ref=8.0 )
+    prob.model.add_design_var("D_a", lower=6, upper=10., ref=10.0 )
     prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01)
-    prob.model.add_design_var("l_s", lower=1.5, upper=2.5, ref=2.0)
+    prob.model.add_design_var("l_s", lower=1.5, upper=2.5)
     prob.model.add_design_var("h_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("h_ys", lower=0.02, upper=0.2, ref=0.1)
     prob.model.add_design_var("h_yr", lower=0.02, upper=0.2, ref=0.1)
@@ -71,17 +71,18 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("pp", lower=70, upper=260, ref=100.0)
     # prob.model.add_design_var("alpha_v",lower=60, upper=160, ref=100)
     prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
-    prob.model.add_design_var("I_s",lower=2900, upper=8500, ref=5000)
+    prob.model.add_design_var("I_s",lower=2900, upper=8500, ref=1000)
     prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1)
     # prob.model.add_design_var("d_sep",lower=0.00, upper=0.020, ref=0.01)
     # prob.model.add_design_var("m_sep", lower=0.005, upper=0.01, ref=0.01)
-    prob.model.add_design_var("magnet_l_pc",lower=0.7, upper=1.0)
+    # prob.model.add_design_var("magnet_l_pc",lower=0.7, upper=1.0)
     # prob.model.add_design_var("J_s",lower=3, upper=10)
 
-    prob.model.add_constraint("B_rymax", upper=2.6)
+    prob.model.add_constraint("B_rymax", upper=2.53)
+    prob.model.add_constraint("B_smax", upper=2.53)
     # prob.model.add_constraint("K_rad",    lower=0.15, upper=0.3)
     # prob.model.add_constraint("E_p", lower=0.9 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", upper=1.1)
+    prob.model.add_constraint("E_p_ratio", lower=0.9,upper=1.1)
     prob.model.add_constraint("torque_ratio", lower=0.97)
     prob.model.add_constraint("r_outer_active", upper=11. / 2.)
     # prob.model.add_constraint("T_e", upper=1.05*target_torque, ref=20e6)
@@ -96,7 +97,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     elif obj_str.lower() in ["eff","efficiency"]:
         prob.model.add_objective("gen_eff", scaler=-1.0)
 
-    prob.model.approx_totals(method="fd")
+    prob.model.approx_totals(method="fd", step = 1e-3, form='central')
 
     prob.setup()
     print('************************')
@@ -179,7 +180,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     else:
         prob = copy_data(prob_in, prob)
 
-    prob.model.approx_totals(method="fd")
+    # prob.model.approx_totals(method="fd", step=1e-3)
 
     if opt_flag:
         prob.run_driver()
@@ -369,7 +370,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
 if __name__ == "__main__":
     opt_flag = True
-    run_all("outputs17-mass", opt_flag, "mass", 17)
+    run_all("outputs20-mass_220705_cobyla2", opt_flag, "mass", 20)
     #for k in ratings_known:
     #    for obj in ["cost", "mass"]:
     #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
