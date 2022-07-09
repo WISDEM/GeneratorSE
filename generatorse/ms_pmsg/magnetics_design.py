@@ -63,7 +63,6 @@ class PMSG_active(om.ExplicitComponent):
         self.add_output("J_s", 0.0, units="A/mm**2", desc="Current density")
 
         # Objective functions
-        self.add_output("Mass", 0.0, units="kg", desc="Actual mass")
         self.add_output("K_rad", 0.0, desc="Aspect ratio")
         #self.add_input("h_s1", 0.010, desc="Slot Opening height")
         #self.add_input("h_s2", 0.010, desc="Wedge Opening height")

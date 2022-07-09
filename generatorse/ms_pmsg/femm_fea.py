@@ -237,10 +237,10 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_output("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_output("Sigma_shear", 0.0, units="Pa", desc="Shear stress")
         self.add_output("Sigma_normal", 0.0, units="Pa", desc="Normal stress")
-        self.add_output("Iron", 0.0, units="kg", desc="magnet length ")
-        self.add_output("M_Fes", 0.0, units="kg", desc="mstator iron mass ")
-        self.add_output("M_Fery", 0.0, units="kg", desc="rotor iron mass ")
-        self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass ")
+        self.add_output("Iron", 0.0, units="kg", desc="total iron mass")
+        self.add_output("M_Fes", 0.0, units="kg", desc="stator iron mass")
+        self.add_output("M_Fery", 0.0, units="kg", desc="rotor yoke iron mass")
+        self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_output("M_Fesy", 0.0, units="kg", desc="Stator yoke mass")
 
         self.declare_partials("*", "*", method="fd")
@@ -691,16 +691,15 @@ class FEMM_Geometry(om.ExplicitComponent):
             outputs["M_Fes"] = V_stator * rho_Fe * p
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * (r_outer**2 - r_inner**2) * l_s * rho_Fe
             outputs["M_Fery"] = V_rotor * rho_Fe * p
-            outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fery"]
-            outputs["M_Fesy"] = V_Fesy * rho_Fe  # Mass of stator yoke
-            outputs["Iron"] = outputs["M_Fest"] + outputs["M_Fesy"] + outputs["M_Fery"]
+            outputs["M_Fesy"] = V_Fesy * rho_Fe
+            outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fesy"] + outputs["M_Fery"]
 
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
                 Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, layer_2, N_c
             )
         except Exception as e:
             outputs = bad_inputs(outputs)
-            raise(e)
+            #raise(e)
             
         femm.closefemm()
 

@@ -22,14 +22,14 @@ class MS_PMSG_Cost(om.ExplicitComponent):
         self.add_input("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
 
         # Outputs
-        self.add_output("mass_total", 0.0, units="kg", desc="Structural mass")
+        self.add_output("mass_active", 0.0, units="kg", desc="Total active mass")
         self.add_output("cost_total", 0.0, units="USD", desc="Total cost")
+        self.add_output("mass_total", 0.0, units="kg", desc="Total mass")
         self.declare_partials("*", "*", method="fd")
 
     def compute(self, inputs, outputs):
-        outputs["mass_total"] = (
-            inputs["Copper"] + inputs["Iron"] + inputs["mass_PM"] + inputs["mass_structural"] + inputs["mass_adder"]
-        )
+        outputs["mass_active"] = inputs["mass_PM"] + inputs["Iron"] + inputs["Copper"]
+        outputs["mass_total"] = inputs["mass_structural"] + outputs["mass_active"] + inputs["mass_adder"]
 
         outputs["cost_total"] = (
             inputs["Copper"] * inputs["C_Cu"]

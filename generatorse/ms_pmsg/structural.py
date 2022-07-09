@@ -47,10 +47,9 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_input("Sigma_shear", 0.0, units="N/m**2", desc="Normal stress")
         self.add_input("rho_Fes", 0.0, units="kg/m**3", desc="Structural Steel density kg/m^3")
         self.add_input("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
-        self.add_output("Structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
         self.add_output("mass_PM", 0.0, units="kg", desc="magnet mass kg")
-        self.add_output("mass_Fe", 0.0, units="kg", desc="Iron mass")
-        self.add_output("mass_active", 0.0, units="kg", desc="active mass")
+        self.add_output("mass_Fe_rotor", 0.0, units="kg", desc="Iron mass in rotor")
+        self.add_output("mass_structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
 
         self.add_output('con_bar', val=0.0, desc='Circumferential arm space constraint (<1)')
         self.add_output('con_uar', val=0.0, desc='Radial deflection constraint-rotor (<1)')
@@ -112,7 +111,6 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         outputs["mass_PM"] = 2 * np.pi * (R + 0.5 * t) * l * h_m * ratio * rho_PM  # magnet mass
 
         # Calculating radial deflection of the rotor
-
         Numer = R**3 * (
             (0.25 * (np.sin(theta_r) - (theta_r * np.cos(theta_r))) / (np.sin(theta_r)) ** 2)
             - (0.5 / np.sin(theta_r))
@@ -125,13 +123,14 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         outputs["u_Ar"] = (Sigma_normal * R**2 / E / t) * (1 + Numer / Denom)
 
         # Calculating axial deflection of the rotor under its own weight
-        w_r = (
-            rho_Fes * g1 * np.sin((np.deg2rad(phi))) * a_r
-        )  # uniformly distributed load of the weight of the rotor arm
-        outputs["mass_Fe"] = mass_st_lam = rho_Fe * 2 * np.pi * (R) * l * h_yr  # mass of rotor yoke steel
-        W = (
-            g1 * np.sin((np.deg2rad(phi))) * (mass_st_lam / N_r + (outputs["mass_PM"]) / N_r)
-        )  # weight of 1/nth of rotor cylinder
+        # uniformly distributed load of the weight of the rotor arm
+        w_r = rho_Fes * g1 * np.sin((np.deg2rad(phi))) * a_r
+
+        # TODO: The mass_Fe here seems the same accounting as "Iron" in the magnetics code
+        outputs["mass_Fe_rotor"] = mass_st_lam = rho_Fe * 2 * np.pi * (R) * l * h_yr  # mass of rotor yoke steel
+
+        # weight of 1/nth of rotor cylinder
+        W = g1 * np.sin((np.deg2rad(phi))) * (mass_st_lam / N_r + (outputs["mass_PM"]) / N_r)
 
         y_a1 = W * l_ir**3 / 12 / E / I_arm_axi_r  # deflection from weight component of back iron
         y_a2 = w_r * l_iir**4 / 24 / E / I_arm_axi_r  # deflection from weight component of yhe arms
@@ -144,10 +143,9 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         outputs["z_Ar"] = (
             (2 * np.pi * (R - 0.5 * t) * l / N_r) * Sigma_shear * (l_ir - 0.5 * t) ** 3 / 3 / E / I_arm_tor_r
         )
-        outputs["Structural_rotor"] = (N_r * (R_1 - R_sh) * a_r * rho_Fes) + np.pi * (
+        outputs["mass_structural_rotor"] = (N_r * (R_1 - R_sh) * a_r * rho_Fes) + np.pi * (
             (r_g - g - h_m - h_yr) ** 2 - (r_g - g - h_m - t) ** 2
         ) * l * rho_Fes
-        outputs["mass_active"] = outputs["mass_PM"] + outputs["mass_Fe"]  # rotor mass
 
         # Constraint outputs
         outputs["con_bar"] = np.abs(b_r)             / outputs["b_all_r"]
@@ -184,10 +182,10 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
         self.add_input("rho_Fes", 0.0, units="kg/m**3", desc="Structural Steel density kg/m^3")
         self.add_input("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
+        self.add_input("mass_Fe_rotor", 0.0, units="kg", desc="Iron mass")
         self.add_input("Copper", 0.0, units="kg", desc="Copper Mass")
         self.add_input("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
-        self.add_input("Structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
-        self.add_input("mass_active", 0.0, units="kg", desc="Active mass")
+        self.add_input("mass_structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
@@ -205,10 +203,10 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_output('con_yas', val=0.0, desc='Axial deflection constraint-rotor (<1)')
         self.add_output('con_zas', val=0.0, desc='Torsional deflection constraint-rotor (<1)')
 
-        self.add_output("Total_active", 0.0, units="kg", desc="Total Active mass")
-        self.add_output("Structural_stator", 0.0, units="kg", desc="Structural mass of stator")
+        self.add_output("mass_Fe", 0.0, units="kg", desc="Iron mass")
+        self.add_output("mass_Fe_stator", 0.0, units="kg", desc="Iron mass in stator")
+        self.add_output("mass_structural_stator", 0.0, units="kg", desc="Structural mass of stator")
         self.add_output("mass_structural", 0.0, units="kg", desc="Total structural mass")
-        self.add_output("Total_mass", 0.0, units="kg", desc="Total mass")
 
         self.declare_partials("*", "*", method="fd")
 
@@ -262,7 +260,8 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         l_iis = l_is  # distance at which the weight of the stator cylinder acts
         l_iiis = l_is  # distance at which the weight of the stator cylinder acts
 
-        mass_st_lam_s = M_Fest + np.pi * L_t * rho_Fe * (
+        # TODO: The mass_Fe here seems the same accounting as "Iron" in the magnetics code
+        outputs["mass_Fe_stator"] = mass_st_lam_s = M_Fest + np.pi * L_t * rho_Fe * (
             (r_g + h_s + h_s1 + h_s2 + h_ys) ** 2 - (r_g + h_s + h_s1 + h_s2) ** 2
         )
         # length of stator arm beam at which self-weight acts
@@ -276,7 +275,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
 
         # print (M_Fest+self.Copper)*g1
 
-        mass_stru_steel = (
+        outputs["mass_structural_stator"] = (
             2 * (N_st * (R_1s - R_no) * a_s * rho_Fes)
             + np.pi * ((R_st + t_s * 0.5) ** 2 - (R_st + t_s * 0.5 - h_ss) ** 2) * L_t * rho_Fes
         )
@@ -325,10 +324,9 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         outputs["z_all_s"] = z_allow_deg * 2 * np.pi * R_st / 360  # allowable torsional deflection
         outputs["b_all_s"] = 2 * np.pi * R_no / N_st  # allowable circumferential arm dimension
 
-        outputs["Structural_stator"] = mass_stru_steel
-        outputs["Total_active"] = inputs["mass_active"] + mass_st_lam_s + Copper
-        outputs["mass_structural"] = outputs["Structural_stator"] + inputs["Structural_rotor"]
-        outputs["Total_mass"] = outputs["mass_structural"] + outputs["Total_active"]
+        # TODO: The mass_Fe here seems the same accounting as "Iron" in the magnetics code
+        outputs["mass_Fe"] = outputs["mass_Fe_stator"] + inputs["mass_Fe_rotor"]
+        outputs["mass_structural"] = outputs["mass_structural_stator"] + inputs["mass_structural_rotor"]
 
         # Constraint outputs
         outputs["con_bas"] = np.abs(b_st)            / outputs["b_all_s"]
