@@ -25,6 +25,11 @@ rated_speed[17] = 7.04
 rated_speed[20] = 6.49
 rated_speed[25] = 5.80
 target_eff = 0.97
+
+D_a = {}
+D_a[15] = 8.
+D_a[20] = 10.
+
 fsql = "log.sql"
 
 mydir = os.path.dirname(os.path.realpath(__file__))  # get path to this file
@@ -42,15 +47,19 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         cleanup_femm_files(mydir)
 
     prob = om.Problem()
-    prob.model = PMSG_Outer_rotor_Opt()
+    prob.model = PMSG_Outer_rotor_Opt(debug_prints=True)
 
-    prob.driver = om.ScipyOptimizeDriver()
-    prob.driver.options["optimizer"] = "COBYLA"
-    prob.driver.options["maxiter"] = 500 #50
-    # prob.driver = om.DifferentialEvolutionDriver()
-    # prob.driver.options["max_gen"] = 20
-    # prob.driver.options["pop_size"] = 60
-    # prob.driver.options["penalty_exponent"] = 3
+    # prob.driver = om.ScipyOptimizeDriver()
+    # prob.driver.options["optimizer"] = "COBYLA"
+    # prob.driver.options["maxiter"] = 500 #50
+    prob.driver = om.DifferentialEvolutionDriver()
+    prob.driver.options["max_gen"] = 20
+    prob.driver.options["pop_size"] = 60
+    prob.driver.options["penalty_exponent"] = 3
+    # from generatorse.common.nlopt_driver import NLoptDriver
+    # prob.driver = NLoptDriver()
+    # prob.driver.options["optimizer"] = "LN_COBYLA"
+
 
     recorder = om.SqliteRecorder(os.path.join(output_dir, fsql))
     prob.driver.add_recorder(recorder)
@@ -63,9 +72,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("D_a", lower=6, upper=10., ref=10.0 )
     prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01)
     prob.model.add_design_var("l_s", lower=1.5, upper=2.5)
-    prob.model.add_design_var("h_t", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("h_ys", lower=0.02, upper=0.2, ref=0.1)
-    prob.model.add_design_var("h_yr", lower=0.02, upper=0.2, ref=0.1)
+    prob.model.add_design_var("h_t", lower=0.04, upper=0.5)
+    prob.model.add_design_var("h_ys", lower=0.02, upper=0.2)
+    prob.model.add_design_var("h_yr", lower=0.02, upper=0.2)
     prob.model.add_design_var("h_m", lower=0.005, upper=0.05, ref=0.01)
     # prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("pp", lower=70, upper=260, ref=100.0)
@@ -82,7 +91,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_constraint("B_smax", upper=2.53)
     # prob.model.add_constraint("K_rad",    lower=0.15, upper=0.3)
     # prob.model.add_constraint("E_p", lower=0.9 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", lower=0.9,upper=1.1)
+    prob.model.add_constraint("E_p_ratio", lower=0.95,upper=1.05)
     prob.model.add_constraint("torque_ratio", lower=0.97)
     prob.model.add_constraint("r_outer_active", upper=11. / 2.)
     # prob.model.add_constraint("T_e", upper=1.05*target_torque, ref=20e6)
@@ -97,7 +106,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     elif obj_str.lower() in ["eff","efficiency"]:
         prob.model.add_objective("gen_eff", scaler=-1.0)
 
-    prob.model.approx_totals(method="fd", step = 1e-3, form='central')
+    prob.model.approx_totals(method="fd", step = 1e-4, form='central')
 
     prob.setup()
     print('************************')
@@ -116,19 +125,19 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["E_p_target"]     = 3300.0
 
         # These are the current design variables
-        prob["D_a"]            = 9.8
-        prob["l_s"]            = 2.5 #2.5
-        prob["h_t"]            = 0.12 #0.2
+        prob["D_a"]            = D_a[ratingMW]
+        prob["l_s"]            = 2.3 #2.5
+        prob["h_t"]            = 0.168 #0.2
         # prob["b_t"]            = 0.26488789
-        prob["pp"]             = 72.11
+        prob["pp"]             = 84.5
         prob["g"]              = 0.007
-        prob["N_c"]            = 2.4
-        prob["I_s"]            = 6399. # 3500
-        prob["h_m"]            = 0.035 #0.015
-        prob["d_mag"]          = 0.0745 #0.08
+        prob["N_c"]            = 3.37
+        prob["I_s"]            = 5864. # 3500
+        prob["h_m"]            = 0.0295 #0.015
+        prob["d_mag"]          = 0.05 #0.08
 
-        prob["h_ys"]           = 0.058 # 0.05
-        prob["h_yr"]           = 0.05
+        prob["h_ys"]           = 0.051 # 0.05
+        prob["h_yr"]           = 0.02
         prob["magnet_l_pc"]    = 1.0
         prob["J_s"]            = 6
         prob["phi"]            = 90
@@ -270,7 +279,7 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
     else:
         prob_struct = copy_data(prob_in, prob_struct)
 
-    prob_struct.model.approx_totals(method="fd")
+    # prob_struct.model.approx_totals(method="fd")
 
     if opt_flag:
         prob_struct.run_driver()
@@ -370,7 +379,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
 if __name__ == "__main__":
     opt_flag = True
-    run_all("outputs20-mass_220705_cobyla2", opt_flag, "mass", 20)
+    run_all("outputs15-mass_220709", opt_flag, "mass", 15)
     #for k in ratings_known:
     #    for obj in ["cost", "mass"]:
     #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
