@@ -281,7 +281,6 @@ class FEMM_Geometry(om.ExplicitComponent):
             print('h_t: ', h_t)
             print('l_s: ', l_s)
             print('N_c: ', N_c)
-            print('rho_Fe: ', rho_Fe)
             print('I_s: ', I_s)
             print('N_nom: ', N_nom)
             print('------')

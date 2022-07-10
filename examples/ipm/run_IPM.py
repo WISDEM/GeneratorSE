@@ -26,9 +26,70 @@ rated_speed[20] = 6.49
 rated_speed[25] = 5.80
 target_eff = 0.97
 
+
+pp = {}
+g = {}
 D_a = {}
-D_a[15] = 8.
-D_a[20] = 10.
+h_m = {}
+d_mag = {}
+magnet_l_pc = {}
+h_yr = {}
+h_ys = {}
+h_s1 = {}
+h_s2 = {}
+h_t = {}
+l_s = {}
+N_c = {}
+I_s = {}
+N_nom = {}
+t_r = {}
+t_s = {}
+h_ss = {}
+h_sr = {}
+
+# 15MW
+pp[15] =  70.0
+g[15] =  0.010633567661203219
+D_a[15] =  9.5
+h_m[15] =  0.04
+d_mag[15] =  0.0931392290092016
+magnet_l_pc[15] =  1.0
+h_yr[15] =  0.19795669867683888
+h_ys[15] =  0.04860267120826085
+h_s1[15] =  0.01
+h_s2[15] =  0.01
+h_t[15] =  0.057487667764258316
+l_s[15] =  1.5
+N_c[15] =  4.
+I_s[15] =  2900.0
+N_nom[15] =  7.49
+t_r[15] = 0.09475373
+t_s[15] = 0.06439639
+h_ss[15] = 0.04
+h_sr[15] = 0.04
+
+# 20MW
+pp[20] =  84.5
+g[20] =  0.007
+D_a[20] =  10.0
+h_m[20] =  0.0295
+d_mag[20] =  0.05
+magnet_l_pc[20] =  1.0
+h_yr[20] =  0.02
+h_ys[20] =  0.051
+h_s1[20] =  0.01
+h_s2[20] =  0.01
+h_t[20] =  0.168
+l_s[20] =  2.3
+N_c[20] =  3.37
+I_s[20] =  5864.0
+N_nom[20] =  6.49
+t_r[20] = 0.09475373
+t_s[20] = 0.06439639
+h_ss[20] = 0.04
+h_sr[20] = 0.04
+
+
 
 fsql = "log.sql"
 
@@ -126,19 +187,17 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
         # These are the current design variables
         prob["D_a"]            = D_a[ratingMW]
-        prob["l_s"]            = 2.3 #2.5
-        prob["h_t"]            = 0.168 #0.2
-        # prob["b_t"]            = 0.26488789
-        prob["pp"]             = 84.5
-        prob["g"]              = 0.007
-        prob["N_c"]            = 3.37
-        prob["I_s"]            = 5864. # 3500
-        prob["h_m"]            = 0.0295 #0.015
-        prob["d_mag"]          = 0.05 #0.08
-
-        prob["h_ys"]           = 0.051 # 0.05
-        prob["h_yr"]           = 0.02
-        prob["magnet_l_pc"]    = 1.0
+        prob["l_s"]            = l_s[ratingMW]
+        prob["h_t"]            = h_t[ratingMW]
+        prob["pp"]             = pp[ratingMW]
+        prob["g"]              = g[ratingMW]
+        prob["N_c"]            = N_c[ratingMW]
+        prob["I_s"]            = I_s[ratingMW]
+        prob["h_m"]            = h_m[ratingMW]
+        prob["d_mag"]          = d_mag[ratingMW]
+        prob["h_ys"]           = h_ys[ratingMW] # 0.05
+        prob["h_yr"]           = h_yr[ratingMW]
+        prob["magnet_l_pc"]    = magnet_l_pc[ratingMW]
         prob["J_s"]            = 6
         prob["phi"]            = 90
         prob["b"]              = 2.
@@ -161,9 +220,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["R_no"]           = 0.925
         prob["R_sh"]           = 1.25
         prob["t_r"]            = 0.057 #  0.06
-        prob["h_sr"]           = 0.04
-        prob["t_s"]            = 0.05 #  0.06
-        prob["h_ss"]           = 0.04
+        prob["h_sr"]           = h_sr[ratingMW]
+        prob["t_s"]            = t_s[ratingMW]
+        prob["h_ss"]           = h_ss[ratingMW]
         prob["y_sh"]           = 0.0
         prob["theta_sh"]       = 0.0
         prob["y_bd"]           = 0.0
@@ -209,7 +268,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     return prob
 
-def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
+def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False, ratingMW=17):
     if output_dir is None:
         output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
@@ -264,10 +323,10 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
         prob_struct["R_nor"] = 0.95
         prob_struct["u_allow_pcent"] = 50
         prob_struct["y_allow_pcent"] = 20
-        prob_struct["h_sr"] = 0.1254730934
-        prob_struct["h_ss"] = 0.050
-        prob_struct["t_r"] = 0.05
-        prob_struct["t_s"] = 0.1
+        prob_struct["h_sr"] = h_sr[ratingMW]
+        prob_struct["h_ss"] = h_ss[ratingMW]
+        prob_struct["t_r"] = t_r[ratingMW]
+        prob_struct["t_s"] = t_s[ratingMW]
         prob_struct["y_bd"] = 0.00
         prob_struct["theta_bd"] = 0.00
         prob_struct["y_sh"] = 0.00
@@ -366,7 +425,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
     # Optimize just magnetics with GA and then structural with SLSQP
     prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=False)
-    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag)
+    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag, ratingMW=int(ratingMW), )
 
     # Bring all data together
     prob = copy_data(prob_struct, prob)
@@ -379,7 +438,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
 if __name__ == "__main__":
     opt_flag = True
-    run_all("outputs15-mass_220709", opt_flag, "mass", 15)
+    run_all("outputs20-cost_220710", opt_flag, "cost", 20)
     #for k in ratings_known:
     #    for obj in ["cost", "mass"]:
     #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
