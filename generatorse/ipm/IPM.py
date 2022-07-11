@@ -41,6 +41,9 @@ class PMSG_Cost(om.ExplicitComponent):
 
 
 class PMSG_Outer_rotor_Opt(om.Group):
+    def initialize(self):
+        self.options.declare("debug_prints", default=False)
+        
     def setup(self):
 
         ivcs = om.IndepVarComp()
@@ -90,8 +93,8 @@ class PMSG_Outer_rotor_Opt(om.Group):
         ivcs.add_output("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
 
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
-        self.add_subsystem("geom", FEMM_Geometry(), promotes=["*"])
+        self.add_subsystem("geom", FEMM_Geometry(debug_prints = self.options['debug_prints']), promotes=["*"])
         self.add_subsystem("sys", md.PMSG_active(), promotes=["*"])
-        self.add_subsystem("results", md.Results(), promotes=["*"])
+        self.add_subsystem("results", md.Results(debug_prints = self.options['debug_prints']), promotes=["*"])
         self.add_subsystem("struct", PMSG_Outer_Rotor_Structural(), promotes=["*"])
         self.add_subsystem("cost", PMSG_Cost(), promotes=["*"])

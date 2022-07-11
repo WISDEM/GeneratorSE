@@ -102,6 +102,9 @@ class PMSG_active(om.ExplicitComponent):
 
 
 class Results(om.ExplicitComponent):
+    def initialize(self):
+        self.options.declare("debug_prints", default=False)
+
     def setup(self):
         self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density ")
         self.add_input("N_s", 0.0, desc="Number of turns per phase in series")
@@ -200,3 +203,12 @@ class Results(om.ExplicitComponent):
 
         outputs["gen_eff"] = 1 - P_Losses / P_rated
         # additional stray losses due to leakage flux
+
+
+        if self.options['debug_prints']:
+            print('torque_ratio: ', outputs["torque_ratio"])
+            print('gen_eff: ', outputs["gen_eff"])
+            print('E_p_ratio: ', outputs["E_p_ratio"])
+            print('B_rymax: ', B_rymax)
+            print('B_smax: ', B_smax)
+            print('*******')

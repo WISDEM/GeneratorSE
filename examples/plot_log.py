@@ -71,7 +71,7 @@ class PlotRecorder(om.Group):
 if __name__ == "__main__":
 
     opt_options = {}
-    opt_options["folder_output"] = "C:\GeneratorSE\examples\outputs17-mass"
+    opt_options["folder_output"] = "C:\GeneratorSE\examples\ipm\outputs20-cost_220710"
     opt_options["file_name"] = "log.sql"
 
     wt_opt = om.Problem(model=PlotRecorder(opt_options=opt_options))

@@ -198,6 +198,9 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
 
 
 class FEMM_Geometry(om.ExplicitComponent):
+    def initialize(self):
+        self.options.declare("debug_prints", default=False)
+
     def setup(self):
         # Inputs
         self.add_input("pp", 0.0, desc="Number of pole pairs")
@@ -262,6 +265,25 @@ class FEMM_Geometry(om.ExplicitComponent):
         rho_Fe = float(inputs['rho_Fe'])
         I_s = float(inputs['I_s'])
         N_nom = float( inputs["N_nom"] )
+
+        if self.options['debug_prints']:
+            print('Inputs')
+            print('pp: ', pp)
+            print('g: ', g)
+            print('D_a: ', D_a)
+            print('h_m: ', h_m)
+            print('d_mag: ', d_mag)
+            print('magnet_l_pc: ', magnet_l_pc)
+            print('h_yr: ', h_yr)
+            print('h_ys: ', h_ys)
+            print('h_so: ', h_so)
+            print('h_wo: ', h_wo)
+            print('h_t: ', h_t)
+            print('l_s: ', l_s)
+            print('N_c: ', N_c)
+            print('I_s: ', I_s)
+            print('N_nom: ', N_nom)
+            print('------')
 
         # Preprocess inputs
         alpha_p = np.pi / pp  # pole sector
@@ -668,6 +690,10 @@ class FEMM_Geometry(om.ExplicitComponent):
         outputs["r_outer_active"] = r_ro
         outputs["r_g"] = r_g
         outputs["f"] = f
+
+        if self.options['debug_prints']:
+            print('Outputs')
+            print('r_ro:', r_ro)
         try:
             femm.mi_analyze()
             (
