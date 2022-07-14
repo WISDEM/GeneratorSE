@@ -1,61 +1,19 @@
 import numpy as np
 import openmdao.api as om
+from generatorse.common.cost import Generator_Cost
 import generatorse.ms_pmsg.magnetics_design as md
 from generatorse.ms_pmsg.femm_fea import FEMM_Geometry
 from generatorse.ms_pmsg.structural import PMSG_Inner_Rotor_Structural
-
-
-class MS_PMSG_Cost(om.ExplicitComponent):
-    def setup(self):
-        self.add_input("C_Cu", 0.0, units="USD/kg", desc="Specific cost of copper")
-        self.add_input("C_Fe", 0.0, units="USD/kg", desc="Specific cost of magnetic steel/iron")
-        self.add_input("C_Fes", 0.0, units="USD/kg", desc="Specific cost of structural steel")
-        self.add_input("C_PM", 0.0, units="USD/kg", desc="Specific cost of Magnet")
-
-        # Mass of each material type
-        self.add_input("Copper", 0.0, units="kg", desc="Copper mass")
-        self.add_input("Iron", 0.0, units="kg", desc="Iron mass")
-        self.add_input("mass_PM", 0.0, units="kg", desc="Magnet mass")
-        self.add_input("mass_structural", 0.0, units="kg", desc="Structural mass")
-
-        self.add_input("mass_adder", 0.0, units="kg", desc="Mass to add to total for unaccounted elements")
-        self.add_input("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
-
-        # Outputs
-        self.add_output("mass_active", 0.0, units="kg", desc="Total active mass")
-        self.add_output("cost_total", 0.0, units="USD", desc="Total cost")
-        self.add_output("mass_total", 0.0, units="kg", desc="Total mass")
-        self.declare_partials("*", "*", method="fd")
-
-    def compute(self, inputs, outputs):
-        outputs["mass_active"] = inputs["mass_PM"] + inputs["Iron"] + inputs["Copper"]
-        outputs["mass_total"] = inputs["mass_structural"] + outputs["mass_active"] + inputs["mass_adder"]
-
-        outputs["cost_total"] = (
-            inputs["Copper"] * inputs["C_Cu"]
-            + inputs["Iron"] * inputs["C_Fe"]
-            + inputs["mass_PM"] * inputs["C_PM"]
-            + inputs["mass_structural"] * inputs["C_Fes"]
-            + inputs["cost_adder"]
-        )
 
 
 class PMSG_Inner_rotor_Opt(om.Group):
     def initialize(self):
         self.options.declare("magnetics_by_fea", default=True)
 
-        # self.linear_solver = lbgs = om.LinearBlockJac()  # om.LinearBlockGS()
-        # self.nonlinear_solver = nlbgs = om.NonlinearBlockGS()
-        # nlbgs.options["maxiter"] = 3
-        # nlbgs.options["atol"] = 1e-2
-        # nlbgs.options["rtol"] = 1e-8
-        # nlbgs.options["iprint"] = 2
-
     def setup(self):
 
         ivcs = om.IndepVarComp()
 
-        ivcs.add_output("Eta_target", 0.0, desc="Target drivetrain efficiency")
         ivcs.add_output("P_rated", 0.0, units="W", desc="Rated Power")
         ivcs.add_output("T_rated", 0.0, units="N*m", desc="Torque")
         ivcs.add_output("E_p_target", 0.0, units="V", desc="Target voltage")
@@ -107,6 +65,8 @@ class PMSG_Inner_rotor_Opt(om.Group):
         ivcs.add_output("C_PM", 0.0, units="USD/kg", desc="Specific cost of Magnet")
         ivcs.add_output("H_c", 0.0, units="A/m", desc="coercivity")
 
+        ivcs.add_output("hvac_mass_coeff", 0.025, units="kg/kW/m")
+        ivcs.add_output("hvac_mass_cost_coeff", 124.0, units="USD/kg")
         ivcs.add_output("mass_adder", 0.0, units="kg", desc="Mass to add to total for unaccounted elements")
         ivcs.add_output("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
 
@@ -120,7 +80,8 @@ class PMSG_Inner_rotor_Opt(om.Group):
 
         self.add_subsystem("results", md.Results(), promotes=["*"])
         self.add_subsystem("struct", PMSG_Inner_Rotor_Structural(), promotes=["*"])
-        self.add_subsystem("cost", MS_PMSG_Cost(), promotes=["*"])
+        self.add_subsystem("cost", Generator_Cost(), promotes=["*"])
+        self.connect("D_outer", "D_generator")
 
 if __name__ == "__main__":
     femm_flag = True

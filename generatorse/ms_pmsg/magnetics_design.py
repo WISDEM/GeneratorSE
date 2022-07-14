@@ -47,7 +47,6 @@ class PMSG_active(om.ExplicitComponent):
         self.add_output("N_s", 0.0, desc="Number of turns in the stator winding")
         self.add_output("b_s", 0.0, units="m", desc="slot width")
         self.add_output("b_t", 0.0, units="m", desc="tooth width")
-        self.add_output("A_Cuscalc", 0.0, units="mm**2", desc="Conductor cross-section mm^2")
 
         # Rotor magnet dimension
         self.add_output("b_m", 0.0, units="m", desc="magnet width")
@@ -72,7 +71,7 @@ class PMSG_active(om.ExplicitComponent):
         self.add_output("Slot_aspect_ratio", desc="Slot aspect ratio")
 
         # Mass Outputs
-        self.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
+        self.add_output("mass_copper", 0.0, units="kg", desc="Copper Mass")
 
         self.add_output("P_Cu", 0.0, units="W", desc="Copper losses")
         self.add_output("P_Ftm", 0.0, units="W", desc="Magnet losses")
@@ -132,16 +131,16 @@ class PMSG_active(om.ExplicitComponent):
         dia = 2 * r_g  # air gap diameter
         outputs["tau_p"] = tau_p = 2 * np.pi * (r_g - g) / (2 * p)
         # equivalent core length
-        outputs["b_m"] = ratio * tau_p  # magnet width
+        outputs["b_m"] = b_m = ratio * tau_p  # magnet width
 
         outputs["f"] = N_nom * p / 60  # outout frequency
-        outputs["S"] = 2 * p * q1 * m  # Stator slots
+        outputs["S"] = S = 2 * p * q1 * m  # Stator slots
         # Stator turns per phase
-        outputs["tau_s"] = tau_s = np.pi * dia / outputs["S"]
+        outputs["tau_s"] = tau_s = np.pi * dia / S
         # Stator slot pitch
-        outputs["b_s"] = b_s = b_s_tau_s * outputs["tau_s"]  # slot width
-        outputs["b_t"] = tau_s - (outputs["b_s"])  # tooth width
-        outputs["Slot_aspect_ratio"] = h_s / outputs["b_s"]
+        outputs["b_s"] = b_s = b_s_tau_s * tau_s  # slot width
+        outputs["b_t"] = tau_s - b_s  # tooth width
+        outputs["Slot_aspect_ratio"] = h_s / b_s
 
         #om_m = 2 * np.pi * N_nom / 60
         #om_e = p * om_m / 2
@@ -149,17 +148,17 @@ class PMSG_active(om.ExplicitComponent):
         # Calculating winding factor
         outputs["k_wd"] = np.sin(np.pi / 6) / q1 / np.sin(np.pi / 6 / q1)
 
-        outputs["L_t"] = l_s + 2 * tau_p
-        outputs["N_s"] = N_s = inputs["N_c"] * 2 * outputs["S"] / (m * q1)
+        outputs["L_t"] = L_t = l_s + 2 * tau_p
+        outputs["N_s"] = N_s = N_c * 2 * S / (m * q1)
         # Calculating no-load voltage induced in the stator
 
-        l_Cus = N_s * (2 * tau_p + l_s)
+        l_Cus = N_s * L_t
         A_s = b_s * (h_s) * 0.5
 
         #A_scalc = A_s * q1 * p
         A_Cus = A_s * k_sfil / (N_c)
 
-        outputs["R_s"] = l_Cus * rho_Cu / (A_Cus)
+        outputs["R_s"] = R_s = l_Cus * rho_Cu / A_Cus
 
         outputs["J_s"] = I_s / (A_Cus * 1e6)
 
@@ -168,18 +167,18 @@ class PMSG_active(om.ExplicitComponent):
         # Calculating stator current and electrical loading
         # self.I_s= sqrt(Z**2+(((self.E_p-G**0.5)/(om_e*self.L_s)**2)**2))
 
-        outputs["A_1"] = 3 * N_s * inputs["I_s"] / (np.pi * dia) * 0.707
+        outputs["A_1"] = 3 * N_s * I_s / (np.pi * dia) / np.sqrt(2)
 
         V_Cus = m * l_Cus * A_Cus
-        outputs["Copper"] = V_Cus * rho_Copper
+        outputs["mass_copper"] = V_Cus * rho_Copper
 
         ##1. Copper Losses
         K_R = 1.2  # Skin effect correction co-efficient
-        outputs["P_Cu"] = m * (I_s / 2**0.5) ** 2 * outputs["R_s"] * K_R
+        outputs["P_Cu"] = 0.5 * m * I_s ** 2 * R_s * K_R
 
         # Stator winding length ,cross-section and resistance
         pFtm = 300  # specific magnet loss
-        outputs["P_Ftm"] = pFtm * 2 * p * outputs["b_m"] * l_s
+        outputs["P_Ftm"] = pFtm * 2 * p * b_m * l_s
 
 
 class Results_by_analytical_model(om.ExplicitComponent):
@@ -207,7 +206,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_output("M_Fesy", 0.0, units="kg", desc="Stator yoke mass")
         self.add_output("M_Fery", 0.0, units="kg", desc="Rotor yoke mass")
-        self.add_output("Iron", 0.0, units="kg", desc="Electrical Steel Mass")
+        self.add_output("mass_iron", 0.0, units="kg", desc="Electrical Steel Mass")
         self.add_input("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
 
         self.add_input("h_s", 0.0, units="m", desc="slot height ")
@@ -223,9 +222,10 @@ class Results_by_analytical_model(om.ExplicitComponent):
         self.add_output("B_symax", 0.0, units="T", desc="Peak Stator Yoke flux density B_ymax")
         self.add_output("B_tmax", 0.0, units="T", desc="Peak Teeth flux density")
         self.add_output("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
-        self.add_output("B_pm1", 0.0, units="T", desc="Fundamental component of peak air gap flux density")
         self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density B_g")
 
+        self.add_output("D_outer", 0.0, units="m", desc="Stator outer diameter")
+        
         # Rotor magnet dimension
         self.add_input("b_m", 0.0, units="m", desc="magnet width")
         self.add_input("k_fes", 0.95, desc="Iron stacking factor")
@@ -244,35 +244,35 @@ class Results_by_analytical_model(om.ExplicitComponent):
     def compute(self, inputs, outputs):
 
         # Unpack inputs
-        r_g = inputs["r_g"]
-        g = inputs["g"]
-        l_s = inputs["l_s"]
-        h_ys = inputs["h_ys"]
-        h_yr = inputs["h_yr"]
-        h_m = inputs["h_m"]
-        b_m = inputs["b_m"]
-        #I_s = inputs["I_s"]
-        #N_nom = inputs["N_nom"]
-        B_r = inputs["B_r"]
-        p = inputs["p"]
-        m = inputs["m"]
-        mu_r = inputs["mu_r"]
-        k_fes = inputs["k_fes"]
-        mu_0 = inputs["mu_0"]
-        q1 = inputs["q1"]
-        rho_Fe = inputs["rho_Fe"]
-        L_t = inputs["L_t"]
+        r_g = float(inputs["r_g"])
+        g = float(inputs["g"])
+        l_s = float(inputs["l_s"])
+        h_ys = float(inputs["h_ys"])
+        h_yr = float(inputs["h_yr"])
+        h_m = float(inputs["h_m"])
+        b_m = float(inputs["b_m"])
+        #I_s = float(inputs["I_s"])
+        #N_nom = float(inputs["N_nom"])
+        B_r = float(inputs["B_r"])
+        p = float(inputs["p"])
+        m = float(inputs["m"])
+        mu_r = float(inputs["mu_r"])
+        k_fes = float(inputs["k_fes"])
+        mu_0 = float(inputs["mu_0"])
+        q1 = float(inputs["q1"])
+        rho_Fe = float(inputs["rho_Fe"])
+        L_t = float(inputs["L_t"])
         tau_p = float(inputs["tau_p"])
         tau_s = float(inputs["tau_s"])
-        b_s = inputs["b_s"]
-        b_t = inputs["b_t"]
-        h_s = inputs["h_s"]
-        N_s = inputs["N_s"]
-        ratio = inputs["ratio"]
-        A_1 = inputs["A_1"]
+        b_s = float(inputs["b_s"])
+        b_t = float(inputs["b_t"])
+        h_s = float(inputs["h_s"])
+        N_s = float(inputs["N_s"])
+        ratio = float(inputs["ratio"])
+        A_1 = float(inputs["A_1"])
 
-        h_s1 = inputs["h_s1"]
-        h_s2 = inputs["h_s2"]
+        h_s1 = float(inputs["h_s1"])
+        h_s2 = float(inputs["h_s2"])
         h_w = h_s2
         alpha_p = np.pi / 2 * ratio
         b_so = 2 * g  # Slot opening
@@ -281,6 +281,13 @@ class Results_by_analytical_model(om.ExplicitComponent):
         l_u = k_fes * l_s  # useful iron stack length
         # air gap diameter
 
+
+        r_m = r_g - g
+        r_outer = r_g + h_s1 + h_s2 + h_s + h_ys
+        r_inner = r_g + h_s1 + h_s2 + h_s
+        r_yoke = r_m - h_m - h_yr
+        outputs["D_outer"] = 2*r_outer
+        
         #l_b = 2 * tau_p  # end winding length
         l_e = l_s + 2 * g  # equivalent core length
 
@@ -313,7 +320,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         outputs["M_Fest"] = V_Fest * rho_Fe  # Mass of stator tooth
         outputs["M_Fesy"] = V_Fesy * rho_Fe  # Mass of stator yoke
         outputs["M_Fery"] = V_Fery * rho_Fe  # Mass of rotor yoke
-        outputs["Iron"] = outputs["M_Fest"] + outputs["M_Fesy"] + outputs["M_Fery"]
+        outputs["mass_iron"] = outputs["M_Fest"] + outputs["M_Fesy"] + outputs["M_Fery"]
 
         L_m = 2 * m * k_wd**2 * (N_s) ** 2 * mu_0 * tau_p * L_t / np.pi**2 / g_eff / p
         # slot leakage inductance
@@ -327,7 +334,7 @@ class Results_by_analytical_model(om.ExplicitComponent):
         #X_snom = om_e * (L_m + L_ssigma)
 
         # Calculating magnetic loading
-        outputs["B_pm1"] = B_r * h_m / mu_r / (g_eff)
+        #B_pm1 = B_r * h_m / mu_r / (g_eff)
         outputs["B_g"] = B_g = B_r * h_m / mu_r / ((g + h_m / mu_r)) * (4 / np.pi) * np.sin(alpha_p)
         outputs["B_symax"] = B_g * b_m * l_e / (2 * h_ys * l_u)
         outputs["B_rymax"] = B_g * b_m * l_e / (2 * h_yr * l_s)
@@ -416,17 +423,18 @@ class Results(om.ExplicitComponent):
         # Calculating Losses
         om_m = 2 * np.pi * N_nom / 60
         om_e = om_m * p
+        om_e2 = om_e / (2 * np.pi * 60)
 
         # Iron Losses ( from Hysteresis and eddy currents)
-        P_Hyys = M_Fesy * (B_symax / 1.5) ** 2 * (P_Fe0h * om_e / (2 * np.pi * 60))  # Hysteresis losses in stator yoke
-        P_Ftys = M_Fesy * (B_symax / 1.5) ** 2 * (P_Fe0e * (om_e / (2 * np.pi * 60)) ** 2)  # Eddy losses in stator yoke
+        P_Hyys = M_Fesy * (B_symax / 1.5) ** 2 * (P_Fe0h * om_e2)  # Hysteresis losses in stator yoke
+        P_Ftys = M_Fesy * (B_symax / 1.5) ** 2 * (P_Fe0e * om_e2 ** 2)  # Eddy losses in stator yoke
         P_Fesynom = P_Hyys + P_Ftys
-        P_Hyd = M_Fest * (B_tmax / 1.5) ** 2 * (P_Fe0h * om_e / (2 * np.pi * 60))  # Hysteresis losses in stator teeth
-        P_Ftd = M_Fest * (B_tmax / 1.5) ** 2 * (P_Fe0e * (om_e / (2 * np.pi * 60)) ** 2)  # Eddy losses in stator teeth
+        P_Hyd = M_Fest * (B_tmax / 1.5) ** 2 * (P_Fe0h * om_e2)  # Hysteresis losses in stator teeth
+        P_Ftd = M_Fest * (B_tmax / 1.5) ** 2 * (P_Fe0e * om_e2 ** 2)  # Eddy losses in stator teeth
         P_Festnom = P_Hyd + P_Ftd
 
-        P_Hyyr = M_Fery * (B_rymax / 1.5) ** 2 * (P_Fe0h * om_e / (2 * np.pi * 60))  # Hysteresis losses in stator yoke
-        P_Ftyr = M_Fery * (B_rymax / 1.5) ** 2 * (P_Fe0e * (om_e / (2 * np.pi * 60)) ** 2)  # Eddy losses in stator yoke
+        P_Hyyr = M_Fery * (B_rymax / 1.5) ** 2 * (P_Fe0h * om_e2)  # Hysteresis losses in stator yoke
+        P_Ftyr = M_Fery * (B_rymax / 1.5) ** 2 * (P_Fe0e * om_e2 ** 2)  # Eddy losses in stator yoke
         P_Fernom = P_Hyyr + P_Ftyr
 
         # additional stray losses due to leakage flux
@@ -441,7 +449,7 @@ class Results(om.ExplicitComponent):
 
         outputs["demag_mmf_ratio"] = H_demag / H_c
 
-        outputs["E_p"] = E_p = np.sqrt(3) * N_s * l_s * r_g * k_wd * om_m * B_g * 0.707
+        outputs["E_p"] = E_p = np.sqrt(3/2) * N_s * l_s * r_g * k_wd * om_m * B_g
 
         outputs["E_p_ratio"] = E_p / E_p_target
         outputs["torque_ratio"] = T_e / T_rated

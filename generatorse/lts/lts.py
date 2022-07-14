@@ -1,40 +1,8 @@
 import openmdao.api as om
+from generatorse.common.cost import Generator_Cost
 import generatorse.lts.magnetics_design as md
 from generatorse.lts.femm_fea import FEMM_Geometry
 from generatorse.lts.structural import LTS_Outer_Rotor_Structural
-
-
-class LTS_Cost(om.ExplicitComponent):
-    def setup(self):
-        self.add_input("C_Cu", 0.0, units="USD/kg", desc="Specific cost of copper")
-        self.add_input("C_Fe", 0.0, units="USD/kg", desc="Specific cost of magnetic steel/iron")
-        self.add_input("C_Fes", 0.0, units="USD/kg", desc="Specific cost of structural steel")
-        self.add_input("C_NbTi", 0.0, units="USD/kg", desc="Specific cost of Magnet")
-
-        # Mass of each material type
-        self.add_input("mass_copper", 0.0, units="kg", desc="Copper mass")
-        self.add_input("mass_iron", 0.0, units="kg", desc="Iron mass")
-        self.add_input("mass_SC", 0.0, units="kg", desc="Magnet mass")
-        self.add_input("mass_structural", 0.0, units="kg", desc="Structural mass")
-
-        self.add_input("mass_adder", 0.0, units="kg", desc="Mass to add to total for unaccounted elements")
-        self.add_input("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
-
-        # Outputs
-        self.add_output("mass_total", 0.0, units="kg", desc="Structural mass")
-        self.add_output("cost_total", 0.0, units="USD", desc="Total cost")
-        self.declare_partials("*", "*", method="fd")
-
-    def compute(self, inputs, outputs):
-        outputs["mass_total"] = (inputs["mass_copper"] + inputs["mass_iron"] +
-                                 inputs["mass_SC"] + inputs["mass_structural"] +
-                                 inputs["mass_adder"])
-
-        outputs["cost_total"] = (inputs["mass_copper"] * inputs["C_Cu"] +
-                                 inputs["mass_iron"] * inputs["C_Fe"] +
-                                 inputs["mass_SC"] * inputs["C_NbTi"] +
-                                 inputs["mass_structural"] * inputs["C_Fes"] +
-                                 inputs["cost_adder"])
 
 
 class LTS_Outer_Rotor_Opt(om.Group):
@@ -86,9 +54,11 @@ class LTS_Outer_Rotor_Opt(om.Group):
         ivcs.add_output("C_Cu", 0.0, units="USD/kg", desc="Specific cost of copper")
         ivcs.add_output("C_Fe", 0.0, units="USD/kg", desc="Specific cost of magnetic steel/iron")
         ivcs.add_output("C_Fes", 0.0, units="USD/kg", desc="Specific cost of structural steel")
-        ivcs.add_output("C_NbTi", 0.0, units="USD/kg", desc="Specific cost of Magnet")
+        ivcs.add_output("C_NbTi", 0.0, units="USD/kg", desc="Specific cost of superconductor")
 
         ivcs.add_output("U_b", 0.0, units="V", desc="brush voltage ")
+        ivcs.add_output("hvac_mass_coeff", 0.025, units="kg/kW/m")
+        ivcs.add_output("hvac_mass_cost_coeff", 124.0, units="USD/kg")
         ivcs.add_output("mass_adder", 0.0, units="kg", desc="Mass to add to total for unaccounted elements")
         ivcs.add_output("cost_adder", 0.0, units="USD", desc="Cost to add to total for unaccounted elements")
 
@@ -101,5 +71,6 @@ class LTS_Outer_Rotor_Opt(om.Group):
         self.add_subsystem("geom", FEMM_Geometry(), promotes=["*"])
         self.add_subsystem("results", md.Results(), promotes=["*"])
         self.add_subsystem("struct", LTS_Outer_Rotor_Structural(), promotes=["*"])
-        self.add_subsystem("cost", LTS_Cost(), promotes=["*"])
+        self.add_subsystem("cost", Generator_Cost(), promotes=["*"])
         self.connect("Torque_actual", "T_e")
+        self.connect("D_a", "D_generator")

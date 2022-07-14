@@ -27,6 +27,7 @@ rated_speed[20] = 6.49
 rated_speed[25] = 5.80
 target_eff = 0.97
 fsql = "log.sql"
+output_root = "LTS_output"
 
 mydir = os.path.dirname(os.path.realpath(__file__))  # get path to this file
 
@@ -47,24 +48,21 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     #prob.driver = NLoptDriver()
     #prob.driver.options['optimizer'] = 'LN_COBYLA'
-    #prob.driver.options["maxiter"] = 500
-    #prob.driver.options["tol"] = 1e-7
-    #prob.driver = om.ScipyOptimizeDriver()
-    #prob.driver.options['optimizer'] = 'SLSQP'
-    #prob.driver.options["maxiter"] = 75
+    #prob.driver.options["maxiter"] = 200
+    #prob.driver.options["tol"] = 1e-6
     prob.driver = om.DifferentialEvolutionDriver()
     prob.driver.options["max_gen"] = 15
-    prob.driver.options["pop_size"] = 60
+    prob.driver.options["pop_size"] = 40
     prob.driver.options["penalty_exponent"] = 3
 
     #prob.model.add_design_var("delta_em", lower=0.060, upper=0.15, ref=0.08)
-    if obj_str.lower() == "cost":
-        prob.model.add_design_var("D_a", lower=5, upper=9)
-        prob.model.add_design_var("h_sc", lower=0.03, upper=0.2, ref=0.1)
-        prob.model.add_design_var("h_s", lower=0.1, upper=0.4, ref=0.1)
-        prob.model.add_design_var("h_yr", lower=0.15, upper=0.3, ref=0.1)
+    #if obj_str.lower() == "cost":
+    prob.model.add_design_var("D_a", lower=5, upper=9)
+    prob.model.add_design_var("h_sc", lower=0.03, upper=0.2, ref=0.1)
+    prob.model.add_design_var("h_s", lower=0.1, upper=0.4, ref=0.1)
+    prob.model.add_design_var("h_yr", lower=0.15, upper=0.3, ref=0.1)
     prob.model.add_design_var("p", lower=20, upper=30, ref=20)
-    #prob.model.add_design_var("l_s", lower=1, upper=1.75)
+    prob.model.add_design_var("l_s", lower=0.75, upper=1.75)
     #prob.model.add_design_var("alpha", lower=0.1, upper=1)
     prob.model.add_design_var("dalpha", lower=1, upper=4)
     prob.model.add_design_var("I_sc_in", lower=400, upper=800, ref=5e2)
@@ -76,13 +74,13 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     # prob.model.add_constraint("Slot_aspect_ratio", lower=4.0, upper=10.0)  # 11
     prob.model.add_constraint("con_angle", lower=0.001, ref=0.1)
     # Differential evolution driver cannot do double-sided constraints, so have to hack it
-    prob.model.add_constraint("E_p", lower=0.8 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", upper=1.20)
+    #prob.model.add_constraint("E_p", lower=0.8 * 3300, ref=3000)
+    prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
     prob.model.add_constraint("constr_B_g_coil", upper=1.0)
-    prob.model.add_constraint("B_coil_max", lower=6.0)
+    #prob.model.add_constraint("B_coil_max", lower=6.0)
     #prob.model.add_constraint("Coil_max_ratio", upper=1.2)
     #prob.model.add_constraint("Critical_current_ratio",upper=1.2)
-    prob.model.add_constraint("B_rymax", upper=2.3)
+    #prob.model.add_constraint("B_rymax", upper=2.3)
     prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
     #prob.model.add_constraint("Torque_actual", upper=1.2*target_torque, ref=20e6)
     if not obj_str.lower() in ['eff','efficiency']:
@@ -153,7 +151,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["theta_sh"] = 0.00
 
         if restart_flag:
-            prob = load_data(os.path.join(output_dir, "LTS_output"), prob)
+            prob = load_data(os.path.join(output_dir, output_root), prob)
 
         # Have to set these last in case we initiatlized from a different rating
         prob["P_rated"] = ratingMW * 1e6
@@ -169,15 +167,16 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
             #prob["h_sc"] = 0.03
             #prob["h_yr"] = 0.16
         elif obj_str.lower() == 'mass':
-            prob["D_a"] = 5.0
-            prob["h_s"] = 0.1
-            prob["h_sc"] = 0.150
+            pass
+            #prob["D_a"] = 5.0
+            #prob["h_s"] = 0.1
+            #prob["h_sc"] = 0.150
             #prob["h_yr"] = 0.16
         else:
             print('Objective?', obj_str)
-            prob["D_a"] = 7.0
-            prob["h_s"] = 0.25
-            prob["h_sc"] = 0.09
+            #prob["D_a"] = 7.0
+            #prob["h_s"] = 0.25
+            #prob["h_sc"] = 0.09
             #prob["h_yr"] = 0.2
 
     else:
@@ -272,7 +271,7 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
         prob_struct["theta_sh"] = 0.00
 
         #prob_struct["mass_copper"] = 60e3
-        prob_struct["mass_SC"] = 4000
+        prob_struct["mass_NbTi"] = 4000
     else:
         prob_struct = copy_data(prob_in, prob_struct)
 
@@ -290,7 +289,7 @@ def write_all_data(prob, output_dir=None):
         output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
 
-    save_data(os.path.join(output_dir, "LTS_output"), prob)
+    save_data(os.path.join(output_dir, output_root), prob)
 
     ratingMW = float(prob.get_val("P_rated", units="MW"))
     raw_data = [
@@ -339,8 +338,8 @@ def write_all_data(prob, output_dir=None):
         ["Layer count",                   "N_l",                    float(prob.get_val("N_l")), "layers", ""],
         ["Turns per layer",               "N_sc_layer",             float(prob.get_val("N_sc_layer")), "turns", ""],
         ["length per racetrack",          "l_sc",                   float(prob.get_val("l_sc", units="km")), "km", ""],
-        ["Mass per coil",                 "mass_SC_racetrack",      float(prob.get_val("mass_SC_racetrack", units="kg")), "kg", ""],
-        ["Total mass of SC coils",        "mass_SC",                float(prob.get_val("mass_SC", units="t")), "Tons", ""],
+        ["Mass per coil",                 "mass_NbTi_racetrack",      float(prob.get_val("mass_NbTi_racetrack", units="kg")), "kg", ""],
+        ["Total mass of SC coils",        "mass_NbTi",                float(prob.get_val("mass_NbTi", units="t")), "Tons", ""],
         ["B_rymax",                       "B_rymax",                float(prob.get_val("B_rymax", units="T")), "Tesla", "<2.1"],
         ["B_g",                           "B_g",                    float(prob.get_val("B_g", units="T")), "Tesla", ""],
         ["B_coil_max",                    "B_coil_max",             float(prob.get_val("B_coil_max", units="T")), "Tesla", "6<"],
@@ -398,7 +397,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = False #True
+    opt_flag = True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)

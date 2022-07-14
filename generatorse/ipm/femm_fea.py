@@ -23,7 +23,7 @@ def bad_inputs(outputs):
     outputs["Sigma_normal"] = 1e9
     outputs["M_Fes"] = 1e9
     outputs["M_Fer"] = 1e9
-    outputs["Iron"] = 1e9
+    outputs["mass_iron"] = 1e9
     outputs["T_e"] = 1e9
     outputs["Sigma_shear"] = 1e9
     femm.mi_saveas("IPM_new_bad_geomtery.fem")
@@ -236,7 +236,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_output("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_output("Sigma_shear", 0.0, units="Pa", desc="Shear stress")
         self.add_output("Sigma_normal", 0.0, units="Pa", desc="Normal stress")
-        self.add_output("Iron", 0.0, units="kg", desc="Magnet length")
+        self.add_output("mass_iron", 0.0, units="kg", desc="Magnet length")
         self.add_output("M_Fes", 0.0, units="kg", desc="Stator iron mass")
         self.add_output("M_Fer", 0.0, units="kg", desc="Rotor iron mass")
         self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
@@ -708,7 +708,7 @@ class FEMM_Geometry(om.ExplicitComponent):
             outputs["M_Fes"] = V_stator * 2 * rho_Fe * pp  / 10
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * ((r_si+h_ys)**2 - r_si**2) * l_s * rho_Fe
             outputs["M_Fer"] = V_rotor * 2 * rho_Fe * pp  / 10
-            outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fer"]
+            outputs["mass_iron"] = outputs["M_Fes"] + outputs["M_Fer"]
             layer_1 = r_si + h_ys + h_t * 0.75
             layer_2 = r_si + h_ys + h_t * 0.25
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
@@ -717,6 +717,6 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         except Exception as e:
             outputs = bad_inputs(outputs)
-            raise(e)
+            #raise(e)
 
         femm.closefemm()

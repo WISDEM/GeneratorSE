@@ -7,37 +7,7 @@ McDonald,A.S. et al. IET Renewable Power Generation(2008),2(1):3 http://dx.doi.o
 
 import numpy as np
 import openmdao.api as om
-
-
-def shell_constant(R, t, l, x, v, E):
-
-    Lambda = (3 * (1 - v**2) / (R**2 * t**2)) ** 0.25
-    D = E * t**3 / (12 * (1 - v**2))
-    C_14 = (np.sinh(Lambda * l)) ** 2 + (np.sin(Lambda * l)) ** 2
-    C_11 = (np.sinh(Lambda * l)) ** 2 - (np.sin(Lambda * l)) ** 2
-    F_2 = np.cosh(Lambda * x) * np.sin(Lambda * x) + np.sinh(Lambda * x) * np.cos(Lambda * x)
-    C_13 = np.cosh(Lambda * l) * np.sinh(Lambda * l) - np.cos(Lambda * l) * np.sin(Lambda * l)
-    F_1 = np.cosh(Lambda * x) * np.cos(Lambda * x)
-    F_4 = np.cosh(Lambda * x) * np.sin(Lambda * x) - np.sinh(Lambda * x) * np.cos(Lambda * x)
-
-    return D, Lambda, C_14, C_11, F_2, C_13, F_1, F_4
-
-
-def plate_constant(a, b, v, r_o, t, E):
-
-    D = E * t**3 / (12 * (1 - v**2))
-    C_2 = 0.25 * (1 - (b / a) ** 2 * (1 + 2 * np.log(a / b)))
-    C_3 = 0.25 * (b / a) * (((b / a) ** 2 + 1) * np.log(a / b) + (b / a) ** 2 - 1)
-    C_5 = 0.5 * (1 - (b / a) ** 2)
-    C_6 = 0.25 * (b / a) * ((b / a) ** 2 - 1 + 2 * np.log(a / b))
-    C_8 = 0.5 * (1 + v + (1 - v) * (b / a) ** 2)
-    C_9 = (b / a) * (0.5 * (1 + v) * np.log(a / b) + 0.25 * (1 - v) * (1 - (b / a) ** 2))
-    L_11 = (1 / 64) * (1 + 4 * (b / a) ** 2 - 5 * (b / a) ** 4 - 4 * (b / a) ** 2 * (2 + (b / a) ** 2) * np.log(a / b))
-    L_17 = 0.25 * (1 - 0.25 * (1 - v) * ((1 - (r_o / a) ** 4) - (r_o / a) ** 2 * (1 + (1 + v) * np.log(a / r_o))))
-
-    L_14 = 1 / 16 * (1 - (b / a) ** 2 - 4 * (b / a) ** 2 * np.log(a / b))
-
-    return D, C_2, C_3, C_5, C_6, C_8, C_9, L_11, L_17, L_14
+from generatorse.common.struct_util import shell_constant, plate_constant
 
 
 class PMSG_rotor_inactive(om.ExplicitComponent):
@@ -265,7 +235,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("rho_Fes", 0.0, units="kg/(m**3)", desc="Structural Steel density")
         self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical Steel density ")
         self.add_input("M_Fest", 0.0, units="kg", desc="Stator teeth mass ")
-        self.add_input("Copper", 0.0, units="kg", desc="Copper mass ")
+        self.add_input("mass_copper", 0.0, units="kg", desc="Copper mass ")
 
         self.add_output("structural_mass_stator", 0.0, units="kg", desc="Stator mass (kg)")
 
@@ -275,7 +245,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
 
         self.add_input("structural_mass_rotor", 0.0, units="kg", desc="Rotor mass (kg)")
-        self.add_output("structural_mass", 0.0, units="kg", desc="Total structural mass (kg)")
+        self.add_output("mass_structural", 0.0, units="kg", desc="Total structural mass (kg)")
 
         self.add_output(
             "u_allowable_s", 0.0, units="m", desc="Allowable Radial deflection as a percentage of air gap diameter"
@@ -308,7 +278,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         g1 = inputs["g1"]
         rho_Fe = inputs["rho_Fe"]
         rho_Fes = inputs["rho_Fes"]
-        Copper = inputs["Copper"]
+        Copper = inputs["mass_copper"]
         M_Fest = inputs["M_Fest"]
         phi = inputs["phi"]
         Sigma_normal = inputs["Sigma_normal"]
@@ -420,7 +390,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
             np.pi * ((R_is**2 - (R_no) ** 2) * t_s) + np.pi * ((R_is + h_ss) ** 2 - R_is**2) * L_s
         )
 
-        outputs["structural_mass"] = outputs["structural_mass_stator"] + structural_mass_rotor
+        outputs["mass_structural"] = outputs["structural_mass_stator"] + structural_mass_rotor
 
         outputs["con_uas"] = np.abs(outputs["u_as"]) / outputs["u_allowable_s"]
         outputs["con_yas"] = np.abs(outputs["y_as"]) / outputs["y_allowable_s"]
@@ -487,7 +457,7 @@ if __name__ == "__main__":
     prob.model.add_design_var("h_sr", lower=0.025, upper=0.6, ref=0.35)
     prob.model.add_design_var("t_r", lower=0.025, upper=0.5, ref=0.3)
     prob.model.add_design_var("t_s", lower=0.025, upper=0.5, ref=0.3)
-    prob.model.add_objective("structural_mass")
+    prob.model.add_objective("mass_structural")
 
     prob.model.add_constraint("con_uar", upper=1.0)
     prob.model.add_constraint("con_yar", upper=1.0)
@@ -523,7 +493,7 @@ if __name__ == "__main__":
     prob["y_sh"] = 0.00
     prob["theta_sh"] = 0.00
 
-    prob["Copper"] = 60e3
+    prob["mass_copper"] = 60e3
     prob["M_Fest"] = 4000
 
     prob.model.approx_totals(method="fd")
@@ -558,7 +528,7 @@ if __name__ == "__main__":
             prob.get_val("y_as", units="mm"),
             prob.get_val("structural_mass_rotor", units="t"),
             prob.get_val("structural_mass_stator", units="t"),
-            prob.get_val("structural_mass", units="t"),
+            prob.get_val("mass_structural", units="t"),
         ],
         "Limit": [
             "",

@@ -8,37 +8,7 @@ McDonald,A.S. et al. IET Renewable Power Generation(2008),2(1):3 http://dx.doi.o
 import pandas as pd
 import numpy as np
 import openmdao.api as om
-
-
-def shell_constant(R, t, l, x, v, E):
-
-    Lambda = (3 * (1 - v ** 2) / (R ** 2 * t ** 2)) ** 0.25
-    D = E * t ** 3 / (12 * (1 - v ** 2))
-    C_14 = (np.sinh(Lambda * l)) ** 2 + (np.sin(Lambda * l)) ** 2
-    C_11 = (np.sinh(Lambda * l)) ** 2 - (np.sin(Lambda * l)) ** 2
-    F_2 = np.cosh(Lambda * x) * np.sin(Lambda * x) + np.sinh(Lambda * x) * np.cos(Lambda * x)
-    C_13 = np.cosh(Lambda * l) * np.sinh(Lambda * l) - np.cos(Lambda * l) * np.sin(Lambda * l)
-    F_1 = np.cosh(Lambda * x) * np.cos(Lambda * x)
-    F_4 = np.cosh(Lambda * x) * np.sin(Lambda * x) - np.sinh(Lambda * x) * np.cos(Lambda * x)
-
-    return D, Lambda, C_14, C_11, F_2, C_13, F_1, F_4
-
-
-def plate_constant(a, b, v, r_o, t, E):
-
-    D = E * t ** 3 / (12 * (1 - v ** 2))
-    C_2 = 0.25 * (1 - (b / a) ** 2 * (1 + 2 * np.log(a / b)))
-    C_3 = 0.25 * (b / a) * (((b / a) ** 2 + 1) * np.log(a / b) + (b / a) ** 2 - 1)
-    C_5 = 0.5 * (1 - (b / a) ** 2)
-    C_6 = 0.25 * (b / a) * ((b / a) ** 2 - 1 + 2 * np.log(a / b))
-    C_8 = 0.5 * (1 + v + (1 - v) * (b / a) ** 2)
-    C_9 = (b / a) * (0.5 * (1 + v) * np.log(a / b) + 0.25 * (1 - v) * (1 - (b / a) ** 2))
-    L_11 = (1 / 64) * (1 + 4 * (b / a) ** 2 - 5 * (b / a) ** 4 - 4 * (b / a) ** 2 * (2 + (b / a) ** 2) * np.log(a / b))
-    L_17 = 0.25 * (1 - 0.25 * (1 - v) * ((1 - (r_o / a) ** 4) - (r_o / a) ** 2 * (1 + (1 + v) * np.log(a / r_o))))
-
-    L_14 = 1 / 16 * (1 - (b / a) ** 2 - 4 * (b / a) ** 2 * np.log(a / b))
-
-    return D, C_2, C_3, C_5, C_6, C_8, C_9, L_11, L_17, L_14
+from generatorse.common.struct_util import shell_constant, plate_constant
 
 
 class LTS_inactive_rotor(om.ExplicitComponent):
@@ -73,8 +43,8 @@ class LTS_inactive_rotor(om.ExplicitComponent):
         self.add_input("R_shaft_outer", 0.0, units="m", desc=" Main shaft outer radius")
         # self.add_input("R_nose_outer", 0.0, units="m", desc=" Bedplate nose outer radius")
         self.add_output("W_ry", 0.0, desc=" line load of rotor yoke thickness")
-        # self.add_input("Copper", 0.0, units="kg", desc=" Copper mass")
-        # self.add_input("mass_SC", 0.0, units="kg", desc=" SC mass")
+        # self.add_input("mass_copper", 0.0, units="kg", desc=" Copper mass")
+        # self.add_input("mass_NbTi", 0.0, units="kg", desc=" SC mass")
         self.add_input("Tilt_angle", 0.0, units="deg", desc=" Main shaft tilt angle")
 
         # Material properties
@@ -128,8 +98,8 @@ class LTS_inactive_rotor(om.ExplicitComponent):
         T_e = inputs["T_e"]
         R_shaft_outer = inputs["R_shaft_outer"]
         # R_nose_outer = inputs["R_nose_outer"]
-        # Copper = inputs["Copper"]
-        # mass_SC = inputs["mass_SC"]
+        # Copper = inputs["mass_copper"]
+        # mass_NbTi = inputs["mass_NbTi"]
         Tilt_angle = inputs["Tilt_angle"]
         Sigma_normal = inputs["Sigma_normal"]
         # Sigma_shear = inputs["Sigma_shear"]
@@ -304,7 +274,7 @@ class LTS_inactive_stator(om.ExplicitComponent):
         self.add_input("g", 9.8106, units="m/s/s", desc="Acceleration due to gravity")
         self.add_input("rho_steel", 0.0, units="kg/m**3", desc="Structural steel mass density")
 
-        self.add_input("mass_SC", 0.0, units="kg", desc="SC mass")
+        self.add_input("mass_NbTi", 0.0, units="kg", desc="SC mass")
         self.add_input("Tilt_angle", 0.0, units="deg", desc=" Main shaft tilt angle")
 
         self.add_output("W_sy", 0.0, desc=" line load of stator yoke thickness")
@@ -356,7 +326,7 @@ class LTS_inactive_stator(om.ExplicitComponent):
         v = inputs["v"]
         g = inputs["g"]
         rho_steel = inputs["rho_steel"]
-        Total_mass_SC = inputs["mass_SC"]
+        Total_mass_NbTi = inputs["mass_NbTi"]
         Tilt_angle = inputs["Tilt_angle"]
         Sigma_normal = inputs["Sigma_normal"]
         # Sigma_shear = inputs["Sigma_shear"]
@@ -431,7 +401,7 @@ class LTS_inactive_stator(om.ExplicitComponent):
             * (W_ssteel[1] * W_ssteel[4] / W_ssteel[3] - W_ssteel[2])
         )
 
-        W_field = np.sin(np.deg2rad(Tilt_angle)) * Total_mass_SC / (2 * np.pi * (D_sc * 0.5 + h_sc * 0.5))
+        W_field = np.sin(np.deg2rad(Tilt_angle)) * Total_mass_NbTi / (2 * np.pi * (D_sc * 0.5 + h_sc * 0.5))
         y_ai2s = (
             -W_field
             * (D_sc * 0.5 + h_sc * 0.5) ** 4
@@ -581,7 +551,7 @@ if __name__ == "__main__":
     prob_struct["theta_sh"] = 0.00
 
     #prob_struct["mass_copper"] = 60e3
-    prob_struct["mass_SC"] = 4000
+    prob_struct["mass_NbTi"] = 4000
 
     prob_struct.model.approx_totals(method="fd")
 

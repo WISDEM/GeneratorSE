@@ -124,11 +124,10 @@ class LTS_active(om.ExplicitComponent):
         self.add_output("y_Q", 0.0, desc="Slots per pole also pole pitch")
 
         # Mass Outputs
-        self.add_output("mass_SC_racetrack", 0.0, units="kg", desc="SC conductor mass per racetrack")
-        self.add_output("mass_SC", 0.0, units="kg", desc=" Total SC conductor mass")
+        self.add_output("mass_NbTi_racetrack", 0.0, units="kg", desc="SC conductor mass per racetrack")
+        self.add_output("mass_NbTi", 0.0, units="kg", desc=" Total SC conductor mass")
         self.add_output("mass_copper", 0.0, units="kg", desc="Copper Mass")
         self.add_output("mass_iron", 0.0, units="kg", desc="Electrical Steel Mass")
-        self.add_output("mass_active", 0.0, units="kg", desc="Actual mass")
 
         self.declare_partials("*", "*", method="fd")
 
@@ -347,17 +346,16 @@ class LTS_active(om.ExplicitComponent):
         # volume of iron in stator tooth
         V_Fery = 0.25 * np.pi * l_s * ((D_a - 2 * h_s) ** 2 - (D_a - 2 * h_s - 2 * h_yr) ** 2)
         # outputs["Copper		 Copper =    =   V_Cus*rho_Copper
-        outputs["mass_iron"] = Iron = V_Fery * rho_Fe  # Mass of stator yoke
+        outputs["mass_iron"] = V_Fery * rho_Fe  # Mass of stator yoke
 
         outputs["N_l"] = h_sc / (1.2e-3)  # round later!
 
         # 0.01147612156295224312590448625181
-        outputs["mass_SC_racetrack"] = mass_SC = l_sc * conductor_area * rho_NbTi
-        outputs["mass_SC"] = Total_mass_SC = p1 * mass_SC
+        outputs["mass_NbTi_racetrack"] = mass_NbTi = l_sc * conductor_area * rho_NbTi
+        outputs["mass_NbTi"] = p1 * mass_NbTi
         V_Cus = m * l_Cus * N_s * (A_Cuscalc)
-        outputs["mass_copper"] = Copper = V_Cus * rho_Copper
+        outputs["mass_copper"] = V_Cus * rho_Copper
 
-        outputs["mass_active"] = Total_mass_SC + Iron + Copper
         outputs["A_1"] = (2 * I_s * N_s * m) / (np.pi * (D_a))
 
         outputs["Cu_losses"] = m * (I_s * 0.707) ** 2 * R_s
@@ -366,7 +364,7 @@ class LTS_active(om.ExplicitComponent):
 
         # print (N_sc,I_s, p1, D_a,delta_em, N_c,S)
 
-        # print(mass_SC)
+        # print(mass_NbTi)
 
 
 class Results(om.ExplicitComponent):

@@ -126,7 +126,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         # uniformly distributed load of the weight of the rotor arm
         w_r = rho_Fes * g1 * np.sin((np.deg2rad(phi))) * a_r
 
-        # TODO: The mass_Fe here seems the same accounting as "Iron" in the magnetics code
+        # TODO: The mass_Fe here seems the same accounting as "mass_iron" in the magnetics code
         outputs["mass_Fe_rotor"] = mass_st_lam = rho_Fe * 2 * np.pi * (R) * l * h_yr  # mass of rotor yoke steel
 
         # weight of 1/nth of rotor cylinder
@@ -183,7 +183,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("rho_Fes", 0.0, units="kg/m**3", desc="Structural Steel density kg/m^3")
         self.add_input("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
         self.add_input("mass_Fe_rotor", 0.0, units="kg", desc="Iron mass")
-        self.add_input("Copper", 0.0, units="kg", desc="Copper Mass")
+        self.add_input("mass_copper", 0.0, units="kg", desc="Copper Mass")
         self.add_input("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_input("mass_structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
@@ -227,7 +227,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         E = inputs["E"]
         rho_Fes = inputs["rho_Fes"]
         rho_Fe = inputs["rho_Fe"]
-        Copper = inputs["Copper"]
+        Copper = inputs["mass_copper"]
         M_Fest = inputs["M_Fest"]
         L_t = inputs["L_t"]  # end winding length
         g = inputs["g"]
@@ -260,7 +260,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         l_iis = l_is  # distance at which the weight of the stator cylinder acts
         l_iiis = l_is  # distance at which the weight of the stator cylinder acts
 
-        # TODO: The mass_Fe here seems the same accounting as "Iron" in the magnetics code
+        # TODO: The mass_Fe here seems the same accounting as "mass_iron" in the magnetics code
         outputs["mass_Fe_stator"] = mass_st_lam_s = M_Fest + np.pi * L_t * rho_Fe * (
             (r_g + h_s + h_s1 + h_s2 + h_ys) ** 2 - (r_g + h_s + h_s1 + h_s2) ** 2
         )
@@ -324,7 +324,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         outputs["z_all_s"] = z_allow_deg * 2 * np.pi * R_st / 360  # allowable torsional deflection
         outputs["b_all_s"] = 2 * np.pi * R_no / N_st  # allowable circumferential arm dimension
 
-        # TODO: The mass_Fe here seems the same accounting as "Iron" in the magnetics code
+        # TODO: The mass_Fe here seems the same accounting as "mass_iron" in the magnetics code
         outputs["mass_Fe"] = outputs["mass_Fe_stator"] + inputs["mass_Fe_rotor"]
         outputs["mass_structural"] = outputs["mass_structural_stator"] + inputs["mass_structural_rotor"]
 
@@ -375,7 +375,7 @@ class PMSG_Inner_Rotor_Structural(om.Group):
         #ivcs.add_output("Sigma_shear", 0.0, units="N/m**2", desc="Shear stress")
         ivcs.add_output("rho_Fes", 0.0, units="kg/m**3", desc="Structural Steel density kg/m^3")
         #ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Magnetic Steel density kg/m^3")
-        #ivcs.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
+        #ivcs.add_output("mass_copper", 0.0, units="kg", desc="Copper Mass")
         #ivcs.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         ivcs.add_output("g1", 9.806, desc="Acceleration due to gravity")
         ivcs.add_output("E", 2.0e11, desc="Youngs modulus")
@@ -465,7 +465,7 @@ if __name__ == "__main__":
     prob_struct["L_t"] = 1.6
     prob_struct["B_g"] = 1.49
 
-    prob_struct["Copper"] = 5000
+    prob_struct["mass_copper"] = 5000
     prob_struct["M_Fest"] = 15000
     prob_struct["Rotor_active"] = 20000
 

@@ -1,6 +1,7 @@
 import openmdao.api as om
-from generatorse.ipm.IPM import PMSG_Outer_rotor_Opt
+from generatorse.ipm.ipm import PMSG_Outer_rotor_Opt
 from generatorse.ipm.structural import PMSG_Outer_Rotor_Structural
+from generatorse.driver.nlopt_driver import NLoptDriver
 from generatorse.common.femm_util import cleanup_femm_files
 from generatorse.common.run_util import copy_data, load_data, save_data
 import os
@@ -24,7 +25,10 @@ rated_speed[15] = 7.49
 rated_speed[17] = 7.04
 rated_speed[20] = 6.49
 rated_speed[25] = 5.80
-target_eff = 0.97
+target_eff = 0.95
+fsql = "log.sql"
+output_root = "IPM_output"
+mydir = os.path.dirname(os.path.realpath(__file__))  # get path to this file
 
 
 pp = {}
@@ -47,7 +51,7 @@ t_s = {}
 h_ss = {}
 h_sr = {}
 
-# 15MW
+# 15-MW
 pp[15] =  70.0
 g[15] =  0.010633567661203219
 D_a[15] =  9.5
@@ -68,7 +72,28 @@ t_s[15] = 0.06439639
 h_ss[15] = 0.04
 h_sr[15] = 0.04
 
-# 20MW
+# 17-MW
+pp[17] =  84.5
+g[17] =  0.007
+D_a[17] =  10.0
+h_m[17] =  0.0295
+d_mag[17] =  0.05
+magnet_l_pc[17] =  1.0
+h_yr[17] =  0.02
+h_ys[17] =  0.051
+h_s1[17] =  0.01
+h_s2[17] =  0.01
+h_t[17] =  0.168
+l_s[17] =  2.3
+N_c[17] =  3.37
+I_s[17] =  5864.0
+N_nom[17] =  6.49
+t_r[17] = 0.09475373
+t_s[17] = 0.06439639
+h_ss[17] = 0.04
+h_sr[17] = 0.04
+
+# 20-MW
 pp[20] =  84.5
 g[20] =  0.007
 D_a[20] =  10.0
@@ -89,11 +114,27 @@ t_s[20] = 0.06439639
 h_ss[20] = 0.04
 h_sr[20] = 0.04
 
+# 25-MW
+pp[25] =  84.5
+g[25] =  0.007
+D_a[25] =  10.0
+h_m[25] =  0.0295
+d_mag[25] =  0.05
+magnet_l_pc[25] =  1.0
+h_yr[25] =  0.02
+h_ys[25] =  0.051
+h_s1[25] =  0.01
+h_s2[25] =  0.01
+h_t[25] =  0.168
+l_s[25] =  2.3
+N_c[25] =  3.37
+I_s[25] =  5864.0
+N_nom[25] =  6.49
+t_r[25] = 0.09475373
+t_s[25] = 0.06439639
+h_ss[25] = 0.04
+h_sr[25] = 0.04
 
-
-fsql = "log.sql"
-
-mydir = os.path.dirname(os.path.realpath(__file__))  # get path to this file
 
 def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, opt_flag=False, restart_flag=True, obj_str="cost", ratingMW=17):
     if output_dir is None:
@@ -110,25 +151,22 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob = om.Problem()
     prob.model = PMSG_Outer_rotor_Opt(debug_prints=True)
 
-    # prob.driver = om.ScipyOptimizeDriver()
-    # prob.driver.options["optimizer"] = "COBYLA"
-    # prob.driver.options["maxiter"] = 500 #50
+    #prob.driver = NLoptDriver()
+    #prob.driver.options['optimizer'] = 'LN_COBYLA'
+    #prob.driver.options["maxiter"] = 200
+    #prob.driver.options["tol"] = 1e-6
     prob.driver = om.DifferentialEvolutionDriver()
-    prob.driver.options["max_gen"] = 20
-    prob.driver.options["pop_size"] = 60
+    prob.driver.options["max_gen"] = 15
+    prob.driver.options["pop_size"] = 30
     prob.driver.options["penalty_exponent"] = 3
-    # from generatorse.common.nlopt_driver import NLoptDriver
-    # prob.driver = NLoptDriver()
-    # prob.driver.options["optimizer"] = "LN_COBYLA"
 
-
-    recorder = om.SqliteRecorder(os.path.join(output_dir, fsql))
-    prob.driver.add_recorder(recorder)
-    prob.add_recorder(recorder)
-    prob.driver.recording_options["excludes"] = ["*_df"]
-    prob.driver.recording_options["record_constraints"] = True
-    prob.driver.recording_options["record_desvars"] = True
-    prob.driver.recording_options["record_objectives"] = True
+    #recorder = om.SqliteRecorder(os.path.join(output_dir, fsql))
+    #prob.driver.add_recorder(recorder)
+    #prob.add_recorder(recorder)
+    #prob.driver.recording_options["excludes"] = ["*_df"]
+    #prob.driver.recording_options["record_constraints"] = True
+    #prob.driver.recording_options["record_desvars"] = True
+    #prob.driver.recording_options["record_objectives"] = True
 
     prob.model.add_design_var("D_a", lower=6, upper=10., ref=10.0 )
     prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01)
@@ -151,11 +189,11 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_constraint("B_rymax", upper=2.53)
     prob.model.add_constraint("B_smax", upper=2.53)
     # prob.model.add_constraint("K_rad",    lower=0.15, upper=0.3)
-    # prob.model.add_constraint("E_p", lower=0.9 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", lower=0.95,upper=1.05)
-    prob.model.add_constraint("torque_ratio", lower=0.97)
+    prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
+    prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
+    prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
+    prob.model.add_constraint("T_e", upper=1.2*target_torque, ref=20e6)
     prob.model.add_constraint("r_outer_active", upper=11. / 2.)
-    # prob.model.add_constraint("T_e", upper=1.05*target_torque, ref=20e6)
 
     if not obj_str.lower() in ["eff","efficiency"]:
         prob.model.add_constraint("gen_eff", lower=0.955)
@@ -232,7 +270,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["z_allow_deg"]    = 0.05       # torsional twist
 
         if restart_flag:
-            prob = load_data(os.path.join(output_dir, "IPM_output"), prob)
+            prob = load_data(os.path.join(output_dir, output_root), prob)
 
         # Have to set these last in case we initiatlized from a different rating
         prob["P_rated"] = ratingMW * 1e6
@@ -295,7 +333,7 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False, ra
     prob_struct.model.add_design_var("h_ss", lower=0.04, upper=0.2, ref=0.1)
     prob_struct.model.add_design_var("h_sr", lower=0.04, upper=0.2, ref=0.1)
 
-    prob_struct.model.add_objective("structural_mass", ref=1e6)
+    prob_struct.model.add_objective("mass_structural", ref=1e6)
 
     prob_struct.model.add_constraint("con_uar", upper=1.0)
     prob_struct.model.add_constraint("con_yar", upper=1.0)
@@ -332,7 +370,7 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False, ra
         prob_struct["y_sh"] = 0.00
         prob_struct["theta_sh"] = 0.00
 
-        prob_struct["Copper"] = 60e3
+        prob_struct["mass_copper"] = 60e3
         prob_struct["M_Fest"] = 4000
 
     else:
@@ -352,7 +390,7 @@ def write_all_data(prob, output_dir=None):
         output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
 
-    save_data(os.path.join(output_dir, "IPM_output"), prob)
+    save_data(os.path.join(output_dir, output_root), prob)
 
     ratingMW = float(prob.get_val("P_rated", units="MW"))
 
@@ -382,8 +420,8 @@ def write_all_data(prob, output_dir=None):
         ["V-angle",                               "alpha_v",           float(prob.get_val("alpha_v",units="deg")), "deg", "(60-160)"],
         #["Barrier distance",                      "w_fe",              float(prob.get_val("w_fe",units="mm")), "mm", ""],
         ["Peak air gap flux density fundamental", "B_g",               float(prob.get_val("B_g",units="T")), "T", ""],
-        ["Peak statorflux density",               "B_smax",            float(prob.get_val("B_smax",units="T")), "T", ""],
-        ["Peak rotor yoke flux density",          "B_rymax",           float(prob.get_val("B_rymax",units="T")), "T", "<2.53"],
+        ["Peak statorflux density",               "B_smax",            float(prob.get_val("B_smax",units="T")), "T", "< 2.53"],
+        ["Peak rotor yoke flux density",          "B_rymax",           float(prob.get_val("B_rymax",units="T")), "T", "< 2.53"],
         ["Pole pairs",                            "pp",                float(prob.get_val("pp")), "-", "(70-260)"],
         ["Generator output frequency",            "f",                 float(prob.get_val("f",units="Hz")), "Hz", ""],
         ["Generator output phase voltage",        "E_p",               float(prob.get_val("E_p",units="V")), "V", ""],
@@ -401,10 +439,10 @@ def write_all_data(prob, output_dir=None):
         ["Shear stress",                          "Sigma_shear",       float(prob.get_val("Sigma_shear",units="kN/m**2")), "kPa", ""],
         ["Normal stress",                         "Sigma_normal",      float(prob.get_val("Sigma_normal",units="kN/m**2")), "kPa", ""],
         ["Generator Efficiency ",                 "gen_eff",           100*float(prob.get_val("gen_eff")), "%", ">=95.5"],
-        ["Iron mass",                             "Iron",              float(prob.get_val("Iron",units="t")), "tons", ""],
+        ["Iron mass",                             "mass_iron",              float(prob.get_val("mass_iron",units="t")), "tons", ""],
         ["Magnet mass",                           "mass_PM",           float(prob.get_val("mass_PM",units="t")), "tons", ""],
-        ["Copper mass",                           "Copper",            float(prob.get_val("Copper",units="t")), "tons", ""],
-        ["Structural Mass",                       "structural_mass",   float(prob.get_val("structural_mass",units="t")), "tons", ""],
+        ["Copper mass",                           "mass_copper",            float(prob.get_val("mass_copper",units="t")), "tons", ""],
+        ["Structural Mass",                       "mass_structural",   float(prob.get_val("mass_structural",units="t")), "tons", ""],
         ["Rotor disc thickness",                  "t_r",               float(prob.get_val("t_r",units="mm")), "mm", "(0.05-0.3)"],
         ["Rotor rim thickness",                   "h_sr",              float(prob.get_val("h_sr",units="mm")), "mm", "(0.04-0.2)"],
         ["Stator disc thickness",                 "t_s",               float(prob.get_val("t_s",units="mm")), "mm", "(0.05-0.3)"],
@@ -424,21 +462,31 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     output_dir = os.path.join(mydir, output_str)
 
     # Optimize just magnetics with GA and then structural with SLSQP
-    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=False)
-    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag, ratingMW=int(ratingMW), )
+    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str,
+                                     ratingMW=int(ratingMW), restart_flag=False, cleanup_flag=False)
+    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag, ratingMW=int(ratingMW))
 
     # Bring all data together
-    prob = copy_data(prob_struct, prob)
+    for k in ["h_sr","h_ss","t_r","t_s"]:
+        prob[k]  = prob_struct[k]
     prob.run_model()
 
     # Write to xlsx and csv files
-    write_all_data(prob, output_dir=output_dir)
+    #prob.model.list_inputs(val=True, hierarchical=True, units=True, desc=True)
     prob.model.list_outputs(val=True, hierarchical=True)
-    #cleanup_femm_files(mydir)
+    write_all_data(prob, output_dir=output_dir)
+    cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
     opt_flag = True
-    run_all("outputs20-cost_220710", opt_flag, "cost", 20)
-    #for k in ratings_known:
-    #    for obj in ["cost", "mass"]:
-    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    #run_all("outputs15-mass", opt_flag, "mass", 15)
+    #run_all("outputs17-mass", opt_flag, "mass", 17)
+    #run_all("outputs20-mass", opt_flag, "mass", 20)
+    #run_all("outputs25-mass", opt_flag, "mass", 25)
+    #run_all("outputs15-cost", opt_flag, "cost", 15)
+    #run_all("outputs17-cost", opt_flag, "cost", 17)
+    #run_all("outputs20-cost", opt_flag, "cost", 20)
+    #run_all("outputs25-cost", opt_flag, "cost", 25)
+    for k in ratings_known:
+        for obj in ["cost", "mass"]:
+            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)

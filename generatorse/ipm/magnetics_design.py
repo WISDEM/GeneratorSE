@@ -23,7 +23,6 @@ class PMSG_active(om.ExplicitComponent):
 
     def setup(self):
 
-        self.add_input("D_a", 0.0, units="m", desc="Stator diameter ")
         self.add_input("r_g", 0.0, units="m", desc="Air gap radius")
         self.add_input("l_s", 0.0, units="m", desc="Stator core length ")
         #self.add_output("l_eff_stator", 0.0, units="m", desc="Effective Stator core length ")
@@ -51,7 +50,7 @@ class PMSG_active(om.ExplicitComponent):
         self.add_output("K_rad", desc="Aspect ratio")
         self.add_output("P_Cu", 0, units="W", desc="Copper losses")
         self.add_output("S", 0.0, desc="Stator slots")
-        self.add_output("Copper", 0.0, units="kg", desc="Copper Mass")
+        self.add_output("mass_copper", 0.0, units="kg", desc="Copper Mass")
 
         self.declare_partials("*", "*", method="fd")
 
@@ -89,16 +88,17 @@ class PMSG_active(om.ExplicitComponent):
         outputs["A_Cuscalc"] = A_Cuscalc = I_s / J_s
         # Calculating stator resistance
         L_Cus = N_s * l_Cus
-        A_slot=h_s*b_s
+        A_slot = h_s*b_s
                 
-        outputs["R_s"] = R_s = (resistivity_Cu* (1 + 20 * 0.00393)* (N_s)* l_Cus/(A_slot*0.65/N_c))
+        A_Cus = A_slot * 0.65 / N_c
+        outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / A_Cus
         
         # Calculating Electromagnetically active mass
-        V_Cus = m * L_Cus * (A_Cuscalc * (10**-6))  # copper volume
-        outputs["Copper"] = V_Cus * rho_Copper
+        V_Cus = m * L_Cus * A_Cuscalc * 1e-6  # copper volume
+        outputs["mass_copper"] = V_Cus * rho_Copper
         # Calculating Losses
         K_R = 1.0  # Skin effect correction coefficient
-        outputs["P_Cu"] = m * (I_s / 2**0.5) ** 2 * R_s * K_R
+        outputs["P_Cu"] = 0.5 * m * I_s ** 2 * R_s * K_R
 
 
 class Results(om.ExplicitComponent):
@@ -170,8 +170,9 @@ class Results(om.ExplicitComponent):
 
         # Calculating  voltage per phase
         om_m = 2 * np.pi * N_nom / 60
+        om_e = om_m * pp
+        om_e2 = om_e / (2 * np.pi * 60)
 
-        om_e = 2 * pp * N_nom / 120
         outputs["E_p"] = E_p = l_s * (D_a * 0.5 * k_w * B_g * om_m * N_s) * np.sqrt(3 / 2)
         outputs["torque_ratio"] = T_e / T_rated
         outputs["E_p_ratio"] = E_p / E_p_target
@@ -184,21 +185,21 @@ class Results(om.ExplicitComponent):
 
         # Iron Losses ( from Hysteresis and eddy currents)
         # Hysteresis losses in stator
-        P_Hyys = M_Fes * (B_smax / 1.5) ** 2 * (P_Fe0h * om_e / (60))
+        P_Hyys = M_Fes * (B_smax / 1.5) ** 2 * (P_Fe0h * om_e2)
 
         # Eddy losses in stator
-        P_Ftys = M_Fes * (B_smax / 1.5) ** 2 * (P_Fe0e * (om_e / (60)) ** 2)
+        P_Ftys = M_Fes * (B_smax / 1.5) ** 2 * (P_Fe0e * om_e2 ** 2)
         P_Fesnom = P_Hyys + P_Ftys
 
         # Hysteresis losses in rotor
-        P_Hyyr = M_Fer * (B_rymax / 1.5) ** 2 * (P_Fe0h * om_e / (60))
+        P_Hyyr = M_Fer * (B_rymax / 1.5) ** 2 * (P_Fe0h * om_e2)
 
         # Eddy losses in rotor
-        P_Ftyr = M_Fer * (B_rymax / 1.5) ** 2 * (P_Fe0e * (om_e / (60)) ** 2)
+        P_Ftyr = M_Fer * (B_rymax / 1.5) ** 2 * (P_Fe0e * om_e2 ** 2)
         P_Fernom = P_Hyyr + P_Ftyr
 
         outputs["P_Fe"] = P_Fe = P_Fesnom + P_Fernom
-        outputs["P_ad"] = P_ad = 0.2 * (outputs["P_Fe"])
+        outputs["P_ad"] = P_ad = 0.2 * P_Fe
         outputs["P_Losses"] = P_Losses = P_Cu + P_Fe + P_ad + P_Ftm
 
         outputs["gen_eff"] = 1 - P_Losses / P_rated

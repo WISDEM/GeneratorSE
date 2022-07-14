@@ -21,7 +21,7 @@ def bad_inputs(outputs):
     outputs["M_Fery"] = 100000
     outputs["M_Fesy"] = 100000
     outputs["M_Fest"] = 100000
-    outputs["Iron"] = 1e8
+    outputs["mass_iron"] = 1e8
     outputs["T_e"] = 1e9
     outputs["Sigma_shear"] = 1e9
     femm.mi_saveas("PMSG_new_bad_geomtery.fem")
@@ -227,17 +227,17 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
         self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical Steel density ")
 
+        self.add_output("D_outer", 0.0, units="m", desc="Stator outer diameter")
         self.add_output("h_t", 0.0, units="m", desc="tooth height")
 
         self.add_output("B_g", 0.0, units="T", desc="Peak air gap flux density B_g")
-        self.add_output("B_pm1", 0.0, units="T", desc="Peak air gap flux density ")
         self.add_output("B_rymax", 0.0, units="T", desc="Peak Rotor yoke flux density")
         self.add_output("B_symax", 0.0, units="T", desc="Peak flux density in thestator yoke")
         self.add_output("B_tmax", 0.0, units="T", desc="Peak tooth flux density")
         self.add_output("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_output("Sigma_shear", 0.0, units="Pa", desc="Shear stress")
         self.add_output("Sigma_normal", 0.0, units="Pa", desc="Normal stress")
-        self.add_output("Iron", 0.0, units="kg", desc="total iron mass")
+        self.add_output("mass_iron", 0.0, units="kg", desc="total iron mass")
         self.add_output("M_Fes", 0.0, units="kg", desc="stator iron mass")
         self.add_output("M_Fery", 0.0, units="kg", desc="rotor yoke iron mass")
         self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
@@ -292,7 +292,8 @@ class FEMM_Geometry(om.ExplicitComponent):
         r_outer = r_g + h_s1 + h_s2 + h_s + h_ys
         r_inner = r_g + h_s1 + h_s2 + h_s
         r_yoke = r_m - h_m - h_yr
-
+        outputs["D_outer"] = 2*r_outer
+        
         theta_b_s = np.arctan(b_s / (r_g))
         theta_tau_s = theta_p_r * 2 / Slots_pp
         theta_tau_s_new = np.arctan((tau_s * 0.5 - b_so * 0.5) / (r_g))
@@ -692,7 +693,7 @@ class FEMM_Geometry(om.ExplicitComponent):
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * (r_outer**2 - r_inner**2) * l_s * rho_Fe
             outputs["M_Fery"] = V_rotor * rho_Fe * p
             outputs["M_Fesy"] = V_Fesy * rho_Fe
-            outputs["Iron"] = outputs["M_Fes"] + outputs["M_Fesy"] + outputs["M_Fery"]
+            outputs["mass_iron"] = outputs["M_Fes"] + outputs["M_Fesy"] + outputs["M_Fery"]
 
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
                 Theta_elec, r_g, l_s, p, g, theta_p_r, I_s, theta_tau_s, layer_1, layer_2, N_c
