@@ -98,9 +98,14 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.approx_totals(method="fd")
 
     prob.setup()
-    # --- Design Variables ---
+    print('************************')
+    print('Design objectives:')
+    print('Generator rating in MW: ', ratingMW)
+    print('Rated speed in rpm: ',rated_speed[ratingMW])
+    print('Target torque in MNm: ', target_torque*1e-6)
+    print('Objective function: ', obj_str)
+    print('************************')
 
-    print(ratingMW, obj_str, rated_speed[ratingMW], target_torque)
     if prob_in is None:
         prob["m"] = 6  # phases
         prob["q"] = 2  # slots per pole per phase
@@ -160,25 +165,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["delta_em"] = 0.06
         prob["l_s"] = 0.75
         prob["load_margin"] = 0.95
-        if obj_str.lower() == 'cost':
-            pass
-            #prob["D_a"] = 9.0
-            #prob["h_s"] = 0.4
-            #prob["h_sc"] = 0.03
-            #prob["h_yr"] = 0.16
-        elif obj_str.lower() == 'mass':
-            pass
-            #prob["D_a"] = 5.0
-            #prob["h_s"] = 0.1
-            #prob["h_sc"] = 0.150
-            #prob["h_yr"] = 0.16
-        else:
-            print('Objective?', obj_str)
-            #prob["D_a"] = 7.0
-            #prob["h_s"] = 0.25
-            #prob["h_sc"] = 0.09
-            #prob["h_yr"] = 0.2
-
     else:
         prob = copy_data(prob_in, prob)
 
@@ -196,7 +182,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     #prob.model.list_outputs(val=True, hierarchical=True)
     print("Final solution:")
     print("E_p_ratio", prob["E_p_ratio"])
-    # print("con_angle", prob["con_angle"])
     print("gen_eff", prob["gen_eff"])
     print("N_c", prob["N_c"])
     print("N_sc", prob["N_sc"])

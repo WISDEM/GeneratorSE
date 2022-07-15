@@ -93,9 +93,14 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.approx_totals(method="fd")
 
     prob.setup()
-    # --- Design Variables ---
+    print('************************')
+    print('Design objectives:')
+    print('Generator rating in MW: ', ratingMW)
+    print('Rated speed in rpm: ',rated_speed[ratingMW])
+    print('Target torque in MNm: ', target_torque*1e-6)
+    print('Objective function: ', obj_str)
+    print('************************')
 
-    print(ratingMW, obj_str, rated_speed[ratingMW], target_torque)
     if prob_in is None:
         # Specific costs
         prob["C_Cu"] = 10.3  #  https://markets.businessinsider.com/commodities/copper-price

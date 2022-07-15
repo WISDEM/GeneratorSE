@@ -149,16 +149,16 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         cleanup_femm_files(mydir)
 
     prob = om.Problem()
-    prob.model = PMSG_Outer_rotor_Opt(debug_prints=True)
+    prob.model = PMSG_Outer_rotor_Opt(debug_prints=False)
 
-    #prob.driver = NLoptDriver()
-    #prob.driver.options['optimizer'] = 'LN_COBYLA'
-    #prob.driver.options["maxiter"] = 200
-    #prob.driver.options["tol"] = 1e-6
-    prob.driver = om.DifferentialEvolutionDriver()
-    prob.driver.options["max_gen"] = 15
-    prob.driver.options["pop_size"] = 30
-    prob.driver.options["penalty_exponent"] = 3
+    prob.driver = NLoptDriver()
+    prob.driver.options['optimizer'] = 'LN_COBYLA'
+    prob.driver.options["maxiter"] = 200
+    prob.driver.options["tol"] = 1e-6
+    #prob.driver = om.DifferentialEvolutionDriver()
+    #prob.driver.options["max_gen"] = 15
+    #prob.driver.options["pop_size"] = 30
+    #prob.driver.options["penalty_exponent"] = 3
 
     #recorder = om.SqliteRecorder(os.path.join(output_dir, fsql))
     #prob.driver.add_recorder(recorder)
@@ -218,9 +218,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     if prob_in is None:
         # Initial design variables for a PMSG designed for a 15MW turbine
-        #prob["P_rated"]        =   17000000.0
-        #prob["T_rated"]        =   23.03066
-        #prob["N_nom"]          =   7.7
         prob["E_p_target"]     = 3300.0
 
         # These are the current design variables
@@ -252,7 +249,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["rho_Fes"]        = 7850.0                 #Steel density
         prob["rho_Copper"]     = 8900.0                  # Kg/m3 copper density
         prob["rho_PM"]         = 7600.0                  # magnet density
-        prob["resistivity_Cu"] = 1.8*10**(-8)*1.4			# Copper resisitivty
+        prob["resistivity_Cu"] = 1.8*1e-8*1.4			# Copper resisitivty
 
         #Support structure parameters
         prob["R_no"]           = 0.925
@@ -276,12 +273,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["P_rated"] = ratingMW * 1e6
         prob["T_rated"] = target_torque
         prob["N_nom"] = rated_speed[ratingMW]
-        #if obj_str.lower() == "cost":
-        #    prob["D_a"] = 9.0
-        #elif obj_str.lower() == "mass":
-        #    prob["D_a"] = 5.0
-        #else:
-        #    prob["D_a"] = 7.0
 
     else:
         prob = copy_data(prob_in, prob)
@@ -396,7 +387,7 @@ def write_all_data(prob, output_dir=None):
 
     raw_data = [
         ["Rating",                                "P_rated",           ratingMW, "MW", ""],
-        ["Air gap diameter",                      "r_g",               2*float(prob.get_val("r_g",units="m")), "m", ""],
+        ["Air gap radius",                        "r_g",               float(prob.get_val("r_g",units="m")), "m", ""],
         ["Stator diameter",                       "D_a",               float(prob.get_val("D_a", units="m")), "m", "(6-10.5)"],
         ["Overall Outer diameter",                "D_outer",           float(prob.get_val("D_outer",units="m")), "m", ""],
         ["Air gap length",                        "g",                 float(prob.get_val("g",units="mm")), "mm", "(7-15)"],
