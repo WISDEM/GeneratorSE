@@ -38,7 +38,7 @@ class Generator_Cost(om.ExplicitComponent):
         # Unpack inputs
         m_coeff = float(inputs["hvac_mass_coeff"])
         c_coeff = float(inputs["hvac_mass_cost_coeff"])
-        rating = float(inputs["P_rating"])
+        rating = float(inputs["P_rated"])
         D_gen = float(inputs["D_generator"])
         m_copper = float(inputs["mass_copper"])
         m_iron = float(inputs["mass_iron"])
@@ -61,7 +61,7 @@ class Generator_Cost(om.ExplicitComponent):
                1.00 * m_sc * inputs["C_NbTi"] +
                1.21 * m_struct * inputs["C_Fes"])
 
-        # Electricity usage
+        # Electricity usage, with kWh intensities from NREL model
         c_elec = 0.064 # $/kWh from EIA
         K_e = c_elec * (96.2 * m_copper + 26.9 * m_iron + 15.9 * m_struct +
                         79.0 * (m_sc + m_pm) )
