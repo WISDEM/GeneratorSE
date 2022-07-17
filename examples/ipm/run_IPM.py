@@ -170,30 +170,28 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     prob.model.add_design_var("D_a", lower=6, upper=10., ref=10.0 )
     prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01)
-    prob.model.add_design_var("l_s", lower=1.5, upper=2.5)
-    prob.model.add_design_var("h_t", lower=0.04, upper=0.5)
-    prob.model.add_design_var("h_ys", lower=0.02, upper=0.2)
-    prob.model.add_design_var("h_yr", lower=0.02, upper=0.2)
+    prob.model.add_design_var("l_s", lower=0.75, upper=2.5)
+    prob.model.add_design_var("h_t", lower=0.04, upper=0.350)
+    prob.model.add_design_var("h_ys", lower=0.02, upper=0.3)
+    prob.model.add_design_var("h_yr", lower=0.02, upper=0.3)
     prob.model.add_design_var("h_m", lower=0.005, upper=0.05, ref=0.01)
-    # prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("pp", lower=70, upper=260, ref=100.0)
-    # prob.model.add_design_var("alpha_v",lower=60, upper=160, ref=100)
+    prob.model.add_design_var("pp", lower=60, upper=260, ref=100.0)
     prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
-    prob.model.add_design_var("I_s",lower=2900, upper=8500, ref=1000)
+    prob.model.add_design_var("I_s",lower=2500, upper=8500, ref=1000)
     prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1)
     # prob.model.add_design_var("d_sep",lower=0.00, upper=0.020, ref=0.01)
     # prob.model.add_design_var("m_sep", lower=0.005, upper=0.01, ref=0.01)
     # prob.model.add_design_var("magnet_l_pc",lower=0.7, upper=1.0)
     # prob.model.add_design_var("J_s",lower=3, upper=10)
 
-    prob.model.add_constraint("B_rymax", upper=2.53)
-    prob.model.add_constraint("B_smax", upper=2.53)
+    #prob.model.add_constraint("B_rymax", upper=2.53)
+    #prob.model.add_constraint("B_smax", upper=2.53)
     # prob.model.add_constraint("K_rad",    lower=0.15, upper=0.3)
-    prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
+    #prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
     prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
     prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
-    prob.model.add_constraint("T_e", upper=1.2*target_torque, ref=20e6)
-    prob.model.add_constraint("r_outer_active", upper=11. / 2.)
+    #prob.model.add_constraint("T_e", upper=1.2*target_torque, ref=20e6)
+    #prob.model.add_constraint("r_outer_active", upper=11. / 2.)
 
     if not obj_str.lower() in ["eff","efficiency"]:
         prob.model.add_constraint("gen_eff", lower=0.955)
@@ -258,10 +256,10 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["h_sr"]           = h_sr[ratingMW]
         prob["t_s"]            = t_s[ratingMW]
         prob["h_ss"]           = h_ss[ratingMW]
-        prob["y_sh"]           = 0.0
-        prob["theta_sh"]       = 0.0
-        prob["y_bd"]           = 0.0
-        prob["theta_bd"]       = 0.0
+        prob["y_sh"]           = 1e-4
+        prob["theta_sh"]       = 1e-3
+        prob["y_bd"]           = 1e-4
+        prob["theta_bd"]       = 1e-3
         prob["u_allow_pcent"]  = 8.5       # % radial deflection
         prob["y_allow_pcent"]  = 1.0       # % axial deflection
         prob["z_allow_deg"]    = 0.05       # torsional twist
@@ -356,16 +354,17 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False, ra
         prob_struct["h_ss"] = h_ss[ratingMW]
         prob_struct["t_r"] = t_r[ratingMW]
         prob_struct["t_s"] = t_s[ratingMW]
-        prob_struct["y_bd"] = 0.00
-        prob_struct["theta_bd"] = 0.00
-        prob_struct["y_sh"] = 0.00
-        prob_struct["theta_sh"] = 0.00
 
         prob_struct["mass_copper"] = 60e3
         prob_struct["M_Fest"] = 4000
 
     else:
         prob_struct = copy_data(prob_in, prob_struct)
+
+    prob_struct["y_bd"] = 1e-4
+    prob_struct["theta_bd"] = 1e-3
+    prob_struct["y_sh"] = 1e-4
+    prob_struct["theta_sh"] = 1e-3
 
     # prob_struct.model.approx_totals(method="fd")
 
@@ -388,45 +387,45 @@ def write_all_data(prob, output_dir=None):
     raw_data = [
         ["Rating",                                "P_rated",           ratingMW, "MW", ""],
         ["Air gap radius",                        "r_g",               float(prob.get_val("r_g",units="m")), "m", ""],
-        ["Stator diameter",                       "D_a",               float(prob.get_val("D_a", units="m")), "m", "(6-10.5)"],
+        ["Stator diameter",                       "D_a",               float(prob.get_val("D_a", units="m")), "m", "(6-10)"],
         ["Overall Outer diameter",                "D_outer",           float(prob.get_val("D_outer",units="m")), "m", ""],
         ["Air gap length",                        "g",                 float(prob.get_val("g",units="mm")), "mm", "(7-15)"],
-        ["Stator length",                         "l_s",               float(prob.get_val("l_s",units="m")), "m", "(1.5-2.5)"],
+        ["Stator length",                         "l_s",               float(prob.get_val("l_s",units="m")), "m", "(0.75-2.5)"],
         ["l/d ratio",                             "K_rad",             float(prob.get_val("K_rad")), "", ""],
         # ["Slot_aspect_ratio",                     "Slot_aspect_ratio", float(prob.get_val("Slot_aspect_ratio")), "", ""],
         ["Pole pitch",                            "tau_p",             float(prob.get_val("tau_p",units="mm")), "mm", ""],
         ["Slot pitch",                            "tau_s",             float(prob.get_val("tau_s",units="mm")), "mm", ""],
         ["Stator slot height",                    "h_s",               float(prob.get_val("h_s",units="mm")), "mm", ""],
         ["Stator slotwidth",                      "b_s",               float(prob.get_val("b_s",units="mm")), "mm", ""],
-        ["Stator tooth width",                    "b_t",               float(prob.get_val("b_t",units="mm")), "mm", "(150-350)"],
-        ["Stator tooth height",                   "h_t",               float(prob.get_val("h_t",units="mm")), "mm", "(150-350)"],
-        ["Stator yoke height",                    "h_ys",              float(prob.get_val("h_ys",units="mm")), "mm", "(25-150)"],
-        ["Rotor yoke height",                     "h_yr",              float(prob.get_val("h_yr",units="mm")), "mm", "(25-150)"],
-        ["Magnet height",                         "h_m",               float(prob.get_val("h_m",units="mm")), "mm", "(10-50)"],
+        #["Stator tooth width",                    "b_t",               float(prob.get_val("b_t",units="mm")), "mm", ""],
+        ["Stator tooth height",                   "h_t",               float(prob.get_val("h_t",units="mm")), "mm", "(40-350)"],
+        ["Stator yoke height",                    "h_ys",              float(prob.get_val("h_ys",units="mm")), "mm", "(20-300)"],
+        ["Rotor yoke height",                     "h_yr",              float(prob.get_val("h_yr",units="mm")), "mm", "(20-300)"],
+        ["Magnet height",                         "h_m",               float(prob.get_val("h_m",units="mm")), "mm", "(5-50)"],
         ["Magnet width",                          "l_m",               float(prob.get_val("l_m",units="mm")), "mm", ""],
         ["Magnet distance from inner radius",     "d_mag",             float(prob.get_val("d_mag",units="mm")), "mm", "(50-250)"],
         # ["Bridge separation width",               "d_sep",             float(prob.get_val("d_sep",units="mm")), "mm", "(0-20)"],
         # ["Bridge separation width",               "m_sep",             float(prob.get_val("m_sep",units="mm")), "mm", "(5-10)"],
-        ["Pole:bridge ratio",                     "magnet_l_pc",       float(prob.get_val("magnet_l_pc")), "", "(0.7-1)"],
-        ["V-angle",                               "alpha_v",           float(prob.get_val("alpha_v",units="deg")), "deg", "(60-160)"],
+        ["Pole:bridge ratio",                     "magnet_l_pc",       float(prob.get_val("magnet_l_pc")), "", ""],
+        ["V-angle",                               "alpha_v",           float(prob.get_val("alpha_v",units="deg")), "deg", ""],
         #["Barrier distance",                      "w_fe",              float(prob.get_val("w_fe",units="mm")), "mm", ""],
         ["Peak air gap flux density fundamental", "B_g",               float(prob.get_val("B_g",units="T")), "T", ""],
         ["Peak statorflux density",               "B_smax",            float(prob.get_val("B_smax",units="T")), "T", "< 2.53"],
         ["Peak rotor yoke flux density",          "B_rymax",           float(prob.get_val("B_rymax",units="T")), "T", "< 2.53"],
-        ["Pole pairs",                            "pp",                float(prob.get_val("pp")), "-", "(70-260)"],
+        ["Pole pairs",                            "pp",                float(prob.get_val("pp")), "-", "(60-260)"],
         ["Generator output frequency",            "f",                 float(prob.get_val("f",units="Hz")), "Hz", ""],
         ["Generator output phase voltage",        "E_p",               float(prob.get_val("E_p",units="V")), "V", ""],
         ["Terminal voltage target",               "E_p_target",        float(prob.get_val("E_p_target", units="V")), "Volts", ""],
-        ["Terminal voltage constraint",           "E_p_ratio",         float(prob.get_val("E_p_ratio")), "", "0.9 < x < 1.1"],
-        ["Generator Output phase current",        "I_s",               float(prob.get_val("I_s",units="A")), "A", "(2900-8500)"],
+        ["Terminal voltage constraint",           "E_p_ratio",         float(prob.get_val("E_p_ratio")), "", "0.8 < x < 1.2"],
+        ["Generator Output phase current",        "I_s",               float(prob.get_val("I_s",units="A")), "A", "(2500-8500)"],
         ["Stator resistance",                     "R_s",               float(prob.get_val("R_s")), "ohm/phase", ""],
         ["Stator slots",                          "S",                 float(prob.get_val("S")), "slots", ""],
-        ["Stator turns",                          "N_c",               float(prob.get_val("N_c")), "turns", "(2-32)"],
+        ["Stator turns",                          "N_c",               float(prob.get_val("N_c")), "turns", "(2-10)"],
         ["Conductor cross-section",               "A_Cuscalc",         float(prob.get_val("A_Cuscalc",units="mm**2")), "mm^2", ""],
-        ["Stator Current density ",               "J_s",               float(prob.get_val("J_s",units="A/mm/mm")), "A/mm^2", "(3-6)"],
+        ["Stator Current density ",               "J_s",               float(prob.get_val("J_s",units="A/mm/mm")), "A/mm^2", ""],
         ["Electromagnetic Torque",                "T_e",               float(prob.get_val("T_e",units="MN*m")), "MNm", ""],
         ["Torque rated target",                   "T_rated",           float(prob.get_val("T_rated", units="MN*m")), "MNm", ""],
-        ["Torque constraint",                     "torque_ratio",      float(prob.get_val("torque_ratio")), "", "0.97 < x < 1.05"],
+        ["Torque constraint",                     "torque_ratio",      float(prob.get_val("torque_ratio")), "", "1.0 < x < 1.2"],
         ["Shear stress",                          "Sigma_shear",       float(prob.get_val("Sigma_shear",units="kN/m**2")), "kPa", ""],
         ["Normal stress",                         "Sigma_normal",      float(prob.get_val("Sigma_normal",units="kN/m**2")), "kPa", ""],
         ["Generator Efficiency ",                 "gen_eff",           100*float(prob.get_val("gen_eff")), "%", ">=95.5"],
@@ -454,8 +453,9 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
     # Optimize just magnetics with GA and then structural with SLSQP
     prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str,
-                                     ratingMW=int(ratingMW), restart_flag=False, cleanup_flag=False)
-    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag, ratingMW=int(ratingMW))
+                                     ratingMW=int(ratingMW), restart_flag=True, cleanup_flag=False)
+    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir,
+                                             opt_flag=True, ratingMW=int(ratingMW))
 
     # Bring all data together
     for k in ["h_sr","h_ss","t_r","t_s"]:
@@ -469,7 +469,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False #True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
