@@ -345,10 +345,6 @@ class PMSG_Inner_Rotor_Structural(om.Group):
         #        nlbgs.options["iprint"] = 2
 
         ivcs = om.IndepVarComp()
-        ivcs.add_output("y_sh", units="W", desc="Deflection at the shaft")
-        ivcs.add_output("theta_sh", 0.0, units="rad", desc="slope of shaft deflection")
-        ivcs.add_output("y_bd", units="W", desc="Deflection of the bedplate")
-        ivcs.add_output("theta_bd", 0.0, units="m", desc="Slope at the bedplate")
         ivcs.add_output("R_sh", 0.0, units="m", desc=" Main shaft outer radius")
         ivcs.add_output("R_no", 0.0, units="m", desc=" Bedplate nose outer radius")
         ivcs.add_output("phi", 0.0, units="deg", desc=" Main shaft tilt angle")
@@ -472,12 +468,6 @@ if __name__ == "__main__":
     prob["u_allow_pcent"] = 5.0  #
     prob["y_allow_pcent"] = 20.0
     prob["z_allow_deg"] = 0.5
-
-    prob_struct["y_bd"] = 0.00
-
-    prob_struct["theta_bd"] = 0.00
-    prob_struct["y_sh"] = 0.00
-    prob_struct["theta_sh"] = 0.00
 
     prob_struct.model.approx_totals(method="fd")
 
