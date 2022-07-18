@@ -212,7 +212,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("g1", 9.806, units="m/s**2", desc="acceleration due to gravity")
         self.add_input("phi", 0, units="deg", desc="rotor tilt -90 degrees during transportation")
         self.add_input("v", 0.3, desc="Poisson's ratio")
-        self.add_input("h_ew", 0.25, desc="Poisson's ratio")
+        self.add_input("h_ew", 0.25, desc="???")
 
         #self.add_input("T_e", 0.0, units="N*m", desc="Rated torque ")
         self.add_input("r_g", 0.0, units="m", desc="air gap radius")

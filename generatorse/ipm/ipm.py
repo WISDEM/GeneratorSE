@@ -36,12 +36,10 @@ class PMSG_Outer_rotor_Opt(om.Group):
         ivcs.add_output('magnet_l_pc', 0.0, desc='Length of magnet divided by max magnet length (slot length)' )
         ivcs.add_output("h_yr", 0.0, units="m", desc="Rotor yoke height")
         ivcs.add_output("h_ys", 0.0, units="m", desc="Stator yoke height")
-        ivcs.add_output("m_sep", 0.0, units="m", desc="magnet distance from center ")
         ivcs.add_output("rho_Fe", 0.0, units="kg/m**3", desc="Electrical steel density")
         ivcs.add_output("h_ew", 0.25, desc="??")
         ivcs.add_output("z_allow_deg", 0.0, units="deg", desc="Allowable torsional twist")
         ivcs.add_output("k_sfil", 0.65, desc="slot fill factor")
-        ivcs.add_output("mu_0", 4 * np.pi / 1e7, desc="premeability of free space")
         ivcs.add_output("P_Fe0h", 4.0, desc="specific hysteresis losses W/kg @ 1.5 T")
         ivcs.add_output("P_Fe0e", 1.0, desc="specific eddy losses W/kg @ 1.5 T")
 

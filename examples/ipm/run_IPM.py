@@ -179,10 +179,8 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
     prob.model.add_design_var("I_s",lower=2500, upper=8500, ref=1000)
     prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1)
-    # prob.model.add_design_var("d_sep",lower=0.00, upper=0.020, ref=0.01)
-    # prob.model.add_design_var("m_sep", lower=0.005, upper=0.01, ref=0.01)
-    # prob.model.add_design_var("magnet_l_pc",lower=0.7, upper=1.0)
-    # prob.model.add_design_var("J_s",lower=3, upper=10)
+    prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
+    prob.model.add_design_var("J_s",lower=3, upper=10)
 
     #prob.model.add_constraint("B_rymax", upper=2.53)
     #prob.model.add_constraint("B_smax", upper=2.53)
@@ -397,7 +395,7 @@ def write_all_data(prob, output_dir=None):
         ["Slot pitch",                            "tau_s",             float(prob.get_val("tau_s",units="mm")), "mm", ""],
         ["Stator slot height",                    "h_s",               float(prob.get_val("h_s",units="mm")), "mm", ""],
         ["Stator slotwidth",                      "b_s",               float(prob.get_val("b_s",units="mm")), "mm", ""],
-        #["Stator tooth width",                    "b_t",               float(prob.get_val("b_t",units="mm")), "mm", ""],
+        ["Stator tooth width",                    "b_t",               float(prob.get_val("b_t",units="mm")), "mm", ""],
         ["Stator tooth height",                   "h_t",               float(prob.get_val("h_t",units="mm")), "mm", "(40-350)"],
         ["Stator yoke height",                    "h_ys",              float(prob.get_val("h_ys",units="mm")), "mm", "(20-300)"],
         ["Rotor yoke height",                     "h_yr",              float(prob.get_val("h_yr",units="mm")), "mm", "(20-300)"],
