@@ -246,7 +246,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["rho_Fes"]        = 7850.0                 #Steel density
         prob["rho_Copper"]     = 8900.0                  # Kg/m3 copper density
         prob["rho_PM"]         = 7600.0                  # magnet density
-        prob["resistivity_Cu"] = 1.8*1e-8*1.4			# Copper resisitivty
+        prob["resistivity_Cu"] = 1.8e-8*1.4			# Copper resisitivty
 
         #Support structure parameters
         prob["R_no"]           = 0.925
@@ -398,7 +398,7 @@ def write_all_data(prob, output_dir=None):
         ["Slot pitch",                            "tau_s",             float(prob.get_val("tau_s",units="mm")), "mm", ""],
         ["Stator slot height",                    "h_s",               float(prob.get_val("h_s",units="mm")), "mm", ""],
         ["Stator slotwidth",                      "b_s",               float(prob.get_val("b_s",units="mm")), "mm", ""],
-        ["Stator tooth width",                    "b_t",               float(prob.get_val("b_t",units="mm")), "mm", ""],
+        ["Stator tooth width",                    "b_t",               float(prob.get_val("b_t",units="mm")), "mm", "(20-500)"],
         ["Stator tooth height",                   "h_t",               float(prob.get_val("h_t",units="mm")), "mm", "(40-350)"],
         ["Stator yoke height",                    "h_ys",              float(prob.get_val("h_ys",units="mm")), "mm", "(20-300)"],
         ["Rotor yoke height",                     "h_yr",              float(prob.get_val("h_yr",units="mm")), "mm", "(20-300)"],
@@ -423,7 +423,7 @@ def write_all_data(prob, output_dir=None):
         ["Stator slots",                          "S",                 float(prob.get_val("S")), "slots", ""],
         ["Stator turns",                          "N_c",               float(prob.get_val("N_c")), "turns", "(2-10)"],
         ["Conductor cross-section",               "A_Cuscalc",         float(prob.get_val("A_Cuscalc",units="mm**2")), "mm^2", ""],
-        ["Stator Current density ",               "J_s",               float(prob.get_val("J_s",units="A/mm/mm")), "A/mm^2", ""],
+        ["Stator Current density ",               "J_s",               float(prob.get_val("J_s",units="A/mm/mm")), "A/mm^2", "(3-10)"],
         ["Electromagnetic Torque",                "T_e",               float(prob.get_val("T_e",units="MN*m")), "MNm", ""],
         ["Torque rated target",                   "T_rated",           float(prob.get_val("T_rated", units="MN*m")), "MNm", ""],
         ["Torque constraint",                     "torque_ratio",      float(prob.get_val("torque_ratio")), "", "1.0 < x < 1.2"],
