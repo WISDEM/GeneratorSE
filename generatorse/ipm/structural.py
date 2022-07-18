@@ -7,7 +7,7 @@ McDonald,A.S. et al. IET Renewable Power Generation(2008),2(1):3 http://dx.doi.o
 
 import numpy as np
 import openmdao.api as om
-from generatorse.common.struct_util import shell_constant, plate_constant
+from generatorse.common.struct_util import shell_constant, plate_constant, structural_constraints
 
 
 class PMSG_rotor_inactive(om.ExplicitComponent):
@@ -59,9 +59,6 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_input("r_outer_active", 0.0, units="m", desc="rotor outer radius ")
         self.add_output("D_outer", 0.0, units="m", desc="rotor outer diameter ")
         self.add_input("r_mag_center", 0.0, units="m", desc="rotor magnet radius ")
-
-        self.add_output("con_uar", val=0.0, desc=" Radial deflection constraint-rotor")
-        self.add_output("con_yar", val=0.0, desc=" Axial deflection constraint-rotor")
 
     def compute(self, inputs, outputs):
 
@@ -194,8 +191,6 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
             * (((r_g) ** 2 - (R_sh) ** 2) * t_r + ((r_outer_active + h_sr) ** 2 - (r_outer_active) ** 2) * L_r)
         )
 
-        outputs["con_uar"] = np.abs(outputs["u_ar"]) / outputs["u_allowable_r"]
-        outputs["con_yar"] = np.abs(outputs["y_ar"]) / outputs["y_allowable_r"]
 
 
 class PMSG_stator_inactive(om.ExplicitComponent):
@@ -253,8 +248,6 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_output(
             "y_allowable_s", 0.0, units="m", desc="Allowable Axial deflection as a percentage of air gap diameter"
         )
-        self.add_output("con_uas", val=0.0, desc=" Radial deflection constraint-stator")
-        self.add_output("con_yas", val=0.0, desc=" Axial deflection constraint-stator")
 
     def compute(self, inputs, outputs):
 
@@ -392,8 +385,6 @@ class PMSG_stator_inactive(om.ExplicitComponent):
 
         outputs["mass_structural"] = outputs["structural_mass_stator"] + structural_mass_rotor
 
-        outputs["con_uas"] = np.abs(outputs["u_as"]) / outputs["u_allowable_s"]
-        outputs["con_yas"] = np.abs(outputs["y_as"]) / outputs["y_allowable_s"]
 
 
 class PMSG_Outer_Rotor_Structural(om.Group):
@@ -406,6 +397,7 @@ class PMSG_Outer_Rotor_Structural(om.Group):
         #        nlbgs.options["iprint"] = 2
 
         ivcs = om.IndepVarComp()
+        ivcs.add_output("gamma", 1.5, desc="Partial safety factor")
         ivcs.add_output("y_sh", units="m", desc="Deflection at the shaft")
         ivcs.add_output("theta_sh", 0.0, units="rad", desc="slope of shaft deflection")
         ivcs.add_output("y_bd", units="W", desc="Deflection of the bedplate")
@@ -427,6 +419,7 @@ class PMSG_Outer_Rotor_Structural(om.Group):
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
         self.add_subsystem("sys1", PMSG_rotor_inactive(), promotes=["*"])
         self.add_subsystem("sys2", PMSG_stator_inactive(), promotes=["*"])
+        self.add_subsystem("con", structural_constraints(), promotes=["*"])
 
 
 if __name__ == "__main__":
@@ -495,6 +488,7 @@ if __name__ == "__main__":
 
     prob["mass_copper"] = 60e3
     prob["M_Fest"] = 4000
+    prob["gamma"] = 1.5
 
     prob.model.approx_totals(method="fd")
 

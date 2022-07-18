@@ -8,18 +8,19 @@ McDonald,A.S. et al. IET Renewable Power Generation(2008),2(1):3 http://dx.doi.o
 import pandas as pd
 import numpy as np
 import openmdao.api as om
+from generatorse.common.struct_util import structural_constraints
 
 
 class PMSG_rotor_inactive(om.ExplicitComponent):
     def setup(self):
 
-        self.add_output("u_Ar", 0.0, units="m", desc="Rotor radial deflection")
-        self.add_output("y_Ar", 0.0, units="m", desc="Rotor axial deflection")
-        self.add_output("z_Ar", 0.0, units="m", desc="Rotor circumferential deflection")
-        self.add_output("u_all_r", 0.0, units="m", desc="Allowable radial rotor")
-        self.add_output("y_all_r", 0.0, units="m", desc="Allowable axial rotor")
-        self.add_output("z_all_r", 0.0, units="m", desc="Allowable circum rotor")
-        self.add_output("b_all_r", 0.0, units="m", desc="Allowable arm dimensions")
+        self.add_output("u_ar", 0.0, units="m", desc="Rotor radial deflection")
+        self.add_output("y_ar", 0.0, units="m", desc="Rotor axial deflection")
+        self.add_output("z_ar", 0.0, units="m", desc="Rotor circumferential deflection")
+        self.add_output("u_allowable_r", 0.0, units="m", desc="Allowable radial rotor")
+        self.add_output("y_allowable_r", 0.0, units="m", desc="Allowable axial rotor")
+        self.add_output("z_allowable_r", 0.0, units="m", desc="Allowable circum rotor")
+        self.add_output("b_allowable_r", 0.0, units="m", desc="Allowable arm dimensions")
         
         self.add_input("u_allow_pcent", 0.0, desc="Allowable radial deflection percent")
         self.add_input("y_allow_pcent", 0.0, desc="Allowable axial deflection percent")
@@ -50,11 +51,6 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         self.add_output("mass_PM", 0.0, units="kg", desc="magnet mass kg")
         self.add_output("mass_Fe_rotor", 0.0, units="kg", desc="Iron mass in rotor")
         self.add_output("mass_structural_rotor", 0.0, units="kg", desc="Rotor structural mass kg")
-
-        self.add_output('con_bar', val=0.0, desc='Circumferential arm space constraint (<1)')
-        self.add_output('con_uar', val=0.0, desc='Radial deflection constraint-rotor (<1)')
-        self.add_output('con_yar', val=0.0, desc='Axial deflection constraint-rotor (<1)')
-        self.add_output('con_zar', val=0.0, desc='Torsional deflection constraint-rotor (<1)')
         
         self.declare_partials("*", "*", method="fd")
 
@@ -100,14 +96,14 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         R = r_g - g - h_m - 0.5 * t
 
         # Rotor mean radius
-        outputs["y_all_r"] = y_allow_pcent * l / 100
-        outputs["u_all_r"] = u_allow_pcent * g / 100  # allowable radial deflection
+        outputs["y_allowable_r"] = y_allow_pcent * l / 100
+        outputs["u_allowable_r"] = u_allow_pcent * g / 100  # allowable radial deflection
         R_1 = R - t * 0.5  # inner radius of rotor cylinder
         k_1 = np.sqrt(I_r / A_r)  # radius of gyration
         m1 = (k_1 / R) ** 2
         l_ir = R  # length of rotor arm beam at which rotor cylinder acts
         l_iir = R_1
-        outputs["b_all_r"] = 2 * np.pi * R_sh / N_r  # allowable circumferential arm dimension for rotor
+        outputs["b_allowable_r"] = 2 * np.pi * R_sh / N_r  # allowable circumferential arm dimension for rotor
         outputs["mass_PM"] = 2 * np.pi * (R + 0.5 * t) * l * h_m * ratio * rho_PM  # magnet mass
 
         # Calculating radial deflection of the rotor
@@ -120,7 +116,7 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         Qov = R**3 / (2 * I_r * theta_r * (m1 + 1))
         Lov = (R_1 - R_sh) / a_r
         Denom = I_r * (Pov - Qov + Lov)  # radial deflection % rotor
-        outputs["u_Ar"] = (Sigma_normal * R**2 / E / t) * (1 + Numer / Denom)
+        outputs["u_ar"] = (Sigma_normal * R**2 / E / t) * (1 + Numer / Denom)
 
         # Calculating axial deflection of the rotor under its own weight
         # uniformly distributed load of the weight of the rotor arm
@@ -134,13 +130,13 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
 
         y_a1 = W * l_ir**3 / 12 / E / I_arm_axi_r  # deflection from weight component of back iron
         y_a2 = w_r * l_iir**4 / 24 / E / I_arm_axi_r  # deflection from weight component of yhe arms
-        outputs["y_Ar"] = y_a1 + y_a2  # axial deflection
+        outputs["y_ar"] = y_a1 + y_a2  # axial deflection
 
         # Calculating # circumferential deflection of the rotor
         # allowable torsional deflection
-        outputs["z_all_r"] = z_allow_deg * 2 * np.pi * R / 360  
+        outputs["z_allowable_r"] = z_allow_deg * 2 * np.pi * R / 360  
         # circumferential deflection
-        outputs["z_Ar"] = (
+        outputs["z_ar"] = (
             (2 * np.pi * (R - 0.5 * t) * l / N_r) * Sigma_shear * (l_ir - 0.5 * t) ** 3 / 3 / E / I_arm_tor_r
         )
         outputs["mass_structural_rotor"] = (N_r * (R_1 - R_sh) * a_r * rho_Fes) + np.pi * (
@@ -148,10 +144,10 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         ) * l * rho_Fes
 
         # Constraint outputs
-        outputs["con_bar"] = np.abs(b_r)             / outputs["b_all_r"]
-        outputs["con_uar"] = np.abs(outputs["u_Ar"]) / outputs["u_all_r"]
-        outputs["con_yar"] = np.abs(outputs["y_Ar"]) / outputs["y_all_r"]
-        outputs["con_zar"] = np.abs(outputs["z_Ar"]) / outputs["z_all_r"]
+        outputs["con_bar"] = np.abs(b_r)             / outputs["b_allowable_r"]
+        outputs["con_uar"] = np.abs(outputs["u_ar"]) / outputs["u_allowable_r"]
+        outputs["con_yar"] = np.abs(outputs["y_ar"]) / outputs["y_allowable_r"]
+        outputs["con_zar"] = np.abs(outputs["z_ar"]) / outputs["z_allowable_r"]
         
 
 
@@ -189,19 +185,14 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         self.add_input("h_s1", 0.010, desc="Slot Opening height")
         self.add_input("h_s2", 0.010, desc="Wedge Opening height")
 
-        self.add_output("u_As", 0.0, units="m", desc="Stator radial deflection")
-        self.add_output("y_As", 0.0, units="m", desc="Stator axial deflection")
+        self.add_output("u_as", 0.0, units="m", desc="Stator radial deflection")
+        self.add_output("y_as", 0.0, units="m", desc="Stator axial deflection")
         self.add_output("D_out", 0.0, units="m", desc="Stator outer diameter")
-        self.add_output("z_As", 0.0, units="m", desc="Stator circumferential deflection")
-        self.add_output("u_all_s", 0.0, units="m", desc="Allowable radial stator")
-        self.add_output("y_all_s", 0.0, units="m", desc="Allowable axial")
-        self.add_output("b_all_s", 0.0, units="m", desc="Allowable circumferential")
-        self.add_output("z_all_s", 0.0, units="m", desc="Allowable circum stator")
-
-        self.add_output('con_bas', val=0.0, desc='Circumferential arm space constraint (<1)')
-        self.add_output('con_uas', val=0.0, desc='Radial deflection constraint-rotor (<1)')
-        self.add_output('con_yas', val=0.0, desc='Axial deflection constraint-rotor (<1)')
-        self.add_output('con_zas', val=0.0, desc='Torsional deflection constraint-rotor (<1)')
+        self.add_output("z_as", 0.0, units="m", desc="Stator circumferential deflection")
+        self.add_output("u_allowable_s", 0.0, units="m", desc="Allowable radial stator")
+        self.add_output("y_allowable_s", 0.0, units="m", desc="Allowable axial")
+        self.add_output("b_allowable_s", 0.0, units="m", desc="Allowable circumferential")
+        self.add_output("z_allowable_s", 0.0, units="m", desc="Allowable circum stator")
 
         self.add_output("mass_Fe", 0.0, units="kg", desc="Iron mass")
         self.add_output("mass_Fe_stator", 0.0, units="kg", desc="Iron mass in stator")
@@ -280,8 +271,8 @@ class PMSG_stator_inactive(om.ExplicitComponent):
             + np.pi * ((R_st + t_s * 0.5) ** 2 - (R_st + t_s * 0.5 - h_ss) ** 2) * L_t * rho_Fes
         )
 
-        outputs["y_all_s"] = y_allow_pcent * L_t / 100
-        outputs["u_all_s"] = u_allow_pcent * g / 100  # allowable radial deflection
+        outputs["y_allowable_s"] = y_allow_pcent * L_t / 100
+        outputs["u_allowable_s"] = u_allow_pcent * g / 100  # allowable radial deflection
         # Calculating radial deflection of the stator
 
         Numers = R_st**3 * (
@@ -296,7 +287,7 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         Lovs = (R_1s - R_no) * 0.5 / (a_s)
         Denoms = I_st * (Povs - Qovs + Lovs)
 
-        outputs["u_As"] = (Sigma_normal * R_st**2 / E / t_s) * (1 + Numers / Denoms)
+        outputs["u_as"] = (Sigma_normal * R_st**2 / E / t_s) * (1 + Numers / Denoms)
 
         # Calculating axial deflection of the stator
 
@@ -306,10 +297,10 @@ class PMSG_stator_inactive(om.ExplicitComponent):
         X_comp2 = W_iis * l_iis**3 / 12 / E / I_arm_axi_s  # deflection component due to 1/nth of stator cylinder
         X_comp3 = w_s * l_iiis**4 / 24 / E / I_arm_axi_s  # deflection component due to weight of arms
 
-        outputs["y_As"] = X_comp1 + X_comp2 + X_comp3  # axial deflection
+        outputs["y_as"] = X_comp1 + X_comp2 + X_comp3  # axial deflection
 
         # Calculating circumferential deflection of the stator
-        outputs["z_As"] = (
+        outputs["z_as"] = (
             np.pi
             * (R_st + 0.5 * t_s)
             * L_t
@@ -321,18 +312,12 @@ class PMSG_stator_inactive(om.ExplicitComponent):
             / E
             / I_arm_tor_s
         )
-        outputs["z_all_s"] = z_allow_deg * 2 * np.pi * R_st / 360  # allowable torsional deflection
-        outputs["b_all_s"] = 2 * np.pi * R_no / N_st  # allowable circumferential arm dimension
+        outputs["z_allowable_s"] = z_allow_deg * 2 * np.pi * R_st / 360  # allowable torsional deflection
+        outputs["b_allowable_s"] = 2 * np.pi * R_no / N_st  # allowable circumferential arm dimension
 
         # TODO: The mass_Fe here seems the same accounting as "mass_iron" in the magnetics code
         outputs["mass_Fe"] = outputs["mass_Fe_stator"] + inputs["mass_Fe_rotor"]
         outputs["mass_structural"] = outputs["mass_structural_stator"] + inputs["mass_structural_rotor"]
-
-        # Constraint outputs
-        outputs["con_bas"] = np.abs(b_st)            / outputs["b_all_s"]
-        outputs["con_uas"] = np.abs(outputs["u_As"]) / outputs["u_all_s"]
-        outputs["con_yas"] = np.abs(outputs["y_As"]) / outputs["y_all_s"]
-        outputs["con_zas"] = np.abs(outputs["z_As"]) / outputs["z_all_s"]
 
 
 class PMSG_Inner_Rotor_Structural(om.Group):
@@ -345,6 +330,7 @@ class PMSG_Inner_Rotor_Structural(om.Group):
         #        nlbgs.options["iprint"] = 2
 
         ivcs = om.IndepVarComp()
+        ivcs.add_output("gamma", 1.5, desc="Partial safety factor")
         ivcs.add_output("R_sh", 0.0, units="m", desc=" Main shaft outer radius")
         ivcs.add_output("R_no", 0.0, units="m", desc=" Bedplate nose outer radius")
         ivcs.add_output("phi", 0.0, units="deg", desc=" Main shaft tilt angle")
@@ -382,6 +368,7 @@ class PMSG_Inner_Rotor_Structural(om.Group):
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
         self.add_subsystem("sys1", PMSG_rotor_inactive(), promotes=["*"])
         self.add_subsystem("sys2", PMSG_stator_inactive(), promotes=["*"])
+        self.add_subsystem("con", structural_constraints(), promotes=["*"])
 
 
 if __name__ == "__main__":
@@ -465,9 +452,10 @@ if __name__ == "__main__":
     prob_struct["M_Fest"] = 15000
     prob_struct["Rotor_active"] = 20000
 
-    prob["u_allow_pcent"] = 5.0  #
-    prob["y_allow_pcent"] = 20.0
-    prob["z_allow_deg"] = 0.5
+    prob_struct["u_allow_pcent"] = 5.0  #
+    prob_struct["y_allow_pcent"] = 20.0
+    prob_struct["z_allow_deg"] = 0.5
+    prob_struct["gamma"] = 1.5
 
     prob_struct.model.approx_totals(method="fd")
 
@@ -508,12 +496,12 @@ if __name__ == "__main__":
             prob_struct.get_val("h_ss", units="mm"),
             prob_struct.get_val("b_st", units="mm"),
             prob_struct.get_val("d_s", units="mm"),
-            prob_struct.get_val("u_Ar", units="mm"),
-            prob_struct.get_val("y_Ar", units="mm"),
-            prob_struct.get_val("z_A_r", units="mm"),
-            prob_struct.get_val("u_As", units="mm"),
-            prob_struct.get_val("y_As", units="mm"),
-            prob_struct.get_val("z_A_s", units="mm"),
+            prob_struct.get_val("u_ar", units="mm"),
+            prob_struct.get_val("y_ar", units="mm"),
+            prob_struct.get_val("z_a_r", units="mm"),
+            prob_struct.get_val("u_as", units="mm"),
+            prob_struct.get_val("y_as", units="mm"),
+            prob_struct.get_val("z_a_s", units="mm"),
             prob_struct.get_val("Structural_rotor", units="t"),
             prob_struct.get_val("Structural_stator", units="t"),
             prob_struct.get_val("mass_structural", units="t"),
@@ -522,19 +510,19 @@ if __name__ == "__main__":
             "",
             "",
             "",
-            prob.get_val("b_all_r", units="mm"),
+            prob.get_val("b_allowable_r", units="mm"),
             "",
             "",
             "",
             "",
-            prob.get_val("b_all_s", units="mm"),
+            prob.get_val("b_allowable_s", units="mm"),
             "",
-            prob.get_val("u_all_r", units="mm"),
+            prob.get_val("u_allowable_r", units="mm"),
             prob.get_val("y_all", units="mm"),
-            prob.get_val("z_all_r", units="mm"),
-            prob.get_val("u_all_r", units="mm"),
+            prob.get_val("z_allowable_r", units="mm"),
+            prob.get_val("u_allowable_r", units="mm"),
             prob.get_val("y_all", units="mm"),
-            prob.get_val("z_all_s", units="mm"),
+            prob.get_val("z_allowable_s", units="mm"),
             "",
             "",
             "",

@@ -217,10 +217,10 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
     prob_struct.model.add_design_var("t_sdisc", lower=0.025, upper=0.5, ref=0.1)
     prob_struct.model.add_objective("mass_structural", ref=1e6)
 
-    prob_struct.model.add_constraint("U_rotor_radial_constraint", upper=1.0)
-    prob_struct.model.add_constraint("U_rotor_axial_constraint", upper=1.0)
-    prob_struct.model.add_constraint("U_stator_radial_constraint", upper=1.0)
-    prob_struct.model.add_constraint("U_stator_axial_constraint", upper=1.0)
+    prob_struct.model.add_constraint("con_uas", upper=1.0)
+    prob_struct.model.add_constraint("con_yas", upper=1.0)
+    prob_struct.model.add_constraint("con_uar", upper=1.0)
+    prob_struct.model.add_constraint("con_yar", upper=1.0)
 
     prob_struct.model.approx_totals(method="fd")
 
@@ -254,6 +254,7 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
         prob_struct["theta_bd"] = 0.00
         prob_struct["y_sh"] = 0.00
         prob_struct["theta_sh"] = 0.00
+        prob_struct["gamma"] = 1.5
 
         #prob_struct["mass_copper"] = 60e3
         prob_struct["mass_NbTi"] = 4000
@@ -340,17 +341,18 @@ def write_all_data(prob, output_dir=None):
         ["Stator yoke thickness",         "h_ys",                   float(prob.get_val("h_ys", units="mm")), "mm", "(25-500)"],
         ["Rotor radial deflection",       "u_ar",                   float(prob.get_val("u_ar", units="mm")), "mm", ""],
         ["Rotor radial limit",            "u_allowable_r",          float(prob.get_val("u_allowable_r", units="mm")), "mm", ""],
-        ["Rotor radial constraint",       "U_rotor_radial_constraint", float(prob.get_val("U_rotor_radial_constraint")), "", "<1"],
         ["Rotor axial deflection",        "y_ar",                   float(prob.get_val("y_ar", units="mm")), "mm", ""],
         ["Rotor axial limit",             "y_allowable_r",          float(prob.get_val("y_allowable_r", units="mm")), "mm", ""],
-        ["Rotor axial constraint",        "U_rotor_axial_constraint", float(prob.get_val("U_rotor_axial_constraint")), "", "<1"],
         ["Rotor torsional twist",         "twist_r",                float(prob.get_val("twist_r", units="deg")), "deg", ""],
         ["Stator radial deflection",      "u_as",                   float(prob.get_val("u_as", units="mm")), "mm", ""],
         ["Stator radial limit",           "u_allowable_s",          float(prob.get_val("u_allowable_s", units="mm")), "mm", ""],
-        ["Stator radial constraint",      "U_stator_radial_constraint", float(prob.get_val("U_stator_radial_constraint")), "", "<1"],
         ["Stator axial deflection",       "y_as",                   float(prob.get_val("y_as", units="mm")), "mm", ""],
         ["Stator axial limit",            "y_allowable_s",          float(prob.get_val("y_allowable_s", units="mm")), "mm", ""],
-        ["Stator axial constraint",       "U_stator_axial_constraint", float(prob.get_val("U_stator_axial_constraint")), "", "<1"],
+        ["Partial safety factor",         "gamma",                  float(prob.get_val("gamma")), "", ""],
+        ["Radial deflection constraint-rotor", "con_uar",           float(prob.get_val("con_uar")), "-", "< 1.0"],
+        ["Radial deflection constraint-rotor", "con_uas",           float(prob.get_val("con_uas")), "-", "< 1.0"],
+        ["Axial deflection constraint-rotor" , "con_yar",           float(prob.get_val("con_yar")), "-", "< 1.0"],
+        ["Axial deflection constraint-rotor" , "con_yas",           float(prob.get_val("con_yas")), "-", "< 1.0"],
         ["Stator torsional twist",        "twist_s",                float(prob.get_val("twist_s", units="deg")), "deg", ""],
         ["Rotor structural mass",         "Structural_mass_rotor",  float(prob.get_val("Structural_mass_rotor", units="t")), "tons", ""],
         ["Stator structural mass",        "Structural_mass_stator", float(prob.get_val("Structural_mass_stator", units="t")), "tons", ""],
@@ -367,7 +369,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
     # Optimize just magnetrics with GA and then structural with SLSQP
     prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=True)
-    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=opt_flag)
+    prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=True)
 
     # Bring all data together
     prob["h_yr_s"] = prob_struct["h_yr_s"]

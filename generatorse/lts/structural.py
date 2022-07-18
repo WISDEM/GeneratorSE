@@ -8,7 +8,7 @@ McDonald,A.S. et al. IET Renewable Power Generation(2008),2(1):3 http://dx.doi.o
 import pandas as pd
 import numpy as np
 import openmdao.api as om
-from generatorse.common.struct_util import shell_constant, plate_constant
+from generatorse.common.struct_util import shell_constant, plate_constant, structural_constraints
 
 
 class LTS_inactive_rotor(om.ExplicitComponent):
@@ -54,11 +54,8 @@ class LTS_inactive_rotor(om.ExplicitComponent):
         # Deflection
         self.add_output("u_ar", 0.0, units="m", desc="rotor radial deflection")
         self.add_output("y_ar", 0.0, units="m", desc="rotor axial deflection")
-        self.add_output("U_rotor_radial_constraint", 0.0, units="m", desc="Stator radial deflection contraint")
-        self.add_output("U_rotor_axial_constraint", 0.0, units="m", desc="Rotor axial deflection contraint")
 
         # Mass Outputs
-
         self.add_input("u_allow_pcent", 0.0, desc="Radial deflection as a percentage of air gap diameter")
         self.add_input("y_allow_pcent", 0.0, desc="Radial deflection as a percentage of air gap diameter")
         # self.add_input("z_allow_deg", 0.0, units="deg", desc="Allowable torsional twist")
@@ -150,8 +147,6 @@ class LTS_inactive_rotor(om.ExplicitComponent):
 
         outputs["u_allowable_r"] = 0.2 * delta_em * 0.01 * u_allow_pcent
 
-        outputs["U_rotor_radial_constraint"] = np.abs(outputs["u_ar"]) / outputs["u_allowable_r"]
-
         ###################################################### Electromagnetic design#############################################
         # return D,C_2,C_3,C_5,C_6,C_8,C_9,L_11,L_17
         # axial deformation of rotor
@@ -241,8 +236,6 @@ class LTS_inactive_rotor(om.ExplicitComponent):
             * (((r_i) ** 2 - (R_shaft_outer) ** 2) * t_rdisc + ((r_i + h_yr_s) ** 2 - (r_i ** 2)) * l_eff_rotor)
         )
 
-        outputs["U_rotor_axial_constraint"] = np.abs(outputs["y_ar"]) / outputs["y_allowable_r"]
-
 
 class LTS_inactive_stator(om.ExplicitComponent):
     """Estimates overall electromagnetic dimensions and Efficiency of PMSG -arms generator."""
@@ -284,8 +277,6 @@ class LTS_inactive_stator(om.ExplicitComponent):
         self.add_input("Sigma_normal", 0.0, units="Pa", desc="Normal stress ")
         # self.add_input("Sigma_shear", 0.0, units="Pa", desc="Normal stress ")
 
-        self.add_output("U_stator_radial_constraint", 0.0, units="m", desc="Stator radial deflection contraint")
-        self.add_output("U_stator_axial_constraint", 0.0, units="m", desc="Stator axial deflection contraint")
         # self.add_input("perc_allowable_radial", 0.0, desc=" Allowable radial % deflection ")
         # self.add_input("perc_allowable_axial", 0.0, desc=" Allowable axial % deflection ")
 
@@ -371,8 +362,6 @@ class LTS_inactive_stator(om.ExplicitComponent):
 
         outputs["u_allowable_s"] = 0.2 * delta_em * 0.01 * u_allow_pcent
 
-        outputs["U_stator_radial_constraint"] = np.abs(outputs["u_as"]) / outputs["u_allowable_s"]
-
         ###################################################### Electromagnetic design#############################################
 
         # axial deformation of stator
@@ -449,8 +438,6 @@ class LTS_inactive_stator(om.ExplicitComponent):
             + np.pi * (r_os ** 2 - r_is ** 2) * l_eff_stator
         )
 
-        outputs["U_stator_axial_constraint"] = np.abs(outputs["y_as"]) / outputs["y_allowable_s"]
-
         outputs["mass_structural"] = outputs["Structural_mass_stator"] + Structural_mass_rotor
 
 
@@ -464,6 +451,7 @@ class LTS_Outer_Rotor_Structural(om.Group):
         #        nlbgs.options["iprint"] = 2
 
         ivcs = om.IndepVarComp()
+        ivcs.add_output("gamma", 1.5, desc="Partial safety factor")
         ivcs.add_output("y_sh", units="W", desc="Deflection at the shaft")
         ivcs.add_output("theta_sh", 0.0, units="rad", desc="slope of shaft deflection")
         ivcs.add_output("y_bd", units="W", desc="Deflection of the bedplate")
@@ -488,6 +476,7 @@ class LTS_Outer_Rotor_Structural(om.Group):
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
         self.add_subsystem("sys1", LTS_inactive_rotor(), promotes=["*"])
         self.add_subsystem("sys2", LTS_inactive_stator(), promotes=["*"])
+        self.add_subsystem("con", structural_constraints(), promotes=["*"])
 
 
 if __name__ == "__main__":
@@ -513,10 +502,10 @@ if __name__ == "__main__":
     prob_struct.model.add_design_var("t_sdisc", lower=0.025, upper=0.5, ref=0.3)
     prob_struct.model.add_objective("mass_structural")
 
-    prob_struct.model.add_constraint("U_rotor_radial_constraint", upper=1.0)
-    prob_struct.model.add_constraint("U_rotor_axial_constraint", upper=1.0)
-    prob_struct.model.add_constraint("U_stator_radial_constraint", upper=1.0)
-    prob_struct.model.add_constraint("U_stator_axial_constraint", upper=1.0)
+    prob_struct.model.add_constraint("con_uar", upper=1.0)
+    prob_struct.model.add_constraint("con_yar", upper=1.0)
+    prob_struct.model.add_constraint("con_uas", upper=1.0)
+    prob_struct.model.add_constraint("con_yas", upper=1.0)
 
     prob_struct.model.approx_totals(method="fd")
 

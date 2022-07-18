@@ -231,6 +231,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["magnet_l_pc"]    = magnet_l_pc[ratingMW]
         prob["J_s"]            = 6
         prob["phi"]            = 90
+        prob["b_t"]            = 0.1
         prob["b"]              = 2.
         prob["c"]              = 5.0
 
@@ -261,6 +262,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["u_allow_pcent"]  = 8.5       # % radial deflection
         prob["y_allow_pcent"]  = 1.0       # % axial deflection
         prob["z_allow_deg"]    = 0.05       # torsional twist
+        prob["gamma"]          = 1.5
 
         if restart_flag:
             prob = load_data(os.path.join(output_dir, output_root), prob)
@@ -352,6 +354,7 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False, ra
         prob_struct["h_ss"] = h_ss[ratingMW]
         prob_struct["t_r"] = t_r[ratingMW]
         prob_struct["t_s"] = t_s[ratingMW]
+        prob_struct["gamma"] = 1.5
 
         prob_struct["mass_copper"] = 60e3
         prob_struct["M_Fest"] = 4000
@@ -435,6 +438,7 @@ def write_all_data(prob, output_dir=None):
         ["Rotor rim thickness",                   "h_sr",              float(prob.get_val("h_sr",units="mm")), "mm", "(0.04-0.2)"],
         ["Stator disc thickness",                 "t_s",               float(prob.get_val("t_s",units="mm")), "mm", "(0.05-0.3)"],
         ["Stator rim thickness",                  "h_ss",              float(prob.get_val("h_ss",units="mm")), "mm", "(0.04-0.2)"],
+        ["Partial safety factor",                 "gamma",             float(prob.get_val("gamma")), "", ""],
         ["Rotor radial deflection constraint",    "con_uar",           float(prob.get_val("con_uar")), "", "<1"],
         ["Rotor axial deflection constraint",     "con_yar",           float(prob.get_val("con_yar")), "", "<1"],
         ["Stator radial deflection constraint",   "con_uas",           float(prob.get_val("con_uas")), "", "<1"],
@@ -473,9 +477,9 @@ if __name__ == "__main__":
     #run_all("outputs20-mass", opt_flag, "mass", 20)
     #run_all("outputs25-mass", opt_flag, "mass", 25)
     #run_all("outputs15-cost", opt_flag, "cost", 15)
-    #run_all("outputs17-cost", opt_flag, "cost", 17)
+    run_all("outputs17-cost", opt_flag, "cost", 17)
     #run_all("outputs20-cost", opt_flag, "cost", 20)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
-    for k in ratings_known:
-        for obj in ["cost", "mass"]:
-            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    #for k in ratings_known:
+    #    for obj in ["cost", "mass"]:
+    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
