@@ -169,7 +169,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     #prob.driver.recording_options["record_objectives"] = True
 
     prob.model.add_design_var("D_a", lower=6, upper=10., ref=10.0 )
-    prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01)
+    #prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01) # always lower bound
     prob.model.add_design_var("l_s", lower=0.75, upper=2.5)
     prob.model.add_design_var("h_t", lower=0.04, upper=0.350)
     prob.model.add_design_var("h_ys", lower=0.02, upper=0.3)
@@ -178,15 +178,15 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("pp", lower=60, upper=260, ref=100.0)
     prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
     prob.model.add_design_var("I_s",lower=2500, upper=8500, ref=1000)
-    prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1)
+    #prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1) # always lower bound
     prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("J_s",lower=3, upper=10)
 
-    #prob.model.add_constraint("B_rymax", upper=2.53)
-    #prob.model.add_constraint("B_smax", upper=2.53)
+    prob.model.add_constraint("B_rymax", upper=2.7)
+    prob.model.add_constraint("B_smax", upper=2.7)
     # prob.model.add_constraint("K_rad",    lower=0.15, upper=0.3)
     #prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
+    prob.model.add_constraint("E_p_ratio", lower=0.9, upper=1.1)
     prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
     #prob.model.add_constraint("T_e", upper=1.2*target_torque, ref=20e6)
     #prob.model.add_constraint("r_outer_active", upper=11. / 2.)
@@ -271,6 +271,8 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["P_rated"] = ratingMW * 1e6
         prob["T_rated"] = target_torque
         prob["N_nom"] = rated_speed[ratingMW]
+        prob["d_mag"] = 0.05
+        prob["g"] = 0.007
 
     else:
         prob = copy_data(prob_in, prob)
@@ -471,15 +473,15 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = False #True
+    opt_flag = True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
     #run_all("outputs25-mass", opt_flag, "mass", 25)
     #run_all("outputs15-cost", opt_flag, "cost", 15)
-    run_all("outputs17-cost", opt_flag, "cost", 17)
+    #run_all("outputs17-cost", opt_flag, "cost", 17)
     #run_all("outputs20-cost", opt_flag, "cost", 20)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
-    #for k in ratings_known:
-    #    for obj in ["cost", "mass"]:
-    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    for k in ratings_known:
+        for obj in ["cost", "mass"]:
+            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
