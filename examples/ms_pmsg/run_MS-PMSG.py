@@ -103,10 +103,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     if prob_in is None:
         # Specific costs
-        prob["C_Cu"] = 10.3  #  https://markets.businessinsider.com/commodities/copper-price
-        prob["C_Fe"] = 0.556
-        prob["C_Fes"] = 0.50139
-        prob["C_PM"] = 30.0
         prob["resisitivty_Cu"] = 1.724e-8  # 1.8e-8 * 1.4  # Copper resisitivty
         prob["rho_Copper"] = 8900.0  # Kg/m3 copper density
         prob["rho_Fe"] = 7700.0  # Steel density
@@ -161,12 +157,8 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["t_s"] = 0.02
         prob["t_wr"] = 0.02
         prob["t_ws"] = 0.04
-        prob["theta_bd"] = 0.00
-        prob["theta_sh"] = 0.00
         prob["u_allow_pcent"] = 10
         prob["y_allow_pcent"] = 20
-        prob["y_bd"] = 0.00
-        prob["y_sh"] = 0.00
         prob["z_allow_deg"] = 0.5
         prob["gamma"] = 1.5
 
@@ -177,6 +169,13 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["P_rated"] = ratingMW * 1e6
         prob["T_rated"] = target_torque
         prob["N_nom"] = rated_speed[ratingMW]
+
+        #Specific costs
+        prob["C_Cu"]           = 7.3
+        prob["C_Fe"]           = 1.56
+        prob["C_Fes"]          = 4.44
+        prob["C_PM"]           = 66.72
+        prob["C_NbTi"]         = 45.43
 
     else:
         prob = copy_data(prob_in, prob)
@@ -391,7 +390,8 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     # Optimize just magnetrics with GA and then structural with SLSQP
     prob=None
     #prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=True, obj_str=obj_str, ratingMW=int(ratingMW), restart_flag=True, femm_flag=False)
-    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW), prob_in=prob, femm_flag=True, cleanup_flag=False)
+    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=opt_flag, obj_str=obj_str, ratingMW=int(ratingMW),
+                                     prob_in=prob, restart_flag=True, femm_flag=True, cleanup_flag=False)
     prob_struct = optimize_structural_design(prob_in=prob, output_dir=output_dir, opt_flag=True)
 
     # Bring all data together
@@ -406,15 +406,15 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False #True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
-    run_all("outputs20-mass", opt_flag, "mass", 20)
+    #run_all("outputs20-mass", opt_flag, "mass", 20)
     #run_all("outputs25-mass", opt_flag, "mass", 25)
     #run_all("outputs15-cost", opt_flag, "cost", 15)
     #run_all("outputs17-cost", opt_flag, "cost", 17)
     #run_all("outputs20-cost", opt_flag, "cost", 20)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
-    #for k in ratings_known:
-    #    for obj in ["cost", "mass"]:
-    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    for k in ratings_known:
+        for obj in ["cost", "mass"]:
+            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)

@@ -31,111 +31,6 @@ output_root = "IPM_output"
 mydir = os.path.dirname(os.path.realpath(__file__))  # get path to this file
 
 
-pp = {}
-g = {}
-D_a = {}
-h_m = {}
-d_mag = {}
-magnet_l_pc = {}
-h_yr = {}
-h_ys = {}
-h_s1 = {}
-h_s2 = {}
-h_t = {}
-l_s = {}
-N_c = {}
-I_s = {}
-N_nom = {}
-t_r = {}
-t_s = {}
-h_ss = {}
-h_sr = {}
-
-# 15-MW
-pp[15] =  70.0
-g[15] =  0.010633567661203219
-D_a[15] =  9.5
-h_m[15] =  0.04
-d_mag[15] =  0.0931392290092016
-magnet_l_pc[15] =  1.0
-h_yr[15] =  0.19795669867683888
-h_ys[15] =  0.04860267120826085
-h_s1[15] =  0.01
-h_s2[15] =  0.01
-h_t[15] =  0.057487667764258316
-l_s[15] =  1.5
-N_c[15] =  4.
-I_s[15] =  2900.0
-N_nom[15] =  7.49
-t_r[15] = 0.09475373
-t_s[15] = 0.06439639
-h_ss[15] = 0.04
-h_sr[15] = 0.04
-
-# 17-MW
-pp[17] =  84.5
-g[17] =  0.007
-D_a[17] =  10.0
-h_m[17] =  0.0295
-d_mag[17] =  0.05
-magnet_l_pc[17] =  1.0
-h_yr[17] =  0.02
-h_ys[17] =  0.051
-h_s1[17] =  0.01
-h_s2[17] =  0.01
-h_t[17] =  0.168
-l_s[17] =  2.3
-N_c[17] =  3.37
-I_s[17] =  5864.0
-N_nom[17] =  6.49
-t_r[17] = 0.09475373
-t_s[17] = 0.06439639
-h_ss[17] = 0.04
-h_sr[17] = 0.04
-
-# 20-MW
-pp[20] =  84.5
-g[20] =  0.007
-D_a[20] =  10.0
-h_m[20] =  0.0295
-d_mag[20] =  0.05
-magnet_l_pc[20] =  1.0
-h_yr[20] =  0.02
-h_ys[20] =  0.051
-h_s1[20] =  0.01
-h_s2[20] =  0.01
-h_t[20] =  0.168
-l_s[20] =  2.3
-N_c[20] =  3.37
-I_s[20] =  5864.0
-N_nom[20] =  6.49
-t_r[20] = 0.09475373
-t_s[20] = 0.06439639
-h_ss[20] = 0.04
-h_sr[20] = 0.04
-
-# 25-MW
-pp[25] =  84.5
-g[25] =  0.007
-D_a[25] =  10.0
-h_m[25] =  0.0295
-d_mag[25] =  0.05
-magnet_l_pc[25] =  1.0
-h_yr[25] =  0.02
-h_ys[25] =  0.051
-h_s1[25] =  0.01
-h_s2[25] =  0.01
-h_t[25] =  0.168
-l_s[25] =  2.3
-N_c[25] =  3.37
-I_s[25] =  5864.0
-N_nom[25] =  6.49
-t_r[25] = 0.09475373
-t_s[25] = 0.06439639
-h_ss[25] = 0.04
-h_sr[25] = 0.04
-
-
 def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, opt_flag=False, restart_flag=True, obj_str="cost", ratingMW=17):
     if output_dir is None:
         output_dir = "outputs"
@@ -182,8 +77,8 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
     prob.model.add_design_var("J_s",lower=3, upper=10)
 
-    prob.model.add_constraint("B_rymax", upper=2.7)
-    prob.model.add_constraint("B_smax", upper=2.7)
+    prob.model.add_constraint("B_rymax", upper=2.95)
+    prob.model.add_constraint("B_smax", upper=2.95)
     # prob.model.add_constraint("K_rad",    lower=0.15, upper=0.3)
     #prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
     prob.model.add_constraint("E_p_ratio", lower=0.9, upper=1.1)
@@ -217,29 +112,23 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["E_p_target"]     = 3300.0
 
         # These are the current design variables
-        prob["D_a"]            = D_a[ratingMW]
-        prob["l_s"]            = l_s[ratingMW]
-        prob["h_t"]            = h_t[ratingMW]
-        prob["pp"]             = pp[ratingMW]
-        prob["g"]              = g[ratingMW]
-        prob["N_c"]            = N_c[ratingMW]
-        prob["I_s"]            = I_s[ratingMW]
-        prob["h_m"]            = h_m[ratingMW]
-        prob["d_mag"]          = d_mag[ratingMW]
-        prob["h_ys"]           = h_ys[ratingMW] # 0.05
-        prob["h_yr"]           = h_yr[ratingMW]
-        prob["magnet_l_pc"]    = magnet_l_pc[ratingMW]
+        prob["D_a"]            = 10.0
+        prob["l_s"]            = 2.3
+        prob["h_t"]            = 0.168
+        prob["pp"]             = 85.0
+        prob["g"]              = 0.007
+        prob["N_c"]            = 3.37
+        prob["I_s"]            = 5864.0
+        prob["h_m"]            = 0.0295
+        prob["d_mag"]          = 0.05
+        prob["h_ys"]           = 0.051
+        prob["h_yr"]           = 0.02
+        prob["magnet_l_pc"]    = 1.0
         prob["J_s"]            = 6
         prob["phi"]            = 90
         prob["b_t"]            = 0.1
         prob["b"]              = 2.
         prob["c"]              = 5.0
-
-        #Specific costs
-        prob["C_Cu"]           = 10.3
-        prob["C_Fe"]           = 1.02
-        prob["C_Fes"]          = 1.0
-        prob["C_PM"]           = 110.0
 
         #Material properties
         prob["rho_Fe"]         = 7700.0                 #Steel density
@@ -252,9 +141,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["R_no"]           = 0.925
         prob["R_sh"]           = 1.25
         prob["t_r"]            = 0.057 #  0.06
-        prob["h_sr"]           = h_sr[ratingMW]
-        prob["t_s"]            = t_s[ratingMW]
-        prob["h_ss"]           = h_ss[ratingMW]
+        prob["h_sr"]           = 0.1
+        prob["t_s"]            = 0.1
+        prob["h_ss"]           = 0.1
         prob["y_sh"]           = 1e-4
         prob["theta_sh"]       = 1e-3
         prob["y_bd"]           = 1e-4
@@ -273,6 +162,13 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["N_nom"] = rated_speed[ratingMW]
         prob["d_mag"] = 0.05
         prob["g"] = 0.007
+
+        #Specific costs
+        prob["C_Cu"]           = 7.3
+        prob["C_Fe"]           = 1.56
+        prob["C_Fes"]          = 4.44
+        prob["C_PM"]           = 66.72
+        prob["C_NbTi"]         = 45.43
 
     else:
         prob = copy_data(prob_in, prob)
@@ -473,7 +369,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False #True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)

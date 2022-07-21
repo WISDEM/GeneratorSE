@@ -142,12 +142,6 @@ class PMSG_rotor_inactive(om.ExplicitComponent):
         outputs["mass_structural_rotor"] = (N_r * (R_1 - R_sh) * a_r * rho_Fes) + np.pi * (
             (r_g - g - h_m - h_yr) ** 2 - (r_g - g - h_m - t) ** 2
         ) * l * rho_Fes
-
-        # Constraint outputs
-        outputs["con_bar"] = np.abs(b_r)             / outputs["b_allowable_r"]
-        outputs["con_uar"] = np.abs(outputs["u_ar"]) / outputs["u_allowable_r"]
-        outputs["con_yar"] = np.abs(outputs["y_ar"]) / outputs["y_allowable_r"]
-        outputs["con_zar"] = np.abs(outputs["z_ar"]) / outputs["z_allowable_r"]
         
 
 

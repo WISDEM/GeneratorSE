@@ -126,12 +126,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["I_s"] = 1945.9858772
         prob["J_s"] = 3.0
 
-        # Specific costs
-        prob["C_Cu"] = 10.3  #  https://markets.businessinsider.com/commodities/copper-price
-        prob["C_Fe"] = 0.556
-        prob["C_Fes"] = 0.50139
-        prob["C_NbTi"] = 30.0
-
         # Material properties
         prob["rho_steel"] = 7850
         prob["rho_Fe"] = 7700.0  # Steel density
@@ -150,10 +144,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["h_ys"] = 0.025
         prob["t_rdisc"] = 0.02507061
         prob["t_sdisc"] = 0.025
-        prob["y_bd"] = 0.00
-        prob["theta_bd"] = 0.00
-        prob["y_sh"] = 0.00
-        prob["theta_sh"] = 0.00
 
         if restart_flag:
             prob = load_data(os.path.join(output_dir, output_root), prob)
@@ -165,6 +155,19 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["delta_em"] = 0.06
         prob["l_s"] = 0.75
         prob["load_margin"] = 0.95
+        prob["y_bd"] = 1e-4
+        prob["theta_bd"] = 1e-3
+        prob["y_sh"] = 1e-4
+        prob["theta_sh"] = 1e-3
+        prob["gamma"] = 1.5
+
+        #Specific costs
+        prob["C_Cu"]           = 7.3
+        prob["C_Fe"]           = 1.56
+        prob["C_Fes"]          = 4.44
+        prob["C_PM"]           = 66.72
+        prob["C_NbTi"]         = 45.43
+
     else:
         prob = copy_data(prob_in, prob)
 
@@ -250,10 +253,10 @@ def optimize_structural_design(prob_in=None, output_dir=None, opt_flag=False):
         prob_struct["h_ys"] = 0.050
         prob_struct["t_rdisc"] = 0.05
         prob_struct["t_sdisc"] = 0.1
-        prob_struct["y_bd"] = 0.00
-        prob_struct["theta_bd"] = 0.00
-        prob_struct["y_sh"] = 0.00
-        prob_struct["theta_sh"] = 0.00
+        prob_struct["y_bd"] = 1e-4
+        prob_struct["theta_bd"] = 1e-3
+        prob_struct["y_sh"] = 1e-4
+        prob_struct["theta_sh"] = 1e-3
         prob_struct["gamma"] = 1.5
 
         #prob_struct["mass_copper"] = 60e3
@@ -384,7 +387,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False #True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
