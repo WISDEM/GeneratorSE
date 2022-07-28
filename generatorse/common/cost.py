@@ -62,7 +62,7 @@ class Generator_Cost(om.ExplicitComponent):
                1.21 * m_struct * inputs["C_Fes"])
 
         # Electricity usage, with kWh intensities from NREL model
-        c_elec = 0.064 # $/kWh from EIA
+        c_elec = 0.078 # 2022 $/kWh from EIA
         K_e = c_elec * (96.2 * m_copper + 26.9 * m_iron + 15.9 * m_struct +
                         79.0 * (m_sc + m_pm) )
 

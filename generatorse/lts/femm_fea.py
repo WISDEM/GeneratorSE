@@ -749,7 +749,7 @@ class FEMM_Geometry(om.ExplicitComponent):
                     D_a, l_s, p1, delta_em, theta_p_r, I_s, theta_b_t, theta_b_s, layer_1, layer_2, Y_q, N_c, tau_p
                 )
             except Exception as e:
-                raise(e)
+                #raise(e)
                 outputs = bad_inputs(outputs)
 
             femm.closefemm()

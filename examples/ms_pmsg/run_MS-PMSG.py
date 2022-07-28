@@ -76,7 +76,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("ratio", lower=0.7, upper=0.85)
 
     #prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
-    prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
+    prob.model.add_constraint("E_p_ratio", lower=0.9, upper=1.1)
     prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
     #prob.model.add_constraint("T_e", upper=1.2*target_torque, ref=1e5)
     prob.model.add_constraint("gen_eff", lower=0.96)
