@@ -49,7 +49,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.driver = NLoptDriver()
     prob.driver.options['optimizer'] = 'LN_COBYLA'
     prob.driver.options["maxiter"] = 200
-    prob.driver.options["tol"] = 1e-6
+    prob.driver.options["tol"] = 1e-8
     #prob.driver = om.DifferentialEvolutionDriver()
     #prob.driver.options["max_gen"] = 15
     #prob.driver.options["pop_size"] = 30
@@ -63,13 +63,15 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     #prob.driver.recording_options["record_desvars"] = True
     #prob.driver.recording_options["record_objectives"] = True
 
-    prob.model.add_design_var("D_a", lower=6, upper=10., ref=10.0 )
+    D_a_up = 9. if ratingMW < 22 else 9.5
+    h_m_up = 0.05 if ratingMW < 22 else 0.06
+    prob.model.add_design_var("D_a", lower=6, upper=D_a_up)
     #prob.model.add_design_var("g", lower=0.007, upper=0.015, ref=0.01) # always lower bound
     prob.model.add_design_var("l_s", lower=0.75, upper=2.5)
     prob.model.add_design_var("h_t", lower=0.04, upper=0.350)
     prob.model.add_design_var("h_ys", lower=0.02, upper=0.3)
     prob.model.add_design_var("h_yr", lower=0.02, upper=0.3)
-    prob.model.add_design_var("h_m", lower=0.005, upper=0.05, ref=0.01)
+    prob.model.add_design_var("h_m", lower=0.005, upper=h_m_up, ref=0.01)
     prob.model.add_design_var("pp", lower=60, upper=260, ref=100.0)
     prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
     prob.model.add_design_var("I_s",lower=2500, upper=8500, ref=1000)
