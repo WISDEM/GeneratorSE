@@ -14,16 +14,18 @@ if platform.system().lower() == "darwin":
     os.environ["WINEPATH"] = "/Users/gbarter/bin/wine"
     os.environ["FEMMPATH"] = "/Users/gbarter/Library/Application Support/CrossOver/Bottles/FEMM/drive_c/femm42/bin/femm.exe"
 
-ratings_known = [15, 17, 20, 25]
+ratings_known = [15, 17, 20, 22, 25]
 rotor_diameter = {}
 rotor_diameter[15] = 242.24
 rotor_diameter[17] = 257.88
 rotor_diameter[20] = 279.71
+rotor_diameter[22] = 293.36
 rotor_diameter[25] = 312.73
 rated_speed = {}
 rated_speed[15] = 7.49
 rated_speed[17] = 7.04
 rated_speed[20] = 6.49
+rated_speed[22] = 6.18
 rated_speed[25] = 5.80
 target_eff = 0.95
 fsql = "log.sql"
@@ -375,10 +377,12 @@ if __name__ == "__main__":
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
+    #run_all("outputs22-mass", opt_flag, "mass", 22)
     #run_all("outputs25-mass", opt_flag, "mass", 25)
     #run_all("outputs15-cost", opt_flag, "cost", 15)
     #run_all("outputs17-cost", opt_flag, "cost", 17)
     #run_all("outputs20-cost", opt_flag, "cost", 20)
+    #run_all("outputs22-cost", opt_flag, "cost", 22)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
     for k in ratings_known:
         for obj in ["cost", "mass"]:
