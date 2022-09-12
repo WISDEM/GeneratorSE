@@ -127,7 +127,6 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     femm.mo_bendcontour(theta_p_d * 5, 1)
     sigma_t_sec, _ = femm.mo_lineintegral(3)
     torque_sec, _ = femm.mo_lineintegral(4)
-    sigma_t = sigma_t_sec*2*np.pi/theta_p_r/5
     torque = torque_sec*2*np.pi/theta_p_r/5
     #femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
     #femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)

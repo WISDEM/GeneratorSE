@@ -38,14 +38,14 @@ class PMSG_active(om.ExplicitComponent):
         # Material properties
         self.add_input("rho_Copper", 0.0, units="kg/(m**3)", desc="Copper density")
         self.add_input("resistivity_Cu", 0.0, units="ohm*m", desc="Copper resistivity ")
-        self.add_input("I_s", 0.0, units="A", desc="Generator input phase current")
         self.add_discrete_input("m", 3, desc=" no of phases")
         
         
         # Outputs
+        self.add_output("I_s", 0.0, units="A", desc="Generator input phase current")
         self.add_output("k_w", 0.0, desc="winding factor ")
         self.add_output("N_s", 0.0, desc="Number of turns per coil")
-        self.add_output("A_Cuscalc", 0.0, units="mm**2", desc="Conductor cross-section")
+        self.add_output("A_Cuscalc", 0.0, units="m**2", desc="Conductor cross-section")
         self.add_output("R_s", 0.0, units="ohm", desc="Stator resistance")
         self.add_output("K_rad", desc="Aspect ratio")
         self.add_output("P_Cu", 0, units="W", desc="Copper losses")
@@ -66,14 +66,12 @@ class PMSG_active(om.ExplicitComponent):
         c = float( inputs["c"] )
         rho_Copper = float( inputs["rho_Copper"] )
         resistivity_Cu = float( inputs["resistivity_Cu"] )
-        I_s = float( inputs["I_s"] )
         m = int( discrete_inputs["m"] )
         h_s = float( inputs["h_s"] )
         b_s = float( inputs["b_s"] )
         tau_s = float(inputs["tau_s"])
         r_g = float(inputs["r_g"])
         pp = float(inputs["pp"])
-
 
         # Computations
         outputs["K_rad"] = l_s / (2 * r_g)  # Aspect ratio
@@ -84,17 +82,15 @@ class PMSG_active(om.ExplicitComponent):
         # outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
         l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
         
-
-        outputs["A_Cuscalc"] = A_Cuscalc = I_s / J_s
         # Calculating stator resistance
         L_Cus = N_s * l_Cus
         A_slot = h_s*b_s
-                
-        A_Cus = A_slot * 0.65 / N_c
+        outputs["A_Cuscalc"] = A_Cus = A_slot * 0.65 / N_c 
+        outputs["I_s"] = I_s = 1e6 * J_s * A_Cus # 1e6 to convert m^2 to mm^2
         outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / A_Cus
         
         # Calculating Electromagnetically active mass
-        V_Cus = m * L_Cus * A_Cuscalc * 1e-6  # copper volume
+        V_Cus = m * L_Cus * A_Cus  # copper volume
         outputs["mass_copper"] = V_Cus * rho_Copper
         # Calculating Losses
         K_R = 1.0  # Skin effect correction coefficient

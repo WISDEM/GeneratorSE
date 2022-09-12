@@ -76,10 +76,10 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("h_m", lower=0.005, upper=h_m_up, ref=0.01)
     prob.model.add_design_var("pp", lower=60, upper=260, ref=100.0)
     prob.model.add_design_var("N_c", lower=2, upper=10, ref=10)
-    prob.model.add_design_var("I_s",lower=2500, upper=8500, ref=1000)
+    #prob.model.add_design_var("I_s",lower=2500, upper=8500, ref=1000)
     #prob.model.add_design_var("d_mag",lower=0.05, upper=0.25, ref=0.1) # always lower bound
     prob.model.add_design_var("b_t", lower=0.02, upper=0.5, ref=0.1)
-    prob.model.add_design_var("J_s",lower=3, upper=10)
+    prob.model.add_design_var("J_s",lower=3, upper=6)
 
     prob.model.add_constraint("B_rymax", upper=2.95)
     prob.model.add_constraint("B_smax", upper=2.95)
@@ -166,6 +166,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["N_nom"] = rated_speed[ratingMW]
         prob["d_mag"] = 0.05
         prob["g"] = 0.007
+        prob["J_s"] = 6.0
 
         #Specific costs
         prob["C_Cu"]           = 7.3
@@ -379,11 +380,11 @@ if __name__ == "__main__":
     #run_all("outputs20-mass", opt_flag, "mass", 20)
     #run_all("outputs22-mass", opt_flag, "mass", 22)
     #run_all("outputs25-mass", opt_flag, "mass", 25)
-    #run_all("outputs15-cost", opt_flag, "cost", 15)
+    run_all("outputs15-cost", opt_flag, "cost", 15)
     #run_all("outputs17-cost", opt_flag, "cost", 17)
     #run_all("outputs20-cost", opt_flag, "cost", 20)
     #run_all("outputs22-cost", opt_flag, "cost", 22)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
-    for k in ratings_known:
-        for obj in ["cost", "mass"]:
-            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    #for k in ratings_known:
+    #    for obj in ["cost", "mass"]:
+    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
