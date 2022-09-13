@@ -60,7 +60,6 @@ class PMSG_Outer_rotor_Opt(om.Group):
 
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
         self.add_subsystem("geom", FEMM_Geometry(debug_prints = self.options['debug_prints']), promotes=["*"])
-        self.add_subsystem("sys", md.PMSG_active(), promotes=["*"])
         self.add_subsystem("results", md.Results(debug_prints = self.options['debug_prints']), promotes=["*"])
         self.add_subsystem("struct", PMSG_Outer_Rotor_Structural(), promotes=["*"])
         self.add_subsystem("cost", Generator_Cost(), promotes=["*"])

@@ -214,11 +214,17 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("h_ys", 0.0, units="m", desc="Stator yoke height")
         self.add_input("h_t", 0.0, units="m", desc="Stator tooth height")
         self.add_input("rho_Fe", 0.0, units="kg/(m**3)", desc="Electrical steel density")
-        self.add_input("I_s", 0.0, units="A", desc="Stator current")
         self.add_input("N_c", 0.0, desc="Number of turns per coil in series")
         self.add_input('magnet_l_pc', 1.0, desc = "Length of magnet divided by max magnet length")
         self.add_input("N_nom", 0.0, units="rpm", desc="Rated speed of the generator")
-
+        self.add_input("b_t", 0.0, units="m", desc="tooth width ")
+        self.add_input("J_s", 0.0, units="A/(mm*mm)", desc="Stator winding current density")
+        self.add_input("b", 0.0, desc="Slot pole combination")
+        self.add_input("c", 0.0, desc="Slot pole combination")
+        self.add_input("rho_Copper", 0.0, units="kg/(m**3)", desc="Copper density")
+        self.add_input("resistivity_Cu", 0.0, units="ohm*m", desc="Copper resistivity ")
+        self.add_discrete_input("m", 3, desc=" no of phases")
+        
         # Outputs
         self.add_output("f", 0.0, units="Hz", desc="Generator output frequency")
         self.add_output("r_g", 0.0, units="m", desc="Air gap radius")
@@ -241,10 +247,19 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_output("M_Fest", 0.0, units="kg", desc="Stator teeth mass")
         self.add_output("r_outer_active", 0.0, units="m", desc="Rotor outer diameter")
         self.add_output("r_mag_center", 0.0, units="m", desc="Rotor magnet radius")
+        self.add_output("I_s", 0.0, units="A", desc="Generator input phase current")
+        self.add_output("k_w", 0.0, desc="winding factor ")
+        self.add_output("N_s", 0.0, desc="Number of turns per coil")
+        self.add_output("A_Cuscalc", 0.0, units="m**2", desc="Conductor cross-section")
+        self.add_output("R_s", 0.0, units="ohm", desc="Stator resistance")
+        self.add_output("K_rad", desc="Aspect ratio")
+        self.add_output("P_Cu", 0, units="W", desc="Copper losses")
+        self.add_output("S", 0.0, desc="Stator slots")
+        self.add_output("mass_copper", 0.0, units="kg", desc="Copper Mass")
 
         self.declare_partials("*", "*", method="fd")
 
-    def compute(self, inputs, outputs):
+    def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
 
         # Inputs
         pp  = float(inputs['pp']) # number pole pairs
@@ -262,8 +277,14 @@ class FEMM_Geometry(om.ExplicitComponent):
         l_s = float(inputs['l_s']) # 2.918 # stack length
         N_c = float(inputs['N_c']) # 3 # Number of turns per coil in series
         rho_Fe = float(inputs['rho_Fe'])
-        I_s = float(inputs['I_s'])
         N_nom = float( inputs["N_nom"] )
+        b_t = float( inputs["b_t"] )
+        J_s = float( inputs["J_s"] )
+        b = float( inputs["b"] )
+        c = float( inputs["c"] )
+        rho_Copper = float( inputs["rho_Copper"] )
+        resistivity_Cu = float( inputs["resistivity_Cu"] )
+        m = int( discrete_inputs["m"] )
 
         if self.options['debug_prints']:
             print('Inputs')
@@ -280,7 +301,6 @@ class FEMM_Geometry(om.ExplicitComponent):
             print('h_t: ', h_t)
             print('l_s: ', l_s)
             print('N_c: ', N_c)
-            print('I_s: ', I_s)
             print('N_nom: ', N_nom)
             print('------')
 
@@ -293,6 +313,14 @@ class FEMM_Geometry(om.ExplicitComponent):
         # angular frequency in radians
         f = 2 * pp * N_nom / 120  # outout frequency
 
+        # Computations
+        outputs["K_rad"] = l_s / (2 * r_g)  # Aspect ratio
+        Slot_pole = b / c
+        outputs["S"] = Slot_pole * 2 * pp * m
+        outputs["k_w"] = 0.933
+        outputs["N_s"] = N_s = N_c*(pp*b/c)*2  # Stator turns per phase
+        # outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
+        
         def rotate(xo, yo, xp, yp, angle):
             ## Rotate a point counterclockwise by a given angle around a given origin.
             # angle *= -1.
@@ -682,14 +710,29 @@ class FEMM_Geometry(om.ExplicitComponent):
         outputs["alpha_v"] = np.rad2deg(p2p0_angle) * 2.
         mag = Segment(Point(magnet1[1,0], magnet1[1,1], evaluate=False), Point(magnet1[5,0], magnet1[5,1], evaluate=False))
         outputs["l_m"] = mag.length
-        outputs["tau_s"] = alpha_pr * D_a / 2.
+        outputs["tau_s"] = tau_s = alpha_pr * D_a / 2.
         b_s = coil_slot1[-1,1] - coil_slot1[0,1]
         outputs["b_s"] = b_s
-        outputs["h_s"] = h_t - h_so - h_wo
+        outputs["h_s"] = h_s = h_t - h_so - h_wo
         outputs["r_outer_active"] = r_ro
         outputs["r_g"] = r_g
         outputs["f"] = f
-
+        
+        # Calculating stator resistance
+        l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
+        L_Cus = N_s * l_Cus
+        A_slot = h_s*b_s
+        outputs["A_Cuscalc"] = A_Cus = A_slot * 0.65 / N_c 
+        outputs["I_s"] = I_s = 1e6 * J_s * A_Cus # 1e6 to convert m^2 to mm^2
+        outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / A_Cus
+        
+        # Calculating Electromagnetically active mass
+        V_Cus = m * L_Cus * A_Cus  # copper volume
+        outputs["mass_copper"] = V_Cus * rho_Copper
+        # Calculating Losses
+        K_R = 1.0  # Skin effect correction coefficient
+        outputs["P_Cu"] = 0.5 * m * I_s ** 2 * R_s * K_R
+        
         if self.options['debug_prints']:
             print('Outputs')
             print('r_ro:', r_ro)
