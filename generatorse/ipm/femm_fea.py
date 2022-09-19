@@ -125,9 +125,10 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     femm.mo_addcontour((r_a + g * 0.5) * np.cos(0), (r_a + g * 0.5) * np.sin(0))
     femm.mo_addcontour((r_a + g * 0.5) * np.cos(theta_p_r * 5), (r_a + g * 0.5) * np.sin(theta_p_r * 5))
     femm.mo_bendcontour(theta_p_d * 5, 1)
-    sigma_t, _ = femm.mo_lineintegral(3)
+    #sigma_t, sigma_t2 = femm.mo_lineintegral(3)
     torque_sec, _ = femm.mo_lineintegral(4)
     torque = torque_sec*2*np.pi/theta_p_r/5
+    sigma_t = torque / (2*np.pi*(r_a + g * 0.5)**2*l_s)
     #femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
     #femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
     femm.mo_clearcontour()
@@ -224,7 +225,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_input("rho_Copper", 0.0, units="kg/(m**3)", desc="Copper density")
         self.add_input("resistivity_Cu", 0.0, units="ohm*m", desc="Copper resistivity ")
         self.add_discrete_input("m", 3, desc=" no of phases")
-        
+
         # Outputs
         self.add_output("f", 0.0, units="Hz", desc="Generator output frequency")
         self.add_output("r_g", 0.0, units="m", desc="Air gap radius")
@@ -320,7 +321,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         outputs["k_w"] = 0.933
         outputs["N_s"] = N_s = N_c*(pp*b/c)*2  # Stator turns per phase
         # outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
-        
+
         def rotate(xo, yo, xp, yp, angle):
             ## Rotate a point counterclockwise by a given angle around a given origin.
             # angle *= -1.
@@ -717,22 +718,22 @@ class FEMM_Geometry(om.ExplicitComponent):
         outputs["r_outer_active"] = r_ro
         outputs["r_g"] = r_g
         outputs["f"] = f
-        
+
         # Calculating stator resistance
         l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
         L_Cus = N_s * l_Cus
         A_slot = h_s*b_s
-        outputs["A_Cuscalc"] = A_Cus = A_slot * 0.65 / N_c 
+        outputs["A_Cuscalc"] = A_Cus = 0.5 * A_slot * 0.65 / N_c # factor of 0.5 for 2 layers, 0.65 is fill density
         outputs["I_s"] = I_s = 1e6 * J_s * A_Cus # 1e6 to convert m^2 to mm^2
         outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / A_Cus
-        
+
         # Calculating Electromagnetically active mass
-        V_Cus = m * L_Cus * A_Cus  # copper volume
+        V_Cus = 2 * m * L_Cus * A_Cus  # copper volume, factor of 2 for 2 layers
         outputs["mass_copper"] = V_Cus * rho_Copper
         # Calculating Losses
         K_R = 1.0  # Skin effect correction coefficient
         outputs["P_Cu"] = 0.5 * m * I_s ** 2 * R_s * K_R
-        
+
         if self.options['debug_prints']:
             print('Outputs')
             print('r_ro:', r_ro)
@@ -747,9 +748,9 @@ class FEMM_Geometry(om.ExplicitComponent):
                 V_stator,
             ) = run_post_process(D_a, g, r_ro, h_yr, h_ys, r_si, alpha_pr)
 
-            outputs["M_Fes"] = V_stator * 2 * rho_Fe * pp  / 10
+            outputs["M_Fes"] = V_stator * rho_Fe * 2 * np.pi / (5 * alpha_pr)
             outputs["M_Fest"] = outputs["M_Fes"] - np.pi * ((r_si+h_ys)**2 - r_si**2) * l_s * rho_Fe
-            outputs["M_Fer"] = V_rotor * 2 * rho_Fe * pp  / 10
+            outputs["M_Fer"] = V_rotor * rho_Fe * 2 * np.pi / (5 * alpha_pr)
             outputs["mass_iron"] = outputs["M_Fes"] + outputs["M_Fer"]
             layer_1 = r_si + h_ys + h_t * 0.75
             layer_2 = r_si + h_ys + h_t * 0.25
