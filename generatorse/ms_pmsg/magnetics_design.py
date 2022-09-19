@@ -169,7 +169,7 @@ class PMSG_active(om.ExplicitComponent):
 
         outputs["A_1"] = 3 * N_s * I_s / (np.pi * dia) / np.sqrt(2)
 
-        V_Cus = m * l_Cus * A_Cus
+        V_Cus = m * l_Cus * 2 * A_Cus # factor of 2 for 2 layers
         outputs["mass_copper"] = V_Cus * rho_Copper
 
         ##1. Copper Losses
