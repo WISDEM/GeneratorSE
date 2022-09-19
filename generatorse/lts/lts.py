@@ -33,7 +33,6 @@ class LTS_Outer_Rotor_Opt(om.Group):
         ivcs.add_output("I_sc_in", 0.0, units="A", desc="SC current")
         ivcs.add_output("N_sc", 0.0, desc="Number of turns of SC field coil")
         ivcs.add_output("N_c", 0.0, desc="Number of turns of armature winding")
-        ivcs.add_output("I_s", 0.0, units="A", desc="Armature current")
         ivcs.add_output("J_s", 0.0, units="A/mm/mm", desc="Armature current density")
         ivcs.add_output("l_s", 0.0, units="m", desc="Stator core length")
 

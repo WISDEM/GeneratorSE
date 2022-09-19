@@ -128,7 +128,7 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, g, theta_p_r, I_s, theta_tau_s, layer_1, l
     #sigma_t, sigma_t2 = femm.mo_lineintegral(3)
     torque_sec, _ = femm.mo_lineintegral(4)
     torque = torque_sec*2*np.pi/theta_p_r/5
-    sigma_t = torque / (2*np.pi*(r_a + g * 0.5)**2*l_s)
+    sigma_t = torque / (2*np.pi * (r_a + g * 0.5)**2 * l_s)
     #femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
     #femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
     femm.mo_clearcontour()
@@ -722,8 +722,8 @@ class FEMM_Geometry(om.ExplicitComponent):
         # Calculating stator resistance
         l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
         L_Cus = N_s * l_Cus
-        A_slot = h_s*b_s
-        outputs["A_Cuscalc"] = A_Cus = 0.5 * A_slot * 0.65 / N_c # factor of 0.5 for 2 layers, 0.65 is fill density
+        A_slot = 0.5*h_s*b_s
+        outputs["A_Cuscalc"] = A_Cus = A_slot * 0.65 / N_c # factor of 0.5 for 2 layers, 0.65 is fill density
         outputs["I_s"] = I_s = 1e6 * J_s * A_Cus # 1e6 to convert m^2 to mm^2
         outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / A_Cus
 
