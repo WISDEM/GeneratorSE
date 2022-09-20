@@ -725,7 +725,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         A_slot = 0.5*h_s*b_s
         outputs["A_Cuscalc"] = A_Cus = A_slot * 0.65 / N_c # factor of 0.5 for 2 layers, 0.65 is fill density
         outputs["I_s"] = I_s = 1e6 * J_s * A_Cus # 1e6 to convert m^2 to mm^2
-        outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / A_Cus
+        outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / (2*A_Cus)
 
         # Calculating Electromagnetically active mass
         V_Cus = 2 * m * L_Cus * A_Cus  # copper volume, factor of 2 for 2 layers

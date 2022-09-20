@@ -222,7 +222,7 @@ class LTS_active(om.ExplicitComponent):
         # k_fill = A_slot / (2 * N_c * A_Cuscalc) # UNUSED
 
         outputs["N_s"] = N_s = N_c * z / (m)  # turns per phase int(N_c)
-        outputs["R_s"] = R_s = resisitivty_Cu * (1 + 20 * 0.00393) * l_Cus * N_s /A_Cuscalc
+        outputs["R_s"] = R_s = resisitivty_Cu * (1 + 20 * 0.00393) * l_Cus * N_s / (2*A_Cuscalc)
 
 
         # print ("Resitance per phase:" ,R_s)

@@ -158,7 +158,7 @@ class PMSG_active(om.ExplicitComponent):
         #A_scalc = A_s * q1 * p
         A_Cus = A_s * k_sfil / (N_c)
 
-        outputs["R_s"] = R_s = l_Cus * rho_Cu / A_Cus
+        outputs["R_s"] = R_s = l_Cus * rho_Cu / (2*A_Cus)
 
         outputs["J_s"] = I_s / (A_Cus * 1e6)
 
