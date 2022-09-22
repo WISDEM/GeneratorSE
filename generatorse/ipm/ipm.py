@@ -28,7 +28,6 @@ class PMSG_Outer_rotor_Opt(om.Group):
         ivcs.add_output("b_t", 0.0, units="m", desc="tooth width ")
         ivcs.add_output("pp", 0.0, desc="Pole pairs")
         ivcs.add_output("g", 0.0, units="m", desc="air gap length")
-        ivcs.add_output("I_s", 0.0, units="A", desc="Stator current")
         ivcs.add_output("N_c", 0.0, desc="Turns")
         ivcs.add_output("J_s", 0.0, units="A/mm**2", desc="Turns")
         ivcs.add_output("d_mag", 0.0, units="m", desc="nagnet distance from rotor inner radius")
@@ -61,7 +60,6 @@ class PMSG_Outer_rotor_Opt(om.Group):
 
         self.add_subsystem("ivcs", ivcs, promotes=["*"])
         self.add_subsystem("geom", FEMM_Geometry(debug_prints = self.options['debug_prints']), promotes=["*"])
-        self.add_subsystem("sys", md.PMSG_active(), promotes=["*"])
         self.add_subsystem("results", md.Results(debug_prints = self.options['debug_prints']), promotes=["*"])
         self.add_subsystem("struct", PMSG_Outer_Rotor_Structural(), promotes=["*"])
         self.add_subsystem("cost", Generator_Cost(), promotes=["*"])

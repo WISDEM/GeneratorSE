@@ -40,8 +40,8 @@ class LTS_active(om.ExplicitComponent):
         self.add_output("p1", 0.0, desc="Pole pairs ")
         self.add_input("delta_em", 0.0, units="m", desc="airgap length ")
         self.add_input("Y", 0.0, desc="coil pitch")
-        self.add_input("I_s", 0.0, units="A", desc="Generator output phase current")
 
+        self.add_output("I_s", 0.0, units="A", desc="Generator output phase current")
         self.add_output("N_s", 0.0, desc="Number of turns per phase in series")
         self.add_output("N_l", 0.0, desc="Number of layers of the SC field coil")
         # self.add_output("Dia_sc", 0.0, units="m", desc="field coil diameter")
@@ -152,7 +152,6 @@ class LTS_active(om.ExplicitComponent):
         p = float(inputs["p"])
         delta_em = float(inputs["delta_em"])
         Y = float(inputs["Y"])
-        I_s = float(inputs["I_s"])
         rho_Fe = float(inputs["rho_Fe"])
         rho_Copper = float(inputs["rho_Copper"])
         rho_NbTi = float(inputs["rho_NbTi"])
@@ -216,13 +215,14 @@ class LTS_active(om.ExplicitComponent):
         # Stator winding length ,cross-section and resistance
         outputs["l_Cus"] = l_Cus = 8 * l_end + 2 * l_s  # length of a turn
         z = S  # Number of coils
-        A_slot = h_s * b_s *0.5
+        A_slot = 0.5 * h_s * b_s
         # d_cu = 2 * np.sqrt(A_Cuscalc / pi) # UNUSED
-        outputs["A_Cuscalc"] = A_Cuscalc = I_s * 1e-06 / (J_s)
+        outputs["A_Cuscalc"] = A_Cuscalc = A_slot * 0.65 / N_c # factor of 0.5 for 2 layers, 0.65 is fill density
+        outputs["I_s"] = I_s = 1e6 * J_s * A_Cuscalc # 1e6 to convert m^2 to mm^2
         # k_fill = A_slot / (2 * N_c * A_Cuscalc) # UNUSED
 
         outputs["N_s"] = N_s = N_c * z / (m)  # turns per phase int(N_c)
-        outputs["R_s"] = R_s = resisitivty_Cu * (1 + 20 * 0.00393) * l_Cus * N_s /(A_slot*0.65/N_c)
+        outputs["R_s"] = R_s = resisitivty_Cu * (1 + 20 * 0.00393) * l_Cus * N_s / (2*A_Cuscalc)
 
 
         # print ("Resitance per phase:" ,R_s)
@@ -335,7 +335,6 @@ class LTS_active(om.ExplicitComponent):
 
         outputs["l_eff_stator"] = l_s + (a_m + W_sc)
 
-        # outputs["A_Cuscalc	= A_Cuscalc = I_n/J_s
         outputs["Slot_aspect_ratio"] = h_s / b_s
 
         # Calculating stator current and electrical loading
@@ -350,21 +349,17 @@ class LTS_active(om.ExplicitComponent):
 
         outputs["N_l"] = h_sc / (1.2e-3)  # round later!
 
-        # 0.01147612156295224312590448625181
         outputs["mass_NbTi_racetrack"] = mass_NbTi = l_sc * conductor_area * rho_NbTi
         outputs["mass_NbTi"] = p1 * mass_NbTi
-        V_Cus = m * l_Cus * N_s * (A_Cuscalc)
+        V_Cus = m * l_Cus * N_s * 2 * A_Cuscalc # copper volume, factor of 2 for 2 layers
         outputs["mass_copper"] = V_Cus * rho_Copper
 
         outputs["A_1"] = (2 * I_s * N_s * m) / (np.pi * (D_a))
 
-        outputs["Cu_losses"] = m * (I_s * 0.707) ** 2 * R_s
+        outputs["Cu_losses"] = 0.5 * m * I_s ** 2 * R_s
         outputs["P_add"] = 0.01 * P_rated
         outputs["P_brushes"] = 6 * U_b * I_s * 0.707
 
-        # print (N_sc,I_s, p1, D_a,delta_em, N_c,S)
-
-        # print(mass_NbTi)
 
 
 class Results(om.ExplicitComponent):

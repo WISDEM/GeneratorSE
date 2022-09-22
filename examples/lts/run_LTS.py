@@ -68,7 +68,6 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.model.add_design_var("I_sc_in", lower=400, upper=800, ref=5e2)
     prob.model.add_design_var("N_sc", lower=2000, upper=3500, ref=1e3)
     prob.model.add_design_var("N_c", lower=1, upper=7)
-    prob.model.add_design_var("I_s", lower=500, upper=3500, ref=1750)
     #prob.model.add_design_var("load_margin", lower=0.85, upper=0.95)
 
     # prob.model.add_constraint("Slot_aspect_ratio", lower=4.0, upper=10.0)  # 11
