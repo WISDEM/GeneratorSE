@@ -15,16 +15,18 @@ if platform.system().lower() == 'darwin':
     os.environ["FEMMPATH"] = "/Users/gbarter/Library/Application Support/CrossOver/Bottles/FEMM/drive_c/femm42/bin/femm.exe"
 
 gear_ratio = 120
-ratings_known = [15, 17, 20, 25]
+ratings_known = [15, 17, 20, 22, 25]
 rotor_diameter = {}
 rotor_diameter[15] = 242.24
 rotor_diameter[17] = 257.88
 rotor_diameter[20] = 279.71
+rotor_diameter[22] = 293.36
 rotor_diameter[25] = 312.73
 rated_speed = {}
 rated_speed[15] = gear_ratio * 7.49
 rated_speed[17] = gear_ratio * 7.04
 rated_speed[20] = gear_ratio * 6.49
+rated_speed[22] = gear_ratio * 6.18
 rated_speed[25] = gear_ratio * 5.80
 target_eff = 0.97
 fsql = "log.sql"
@@ -49,7 +51,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.driver = NLoptDriver()
     prob.driver.options['optimizer'] = 'LN_COBYLA'
     prob.driver.options["maxiter"] = 200
-    prob.driver.options["tol"] = 1e-6
+    prob.driver.options["tol"] = 1e-8
     #prob.driver = om.DifferentialEvolutionDriver()
     #prob.driver.options["max_gen"] = 15
     #prob.driver.options["pop_size"] = 30
@@ -77,7 +79,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
 
     #prob.model.add_constraint("E_p", upper=1.2 * 3300, ref=3000)
     prob.model.add_constraint("E_p_ratio", lower=0.9, upper=1.1)
-    prob.model.add_constraint("torque_ratio", lower=1.0, upper=1.2)
+    prob.model.add_constraint("torque_ratio", lower=1.05, upper=1.15)
     #prob.model.add_constraint("T_e", upper=1.2*target_torque, ref=1e5)
     prob.model.add_constraint("gen_eff", lower=0.96)
 
@@ -169,6 +171,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["P_rated"] = ratingMW * 1e6
         prob["T_rated"] = target_torque
         prob["N_nom"] = rated_speed[ratingMW]
+        prob["N_c"] = 3.0
 
         #Specific costs
         prob["C_Cu"]           = 7.3
@@ -406,7 +409,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = False #True
+    opt_flag = True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
@@ -414,7 +417,9 @@ if __name__ == "__main__":
     #run_all("outputs15-cost", opt_flag, "cost", 15)
     #run_all("outputs17-cost", opt_flag, "cost", 17)
     #run_all("outputs20-cost", opt_flag, "cost", 20)
-    #run_all("outputs25-cost", opt_flag, "cost", 25)
-    for k in ratings_known:
-        for obj in ["cost", "mass"]:
-            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    #run_all("outputs22-cost", opt_flag, "cost", 22)
+    run_all("outputs25-cost", opt_flag, "cost", 25)
+    #for k in ratings_known:
+    #    for obj in ["cost"]:#, "mass"]:
+    #        for m in range(2):
+    #            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)

@@ -96,10 +96,11 @@ def B_r_B_t(Theta_elec, D_a, l_s, p1, delta_em, theta_p_r, I_s,
     femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(0), (R_a + delta_em * 0.5) * np.sin(0))
     femm.mo_addcontour((R_a + delta_em * 0.5) * np.cos(theta_p_r), (R_a + delta_em * 0.5) * np.sin(theta_p_r))
     femm.mo_bendcontour(theta_p_d, 0.25)
-    sigma_t_sec, _ = femm.mo_lineintegral(3)
+    #sigma_t_sec, _ = femm.mo_lineintegral(3)
     torque_sec, _ = femm.mo_lineintegral(4)
-    sigma_t = sigma_t_sec*2*np.pi/theta_p_r
+    #sigma_t = sigma_t_sec*2*np.pi/theta_p_r
     torque = torque_sec*2*np.pi/theta_p_r
+    sigma_t = torque / (2*np.pi * (R_a + delta_em * 0.5)**2 * l_s)
     #femm.mo_makeplot(2, 1000, "B_r_1.csv", 1)
     #femm.mo_makeplot(3, 1000, "B_t_1.csv", 1)
     #B_r_1 = np.loadtxt("B_r_1.csv")
@@ -255,7 +256,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         alpha_r = np.deg2rad(alpha_d)
         beta_r = np.deg2rad(beta_d)
         h_sc = float(inputs["h_sc"])
-        p1 = float(np.round(inputs["p1"]))
+        p1 = float(inputs["p1"])
         D_a = float(inputs["D_a"])
         R_a = 0.5 * D_a
         h_yr = float(inputs["h_yr"])
@@ -263,9 +264,9 @@ class FEMM_Geometry(om.ExplicitComponent):
         q = discrete_inputs["q"]
         m = discrete_inputs["m"]
         D_sc = float(inputs["D_sc"])
-        N_sc = float(np.round(inputs["N_sc"]))
+        N_sc = float(inputs["N_sc"])
         I_sc = float(inputs["I_sc_in"])
-        N_c = float(np.round(inputs["N_c"]))
+        N_c = float(inputs["N_c"])
         delta_em = float(inputs["delta_em"])
         I_s = float(inputs["I_s"])
         Slots = float(inputs["Slots"])
@@ -721,12 +722,12 @@ class FEMM_Geometry(om.ExplicitComponent):
                 b = -(Load_line_slope + 241.32)
                 c = 1859.9
                 B_o = (-b - np.sqrt(b ** 2.0 - 4.0 * a * c)) / 2.0 / a
-                # I_c = B_o * Load_line_slope #UNUSED
                 # Populate openmdao outputs
                 # Max current from manufacturer of superconducting coils, quadratic fit
                 # outputs["margin_I_c"] = 3.5357 * B_coil_max ** 2.0 - 144.79 * B_coil_max + 1116.0
 
-                outputs["margin_I_c"] = outputs["I_sc_out"] = I_sc_out = float(a * B_o ** 2.0 - 241.32 * B_o + c-(1000-load_margin*1000))
+                outputs["margin_I_c"] = outputs["I_sc_out"] = I_sc_out = B_o * Load_line_slope - 1e3*(1-load_margin)
+
                 myopen()
                 femm.opendocument("coil_design_new.fem")
                 femm.mi_modifycircprop("A1+",  1, I_sc_out)

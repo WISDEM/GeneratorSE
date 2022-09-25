@@ -30,8 +30,8 @@ class LTS_active(om.ExplicitComponent):
         # field coil parameters
         self.add_input("h_sc", 0.0, units="m", desc="SC coil height")
         # self.add_input("alpha_p", 0.0, desc="pole arc coefficient")
-        self.add_input("alpha", 0.0, units="deg", desc="Start angle of field coil")
-        self.add_input("dalpha", 0.0, units="deg", desc="Angle subtended by field coil")
+        self.add_input("alpha", 0.0, units="deg", desc="Start angle of field coil") 
+        self.add_input("dalpha", 0.0, desc="Field coil fraction of available space")
         self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
         # self.add_input("I_sc", 0.0, units="A", desc="SC current ")
         self.add_input("N_sc", 0.0, desc="Number of turns of SC field coil")
@@ -47,8 +47,6 @@ class LTS_active(om.ExplicitComponent):
         # self.add_output("Dia_sc", 0.0, units="m", desc="field coil diameter")
         # self.add_input("Outer_width", 0.0, units="m", desc="Coil outer width")
         self.add_output("beta", 0.0, units="deg", desc="End angle of field coil")
-        self.add_output("con_angle", 0.0, units="deg", desc="Geometric constraint for valid setup")
-        self.add_output("con_angle2", 0.0, units="deg", desc="Geometric constraint for valid setup")
         self.add_output("theta_p", 0.0, units="deg", desc="Pole pitch angle in degrees")
 
         # Material properties
@@ -229,9 +227,8 @@ class LTS_active(om.ExplicitComponent):
         # r_strand                =0.425e-3
         theta_p_r = tau_p / (R_sc + h_sc)
         outputs["theta_p"] = theta_p_d = np.rad2deg(theta_p_r)
-        outputs["beta"] = beta_d = alpha_d + dalpha
-        outputs["con_angle"] = 0.5 * theta_p_d - beta_d
-        outputs["con_angle2"] = beta_d - alpha_d
+        dalpha_d = dalpha * (0.5 * theta_p_d - alpha_d)
+        outputs["beta"] = beta_d = alpha_d + dalpha_d
         beta_r = np.deg2rad(beta_d)
         # outputs["beta   beta = = (theta_p - 2*alpha)*0.5-2
         # random_degree = np.random.uniform(1.0, theta_p * 0.5 - alpha - 0.25)
