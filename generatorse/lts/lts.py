@@ -30,7 +30,6 @@ class LTS_Outer_Rotor_Opt(om.Group):
         # ivcs.add_output("alpha_p", 0.0, desc="pole arc coefficient")
         ivcs.add_output("alpha", 0.0, units="deg", desc="Start angle of field coil")
         ivcs.add_output("dalpha", 0.0, desc="Field coil fraction of available space")
-        ivcs.add_output("I_sc_in", 0.0, units="A", desc="SC current")
         ivcs.add_output("N_sc", 0.0, desc="Number of turns of SC field coil")
         ivcs.add_output("N_c", 0.0, desc="Number of turns of armature winding")
         ivcs.add_output("J_s", 0.0, units="A/mm/mm", desc="Armature current density")
