@@ -52,6 +52,10 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     prob.driver.options['optimizer'] = 'LN_COBYLA'
     prob.driver.options["maxiter"] = 250
     prob.driver.options["tol"] = 1e-8
+    #prob.driver = om.ScipyOptimizeDriver()
+    #prob.driver.options['optimizer'] = 'SLSQP'
+    #prob.driver.options["maxiter"] = 50
+    #prob.driver.options["tol"] = 1e-8
     #prob.driver = om.DifferentialEvolutionDriver()
     #prob.driver.options["max_gen"] = 20
     #prob.driver.options["pop_size"] = 30
@@ -61,15 +65,15 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     #prob.model.add_design_var("delta_em", lower=0.060, upper=0.15, ref=0.08)
     #if obj_str.lower() == "cost":
     #prob.model.add_design_var("D_a", lower=5, upper=D_a_up)
-    ##prob.model.add_design_var("h_sc", lower=0.03, upper=0.2, ref=0.1)
+    prob.model.add_design_var("h_sc", lower=0.03, upper=0.25, ref=0.1)
     prob.model.add_design_var("h_s", lower=0.05, upper=0.4, ref=0.1)
     prob.model.add_design_var("h_yr", lower=0.15, upper=0.3, ref=0.1)
-    prob.model.add_design_var("p", lower=15, upper=40, ref=10)
+    prob.model.add_design_var("p", lower=15, upper=40, ref=100)
     #prob.model.add_design_var("l_s", lower=0.75, upper=1.75)
     #prob.model.add_design_var("alpha", lower=0.1, upper=1)
-    ##prob.model.add_design_var("dalpha", lower=0.05, upper=0.9)
+    prob.model.add_design_var("dalpha", lower=0.2, upper=0.6)
     prob.model.add_design_var("N_sc", lower=1500, upper=3500, ref=1e3)
-    ##prob.model.add_design_var("N_c", lower=1, upper=7)
+    #prob.model.add_design_var("N_c", lower=1, upper=7)
     #prob.model.add_design_var("load_margin", lower=0.85, upper=0.95)
 
     # prob.model.add_constraint("Slot_aspect_ratio", lower=4.0, upper=10.0)  # 11
@@ -77,7 +81,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     # Differential evolution driver cannot do double-sided constraints, so have to hack it
     #prob.model.add_constraint("E_p", lower=0.8 * 3300, ref=3000)
     prob.model.add_constraint("E_p_ratio", lower=0.8, upper=1.20)
-    ##prob.model.add_constraint("constr_B_g_coil", upper=1.0)
+    prob.model.add_constraint("constr_B_g_coil", upper=1.0)
     #prob.model.add_constraint("B_coil_max", lower=6.0)
     #prob.model.add_constraint("Coil_max_ratio", upper=1.2)
     #prob.model.add_constraint("Critical_current_ratio",upper=1.2)
@@ -93,7 +97,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
     else:
         print('Objective?', obj_str)
 
-    prob.model.approx_totals(method="fd")
+    prob.model.approx_totals(method="fd", step=1e-3, form='forward')
 
     prob.setup()
     print('************************')
@@ -156,13 +160,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["y_sh"] = 1e-4
         prob["theta_sh"] = 1e-3
         prob["gamma"] = 1.5
-        prob["l_s"] = 1.75
+        prob["l_s"] = 1.0
         prob["D_a"] = prob["D_generator"] = D_a_up
         prob["N_c"] = 1.0
-        #prob["N_sc"] = 3500.0
-        #prob["h_s"] = 0.4
-        prob["dalpha"] = 0.33
-        prob["h_sc"] = 0.160
 
         #Specific costs
         prob["C_Cu"]           = 7.3
@@ -296,7 +296,6 @@ def write_all_data(prob, output_dir=None):
         ["Alpha",                         "alpha",                  float(prob.get_val("alpha", units="deg")), "deg", "(0.1-1)"],
         ["delta Alpha",                   "dalpha",                 float(prob.get_val("dalpha")), "", "(0.05-0.95)"],
         ["Beta",                          "beta",                   float(prob.get_val("beta", units="deg")), "deg", ""],
-        ["Geometry constraint",           "con_angle",              float(prob.get_val("con_angle", units="deg")), "deg", ">0"],
         ["Slot_aspect_ratio",             "Slot_aspect_ratio",      float(prob.get_val("Slot_aspect_ratio")), "", ""],
         ["Pole pitch",                    "tau_p",                  float(prob.get_val("tau_p", units="mm")), "mm", ""],
         ["Slot pitch",                    "tau_s",                  float(prob.get_val("tau_s", units="mm")), "mm", ""],
@@ -389,17 +388,17 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False #True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
     #run_all("outputs25-mass", opt_flag, "mass", 25)
-    run_all("outputs15-cost", opt_flag, "cost", 15)
-    run_all("outputs17-cost", opt_flag, "cost", 17)
-    run_all("outputs20-cost", opt_flag, "cost", 20)
-    run_all("outputs22-cost", opt_flag, "cost", 22)
-    run_all("outputs25-cost", opt_flag, "cost", 25)
+    #run_all("outputs15-cost", opt_flag, "cost", 15)
+    #run_all("outputs17-cost", opt_flag, "cost", 17)
+    #run_all("outputs20-cost", opt_flag, "cost", 20)
+    #run_all("outputs22-cost", opt_flag, "cost", 22)
+    #run_all("outputs25-cost", opt_flag, "cost", 25)
     #for _ in range(2):
-    #    for k in ratings_known:
-    #        for obj in ["cost"]:#, "mass"]:
-    #            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    for k in ratings_known:
+        for obj in ["cost"]:#, "mass"]:
+            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)

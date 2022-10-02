@@ -279,7 +279,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         ylabel1, ylabel2 = inputs["field_coil_ylabel"]
         load_margin=float(inputs["load_margin"])
         I_sc_in = 650.0 # Fixed starting guess at critical current
-        
+
         # Build the geometry of the generator sector
         slot_radius = R_a - h_s
         yoke_radius = slot_radius - h_yr
@@ -303,7 +303,7 @@ class FEMM_Geometry(om.ExplicitComponent):
         # Draw the field coil
         myopen()
         femm.newdocument(0)
-        femm.mi_probdef(0, "meters", "planar", 1.0e-8, l_s, 30)
+        femm.mi_probdef(0, "meters", "planar", 1.0e-10, l_s, 30)
 
         femm.mi_addnode(x1, y1)
         femm.mi_addnode(x2, y2)
@@ -482,13 +482,14 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         femm.mi_selectgroup(1)
         angle1_d = np.rad2deg(tau_p / (radius_sc + h_sc) - theta_b_t * 0.5)
-        femm.mi_copyrotate(0, 0, angle1_d, 1)
-
+        r_o = (radius_sc + h_sc) * 2
+        #femm.mi_copyrotate(0, 0, angle1_d, 1)
+        femm.mi_mirror(yoke_radius*np.cos(0.5*theta_p_r), yoke_radius*np.sin(0.5*theta_p_r),
+        r_o*np.cos(0.5*theta_p_r), r_o*np.sin(0.5*theta_p_r))
         # femm.mi_addarc(slot_radius*np.cos(theta_b_t_new),slot_radius*np.sin(theta_b_t_new),slot_radius*np.cos(theta_p_r),slot_radius*np.sin(theta_p_r),5,1)
 
         # femm.mi_addsegment(slot_radius*np.cos(theta_p_r),slot_radius*np.sin(theta_p_r),D_a/2*np.cos(theta_p_r),D_a/2*np.sin(theta_p_r))
 
-        r_o = (radius_sc + h_sc) * 2
 
         # femm.mi_addsegment(D_a/2*np.cos(0),D_a/2*np.sin(0),radius_sc*np.cos(0),radius_sc*np.sin(0))
 
@@ -718,13 +719,13 @@ class FEMM_Geometry(om.ExplicitComponent):
                 B_o = (-b - np.sqrt(b ** 2.0 - 4.0 * a * c)) / 2.0 / a
                 # Max current from manufacturer of superconducting coils, quadratic fit
                 # outputs["margin_I_c"] = 3.5357 * B_coil_max ** 2.0 - 144.79 * B_coil_max + 1116.0
-                
+
                 I_sc_out = B_o * Load_line_slope - 1e3*(1-load_margin)
                 bisec_err = I_sc_out - I_sc
                 #print('Iteration',n,':',I_sc,'vs',I_sc_out)
                 I_sc = 0.0*I_sc + 1.0*I_sc_out
                 n += 1
-                
+
                 myopen()
                 femm.opendocument("coil_design_new.fem")
                 femm.mi_modifycircprop("A1+",  1, I_sc)
