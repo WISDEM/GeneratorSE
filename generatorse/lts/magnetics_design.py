@@ -30,10 +30,9 @@ class LTS_active(om.ExplicitComponent):
         # field coil parameters
         self.add_input("h_sc", 0.0, units="m", desc="SC coil height")
         # self.add_input("alpha_p", 0.0, desc="pole arc coefficient")
-        self.add_input("alpha", 0.0, units="deg", desc="Start angle of field coil")
-        self.add_input("dalpha", 0.0, units="deg", desc="Angle subtended by field coil")
+        self.add_input("alpha", 0.0, units="deg", desc="Start angle of field coil") 
+        self.add_input("dalpha", 0.0, desc="Field coil fraction of available space")
         self.add_input("h_yr", 0.0, units="m", desc="rotor yoke height")
-        # self.add_input("I_sc", 0.0, units="A", desc="SC current ")
         self.add_input("N_sc", 0.0, desc="Number of turns of SC field coil")
         self.add_input("N_c", 0.0, desc="Number of turns per coil")
         self.add_input("p", 0.0, desc="Pole pairs ")
@@ -47,8 +46,6 @@ class LTS_active(om.ExplicitComponent):
         # self.add_output("Dia_sc", 0.0, units="m", desc="field coil diameter")
         # self.add_input("Outer_width", 0.0, units="m", desc="Coil outer width")
         self.add_output("beta", 0.0, units="deg", desc="End angle of field coil")
-        self.add_output("con_angle", 0.0, units="deg", desc="Geometric constraint for valid setup")
-        self.add_output("con_angle2", 0.0, units="deg", desc="Geometric constraint for valid setup")
         self.add_output("theta_p", 0.0, units="deg", desc="Pole pitch angle in degrees")
 
         # Material properties
@@ -229,9 +226,8 @@ class LTS_active(om.ExplicitComponent):
         # r_strand                =0.425e-3
         theta_p_r = tau_p / (R_sc + h_sc)
         outputs["theta_p"] = theta_p_d = np.rad2deg(theta_p_r)
-        outputs["beta"] = beta_d = alpha_d + dalpha
-        outputs["con_angle"] = 0.5 * theta_p_d - beta_d
-        outputs["con_angle2"] = beta_d - alpha_d
+        dalpha_d = dalpha * (0.5 * theta_p_d - alpha_d)
+        outputs["beta"] = beta_d = alpha_d + dalpha_d
         beta_r = np.deg2rad(beta_d)
         # outputs["beta   beta = = (theta_p - 2*alpha)*0.5-2
         # random_degree = np.random.uniform(1.0, theta_p * 0.5 - alpha - 0.25)
@@ -367,7 +363,6 @@ class Results(om.ExplicitComponent):
         self.add_input("K_h", 2.0, desc="??")
         self.add_input("K_e", 0.5, desc="??")
 
-        #self.add_input("I_sc_out", 0.0, units="A", desc="SC current ")
         self.add_input("N_sc", 0.0, desc="Number of turns of SC field coil")
         self.add_input("N_l", 0.0, desc="Number of layers of the SC field coil")
         self.add_input("D_a", 0.0, units="m", desc="Armature diameter ")
@@ -386,8 +381,6 @@ class Results(om.ExplicitComponent):
         self.add_input("P_brushes", units="W", desc="brush losses")
         self.add_input("l_s", 0.0, units="m", desc="Stator core length")
         self.add_input("E_p_target", 0.0, units="V", desc="target terminal voltage")
-        # self.add_output("con_I_sc", 0.0, units="A/(mm*mm)", desc="SC current ")
-        # self.add_output("con_N_sc", 0.0, desc="Number of turns of SC field coil")
         self.add_output("E_p", 0.0, units="V", desc="terminal voltage")
         self.add_output("N_sc_layer", 0.0, desc="Number of turns per layer")
         self.add_output("P_Fe", units="W", desc="Iron losses")
@@ -420,8 +413,6 @@ class Results(om.ExplicitComponent):
         T_rated = float(inputs["T_rated"])
         T_actual = float(inputs["Torque_actual"])
         E_p_target = float(inputs["E_p_target"])
-        # outputs["con_N_sc"] = con_N_sc = N_sc - N_sc_out
-        # outputs["con_I_sc"] = con_I_sc = I_sc - I_sc_out
         outputs["N_sc_layer"] = int(N_sc / N_l)
 
         # Calculating  voltage per phase
