@@ -1,13 +1,11 @@
 ---------------
-# GeneratorSE
+# MS-PMSG
 
-GeneratorSE is a set of numerical tools for sizing three technologies of variable speed wind turbine generators:
+MS-PMSG is a set of codes for sizing medium speed permanent magnet synchronous generators:
 
-* Direct-drive interior permanent magnet synchronous generators (DD-IPM)
-* Geared medium-speed interior permanent magnet synchronous generators (MS-IPM)
-* Direct-drive low temperature superconducting generators (LTS)
+This folder contains the codes wrtten to estimate basic generator dimensions, mass and costs based on both analytical models as well as performance predictions
 
-This repository contains the codes based on the open-source library pyFEMM. The purely analytical tools to size PMSG machines have instead been integrated within [WISDEM](https://github.com/wisdem/wisdem)
+based on FEA using the open-source library pyFEMM available through a user-defined flag. These tools have been integrated within [WISDEM](https://github.com/wisdem/wisdem)
 
 The codes adopt the optimization library [OpenMDAO](https://openmdao.org) and mainly considers available torque, mechanical power, normal and shear stresses, material properties, and costs to optimize designs by satisfying specific design criteria. 
 
@@ -36,6 +34,5 @@ To run the code, follow these steps
 
 For functionality, theory, or software issues please use <https://github.com/WISDEM/GeneratorSE/issues>
 
-## Acknowledgments
 
-The technical support of David Meeker, Ph.D., author of the Femm library is gratefully acknowledged
+
