@@ -24,7 +24,8 @@ class Results(om.ExplicitComponent):
     def setup(self):
         self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density ")
         self.add_input("N_s", 0.0, desc="Number of turns per phase in series")
-        self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
+        self.add_input("N_nom", 0.0, units="rpm", desc="input speed")
+        self.add_input("N_rated", 0.0, units="rpm", desc="rated speed")
         self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
         self.add_input("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_input("P_rated", units="W", desc="Machine rating")
@@ -65,6 +66,7 @@ class Results(om.ExplicitComponent):
         B_g = float( inputs["B_g"] )
         N_s = float( inputs["N_s"] )
         N_nom = float( inputs["N_nom"] )
+        N_rated = float( inputs["N_rated"] )
         T_rated = float( inputs["T_rated"] )
         T_e = float( inputs["T_e"] )
         P_rated = float( inputs["P_rated"] )
@@ -118,7 +120,7 @@ class Results(om.ExplicitComponent):
         outputs["P_ad"] = P_ad = 0.2 * P_Fe
         outputs["P_Losses"] = P_Losses = P_Cu + P_Fe + P_ad + P_Ftm
 
-        outputs["gen_eff"] = 1 - P_Losses / P_rated
+        outputs["gen_eff"] = 1 - P_Losses / (P_rated*N_nom/N_rated)
         # additional stray losses due to leakage flux
 
 

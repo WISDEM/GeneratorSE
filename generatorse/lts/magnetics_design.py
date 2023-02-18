@@ -370,7 +370,8 @@ class Results(om.ExplicitComponent):
         self.add_input("B_rymax", 0.0, units='T', desc="Peak Rotor yoke flux density")
         self.add_input("B_g", 0.0, units='T', desc="Peak air gap flux density ")
         self.add_input("N_s", 0.0, desc="Number of turns per phase in series")
-        self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
+        self.add_input("N_nom", 0.0, units="rpm", desc="input speed")
+        self.add_input("N_rated", 0.0, units="rpm", desc="rated speed")
         self.add_input("p1", 0.0, desc="Pole pairs ")
         self.add_input("mass_iron", 0.0, units="kg", desc="Electrical Steel Mass")
         self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
@@ -402,7 +403,8 @@ class Results(om.ExplicitComponent):
         B_rymax = float(inputs["B_rymax"])
         B_g = float(inputs["B_g"])
         N_s = float(inputs["N_s"])
-        N_nom = float(inputs["N_nom"])
+        N_nom = float( inputs["N_nom"] )
+        N_rated = float( inputs["N_rated"] )
         p1 = float(inputs["p1"])
         Iron = float(inputs["mass_iron"])
         P_rated = float(inputs["P_rated"])
@@ -427,7 +429,7 @@ class Results(om.ExplicitComponent):
         ) * Iron
 
         outputs["P_Losses"] = P_Losses = Cu_losses + P_Fe + P_add + P_brushes
-        outputs["gen_eff"] = 1 - P_Losses / P_rated
+        outputs["gen_eff"] = 1 - P_Losses / (P_rated*N_nom/N_rated)
         outputs["torque_ratio"] = T_actual / T_rated
         outputs["E_p_ratio"] = E_p / E_p_target
 
