@@ -160,6 +160,7 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["P_rated"] = ratingMW * 1e6
         prob["T_rated"] = target_torque
         prob["N_nom"] = rated_speed[ratingMW]
+        prob["N_rated"] = rated_speed[ratingMW]
         prob["d_mag"] = 0.05
         prob["g"] = 0.007
         prob["D_a"] = prob["D_generator"] = D_a_up
@@ -352,6 +353,34 @@ def write_all_data(prob, output_dir=None):
     df = pd.DataFrame(raw_data, columns=["Parameters", "Symbol", "Values", "Units", "Limit"])
     df.to_excel(os.path.join(output_dir, f"Optimized_IPM_PMSG_{ratingMW}_MW.xlsx"))
 
+def get_eff_curve(output_str, obj_str, ratingMW):
+    output_dir = os.path.join(mydir, output_str)
+
+    prob = optimize_magnetics_design(output_dir=output_dir, opt_flag=False, obj_str=obj_str,
+                                     ratingMW=int(ratingMW), restart_flag=True, cleanup_flag=False)
+
+    rpm = np.unique( np.minimum(rated_speed[int(ratingMW)], np.arange(2, 8.1, 0.5)) )
+    torque = np.zeros(rpm.shape)
+    shear = np.zeros(rpm.shape)
+    normal = np.zeros(rpm.shape)
+    losses = np.zeros(rpm.shape)
+    eff = np.zeros(rpm.shape)
+    for ir, r in enumerate(rpm):
+        prob["N_nom"] = r
+        prob.run_model()
+        
+        torque[ir] = float(prob.get_val("T_e",units="MN*m"))
+        shear[ir] = float(prob.get_val("Sigma_shear",units="kN/m**2"))
+        normal[ir] = float(prob.get_val("Sigma_normal",units="kN/m**2"))
+        losses[ir] = float(prob.get_val("P_Losses",units="kW"))
+        eff[ir] = float(prob.get_val("gen_eff"))
+
+    np.savetxt(os.path.join(output_dir, f"eff_curve_{ratingMW}MW-IPM.csv"),
+               np.c_[rpm, torque, shear, normal, losses, eff],
+               delimiter=',',
+               header='RPM,Torque [MNm],Shear stress [kN/m^2],Normal stress [kN/m^2],Losses [kW],Efficiency')
+    
+        
 def run_all(output_str, opt_flag, obj_str, ratingMW):
     output_dir = os.path.join(mydir, output_str)
 
@@ -374,7 +403,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
 
 if __name__ == "__main__":
     opt_flag = True
-    for k in range(2):
+    #for k in range(2):
         #run_all("outputs15-mass", opt_flag, "mass", 15)
         #run_all("outputs17-mass", opt_flag, "mass", 17)
         #run_all("outputs20-mass", opt_flag, "mass", 20)
@@ -383,8 +412,10 @@ if __name__ == "__main__":
         #run_all("outputs15-cost", opt_flag, "cost", 15)
         #run_all("outputs17-cost", opt_flag, "cost", 17)
         #run_all("outputs20-cost", opt_flag, "cost", 20)
-        run_all("outputs22-cost", opt_flag, "cost", 22)
-        run_all("outputs25-cost", opt_flag, "cost", 25)
+        #run_all("outputs22-cost", opt_flag, "cost", 22)
+        #run_all("outputs25-cost", opt_flag, "cost", 25)
     #for k in ratings_known:
     #    for obj in ["cost"]: #, "mass"]:
     #            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    for k in ratings_known:
+        get_eff_curve(f"outputs{k}-cost", "cost", k)
