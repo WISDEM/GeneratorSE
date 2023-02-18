@@ -369,7 +369,8 @@ class Results(om.ExplicitComponent):
         self.add_input("I_s", 0.0, units="A", desc="Stator current amplitude")
         self.add_input("l_s", 0.0, units="m", desc="stack length")
         self.add_input("p", desc="No of pole pairs")
-        self.add_input("N_nom", 0.0, units="rpm", desc="rated speed")
+        self.add_input("N_nom", 0.0, units="rpm", desc="input speed")
+        self.add_input("N_rated", 0.0, units="rpm", desc="rated speed")
         self.add_input("N_s", 0.0, desc="Number of turns in the stator winding")
         self.add_input("N_c", 0.0, desc="Number of coils")
         self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
@@ -412,7 +413,8 @@ class Results(om.ExplicitComponent):
         N_s = inputs["N_s"]
         k_wd = float(inputs["k_wd"])
         l_s = inputs["l_s"]
-        N_nom = float(inputs["N_nom"])
+        N_nom = float( inputs["N_nom"] )
+        N_rated = float( inputs["N_rated"] )
         r_g = inputs["r_g"]
         g = inputs["g"]
         I_s = inputs["I_s"]
@@ -442,7 +444,7 @@ class Results(om.ExplicitComponent):
 
         outputs["Losses"] = P_Cu + P_Festnom + P_Fesynom + P_ad + P_Ftm + P_Fernom
 
-        outputs["gen_eff"] = 1 - outputs["Losses"] / P_rated
+        outputs["gen_eff"] = 1 - outputs["Losses"] / (P_rated*N_nom/N_rated)
 
         I_sc = 4.2 * I_s
         H_demag = -(N_c * I_sc + h_m * B_r / mu_0 * mu_r) / (h_m / mu_r + g)
