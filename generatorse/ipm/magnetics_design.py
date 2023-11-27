@@ -23,9 +23,12 @@ class Results(om.ExplicitComponent):
 
     def setup(self):
         self.add_input("B_g", 0.0, units="T", desc="Peak air gap flux density ")
+        self.add_input("Ind", 0.0, desc="Inductance ")
+        self.add_input("I_s", 0.0, units="A", desc="Stator current ")
         self.add_input("N_s", 0.0, desc="Number of turns per phase in series")
         self.add_input("N_nom", 0.0, units="rpm", desc="input speed")
         self.add_input("N_rated", 0.0, units="rpm", desc="rated speed")
+        self.add_input("R_s", 0.0, desc="resistance per phase")
         self.add_input("T_rated", 0.0, units="N*m", desc="Rated torque ")
         self.add_input("T_e", 0.0, units="N*m", desc="Shear stress actual")
         self.add_input("P_rated", units="W", desc="Machine rating")
@@ -64,6 +67,8 @@ class Results(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         # Unpack inputs
         B_g = float( inputs["B_g"] )
+        Ind = float(inputs["Ind"])
+        I_s = float(inputs["I_s"])
         N_s = float( inputs["N_s"] )
         N_nom = float( inputs["N_nom"] )
         N_rated = float( inputs["N_rated"] )
@@ -85,13 +90,16 @@ class Results(om.ExplicitComponent):
         P_Fe0h = float( inputs["P_Fe0h"] )
         P_Fe0e = float( inputs["P_Fe0e"] )
         k_w = float( inputs["k_w"] )
+        R_s = float(inputs["R_s"])
 
         # Calculating  voltage per phase
         om_m = 2 * np.pi * N_nom / 60
         om_e = om_m * pp
         om_e2 = om_e / (2 * np.pi * 60)
 
-        outputs["E_p"] = E_p = l_s * (D_a * 0.5 * k_w * B_g * om_m * N_s) * np.sqrt(3 / 2)
+        #outputs["E_p"] = E_p = l_s * (D_a * 0.5 * k_w * B_g * om_m * N_s) * np.sqrt(1.5)
+        outputs["E_p"] = E_p = (l_s * (D_a * 0.5 * k_w * B_g * om_m * N_s) * np.sqrt(1.5) +
+                                I_s * np.sqrt(0.5) * np.sqrt(R_s**2 + (om_e/np.pi * Ind)**2) )
         outputs["torque_ratio"] = T_e / T_rated
         outputs["E_p_ratio"] = E_p / E_p_target
 
@@ -126,6 +134,7 @@ class Results(om.ExplicitComponent):
 
         if self.options['debug_prints']:
             print('torque_ratio: ', outputs["torque_ratio"])
+            print("losses:", P_Cu, P_Fe, P_ad, P_Ftm)
             print('gen_eff: ', outputs["gen_eff"])
             print('E_p_ratio: ', outputs["E_p_ratio"])
             print('B_rymax: ', B_rymax)

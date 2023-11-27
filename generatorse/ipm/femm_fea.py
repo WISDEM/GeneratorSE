@@ -257,7 +257,8 @@ class FEMM_Geometry(om.ExplicitComponent):
         self.add_output("P_Cu", 0, units="W", desc="Copper losses")
         self.add_output("S", 0.0, desc="Stator slots")
         self.add_output("mass_copper", 0.0, units="kg", desc="Copper Mass")
-
+        self.add_output("Ind", 0.0, units="H", desc="Inductance")
+        
         self.declare_partials("*", "*", method="fd")
 
     def compute(self, inputs, outputs, discrete_inputs, discrete_outputs):
@@ -316,9 +317,9 @@ class FEMM_Geometry(om.ExplicitComponent):
 
         # Computations
         outputs["K_rad"] = l_s / (2 * r_g)  # Aspect ratio
-        Slot_pole = b / c
-        outputs["S"] = Slot_pole * 2 * pp * m
-        outputs["k_w"] = 0.933
+        q1 = b / c
+        outputs["S"] = S = q1 * 2 * pp * m
+        outputs["k_w"] = k_w = 0.933
         outputs["N_s"] = N_s = N_c*(pp*b/c)*2  # Stator turns per phase
         # outputs["N_s"] = N_s = S * 2.0 / 3 * N_c  # Stator turns per phase
 
@@ -720,15 +721,38 @@ class FEMM_Geometry(om.ExplicitComponent):
         outputs["f"] = f
 
         # Calculating stator resistance
-        l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
+        l_Cus = 2 * (l_s + 2*tau_s/np.sqrt(3))  # length of coil
+        #l_Cus = 2 * (l_s + np.pi / 4 * (tau_s + b_t))  # length of a turn
         L_Cus = N_s * l_Cus
         A_slot = 0.5*h_s*b_s
         outputs["A_Cuscalc"] = A_Cus = A_slot * 0.65 / N_c # factor of 0.5 for 2 layers, 0.65 is fill density
         outputs["I_s"] = I_s = 1e6 * J_s * A_Cus # 1e6 to convert m^2 to mm^2
         outputs["R_s"] = R_s = resistivity_Cu* (1 + 20 * 0.00393)* L_Cus / (2*A_Cus)
 
+        # calculating stator synchronous magnetizing inductance
+        b_so = 0.004
+        mu_r = 1.05
+        #y_tau_p = 1
+        # calculating carter factor
+        gamma = 4/np.pi * ( b_so / 2 / (g + h_m / mu_r) * np.arctan(b_so / 2 / (g + h_m / mu_r))
+                            - np.log(np.sqrt(1 + (b_so / 2 / (g + h_m / mu_r)) ** 2)) )
+        k_C = tau_s / (tau_s - gamma * (g + h_m / mu_r))  # carter coefficient
+        g_eff = k_C * (g + h_m / mu_r)
+        # l_e = l_s + 2 * 0.001 * r_g  # equivalent core length
+        mu_0 = 4 * np.pi * 1e-7
+        w_m = 3 * (k_w**2 * N_s**2) * mu_0 * 2*r_g * l_s / (np.pi * g_eff * pp**2)
+        # slot leakage inductance
+        L_ssigmas = 2 * mu_0 * l_s * N_s**2 / pp / q1 * (h_s / (3 * b_s) + (h_wo / (b_s + b_so) / 0.5) + h_so / b_s)
+        # end winding leakage inductance
+        L_ssigmaew = (1.2 * mu_0 * N_s**2 / pp) * (3 / 2 * b_s)
+        # tooth tip leakage inductance#tooth tip leakage inductance
+        L_ssigmag = 2 * mu_0 * l_s * N_s**2 / pp / q1 * (5 * (g * k_C / b_so) / (5 + 4 * (g * k_C / b_so)))
+        L_ssigma = L_ssigmas + L_ssigmaew + L_ssigmag
+        outputs["Ind"] = Ind = w_m + L_ssigma
+
         # Calculating Electromagnetically active mass
-        V_Cus = 2 * m * L_Cus * A_Cus  # copper volume, factor of 2 for 2 layers
+        #V_Cus = 2 * m * L_Cus * A_Cus  # copper volume, factor of 2 for 2 layers
+        V_Cus = l_Cus * A_slot*0.65*S # copper volume
         outputs["mass_copper"] = V_Cus * rho_Copper
         # Calculating Losses
         K_R = 1.0  # Skin effect correction coefficient
@@ -757,6 +781,9 @@ class FEMM_Geometry(om.ExplicitComponent):
             outputs["T_e"], outputs["Sigma_shear"] = B_r_B_t(
                 Theta_elec, D_a, l_s, pp , g, alpha_pr, I_s, alpha_y, layer_1, layer_2, N_c, tau_p
             )
+            I_sc = w_m / Ind * np.pi*4 * pp * outputs["B_g"] * (h_m+g) / (6*mu_0*k_w*N_s)
+            if self.options['debug_prints']:
+                print ("I_sc:",I_sc)
 
         except Exception as e:
             outputs = bad_inputs(outputs)
