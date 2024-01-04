@@ -428,8 +428,8 @@ if __name__ == "__main__":
     #run_all("outputs22-cost", opt_flag, "cost", 22)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
     #for _ in range(2):
-    #for k in ratings_known:
-    #    for obj in ["cost"]:#, "mass"]:
-    #        run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
     for k in ratings_known:
-        get_eff_curve(f"outputs{k}-cost", "cost", k)
+        for obj in ["cost"]:#, "mass"]:
+            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    #for k in ratings_known:
+    #    get_eff_curve(f"outputs{k}-cost", "cost", k)
