@@ -25,8 +25,8 @@ To run the code, follow these steps
 
 2. In an anaconda environment, type 
 
+        conda install openmdao pandas openpyxl numpy nlopt matplotlib scipy
         pip install pyfemm
-        conda install openmdao
 
 3. In your preferred folder, clone and compile the repository
 
