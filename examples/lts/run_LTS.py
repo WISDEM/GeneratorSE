@@ -126,6 +126,9 @@ def optimize_magnetics_design(prob_in=None, output_dir=None, cleanup_flag=True, 
         prob["N_c"] = 2.2532984
         prob["I_s"] = 1945.9858772
         prob["J_s"] = 3.0
+        prob["h_s"] = 0.2
+        prob["h_sc"] = 0.1
+        prob["h_yr"] = 0.25
 
         # Material properties
         prob["rho_steel"] = 7850
@@ -384,7 +387,7 @@ def get_eff_curve(output_str, obj_str, ratingMW):
     for ir, r in enumerate(rpm):
         prob["N_nom"] = r
         prob.run_model()
-        
+
         torque[ir] = float(prob.get_val("Torque_actual",units="MN*m"))
         shear[ir] = float(prob.get_val("Sigma_shear",units="kN/m**2"))
         normal[ir] = float(prob.get_val("Sigma_normal",units="kN/m**2"))
@@ -395,8 +398,8 @@ def get_eff_curve(output_str, obj_str, ratingMW):
                np.c_[rpm, torque, shear, normal, losses, eff],
                delimiter=',',
                header='RPM,Torque [MNm],Shear stress [kN/m^2],Normal stress [kN/m^2],Losses [kW],Efficiency')
-    
-        
+
+
 def run_all(output_str, opt_flag, obj_str, ratingMW):
     output_dir = os.path.join(mydir, output_str)
 
