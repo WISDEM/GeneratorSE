@@ -437,7 +437,7 @@ def run_all(output_str, opt_flag, obj_str, ratingMW):
     cleanup_femm_files(mydir, output_dir)
 
 if __name__ == "__main__":
-    opt_flag = True
+    opt_flag = False #True
     #run_all("outputs15-mass", opt_flag, "mass", 15)
     #run_all("outputs17-mass", opt_flag, "mass", 17)
     #run_all("outputs20-mass", opt_flag, "mass", 20)
@@ -447,9 +447,9 @@ if __name__ == "__main__":
     #run_all("outputs20-cost", opt_flag, "cost", 20)
     #run_all("outputs22-cost", opt_flag, "cost", 22)
     #run_all("outputs25-cost", opt_flag, "cost", 25)
-    #for k in ratings_known:
-    #    for obj in ["cost"]:#, "mass"]:
-    #        for m in range(2):
-    #            run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
     for k in ratings_known:
-        get_eff_curve(f"outputs{k}-cost", "cost", k)
+        for obj in ["cost"]:#, "mass"]:
+            for m in range(2):
+                run_all(f"outputs{k}-{obj}", opt_flag, obj, k)
+    #for k in ratings_known:
+    #    get_eff_curve(f"outputs{k}-cost", "cost", k)
